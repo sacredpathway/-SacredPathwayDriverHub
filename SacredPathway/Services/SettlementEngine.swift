@@ -1,0 +1,82 @@
+import Foundation
+
+struct SettlementCalculation {
+    let totalRevenue: Double
+    let totalExpenses: Double
+    let grossProfit: Double
+    let driverPayPercentage: Double
+    let driverPayAmount: Double
+    let dispatcherFeePercentage: Double
+    let dispatcherFeeAmount: Double
+    let factoringFeePercentage: Double
+    let factoringFeeAmount: Double
+    let authorityFee: Double
+    let maintenanceReserve: Double
+    let carrierNetPay: Double
+}
+
+class SettlementEngine {
+
+    /// Calculate a complete settlement
+    static func calculate(
+        loads: [Load],
+        expenses: [Expense],
+        profile: Profile,
+        driver: Driver,
+        payOnRevenue: Bool = false
+    ) -> SettlementCalculation {
+
+        // Step 1: Total revenue from all loads
+        let totalRevenue = loads.reduce(0.0) { sum, load in
+            sum + (load.totalRevenue ?? 0)
+        }
+
+        // Step 2: Total expenses
+        let totalExpenses = expenses.reduce(0.0) { sum, expense in
+            sum + expense.amount
+        }
+
+        // Step 3: Gross profit
+        let grossProfit = totalRevenue - totalExpenses
+
+        // Step 4: Driver pay
+        let driverPct = driver.payPercentage ?? profile.driverPayPercentage ?? 25.0
+        let driverPayBase = payOnRevenue ? totalRevenue : grossProfit
+        let driverPayAmount = driverPayBase * (driverPct / 100.0)
+
+        // Step 5: Dispatcher fee (always on revenue)
+        let dispatcherPct = profile.dispatcherFeePercentage ?? 0.0
+        let dispatcherFeeAmount = totalRevenue * (dispatcherPct / 100.0)
+
+        // Step 6: Factoring fee (always on revenue)
+        let factoringPct = profile.factoringFeePercentage ?? 0.0
+        let factoringFeeAmount = totalRevenue * (factoringPct / 100.0)
+
+        // Step 7: Flat fees
+        let authorityFee = profile.authorityFee ?? 0.0
+        let maintenanceReserve = profile.maintenanceReserve ?? 0.0
+
+        // Step 8: Carrier net pay (what the company keeps)
+        let carrierNetPay = grossProfit
+            - driverPayAmount
+            - dispatcherFeeAmount
+            - factoringFeeAmount
+            - authorityFee
+            - maintenanceReserve
+
+        return SettlementCalculation(
+            totalRevenue: totalRevenue,
+            totalExpenses: totalExpenses,
+            grossProfit: grossProfit,
+            driverPayPercentage: driverPct,
+            driverPayAmount: driverPayAmount,
+            dispatcherFeePercentage: dispatcherPct,
+            dispatcherFeeAmount: dispatcherFeeAmount,
+            factoringFeePercentage: factoringPct,
+            factoringFeeAmount: factoringFeeAmount,
+            authorityFee: authorityFee,
+            maintenanceReserve: maintenanceReserve,
+            carrierNetPay: carrierNetPay
+        )
+    }
+}
