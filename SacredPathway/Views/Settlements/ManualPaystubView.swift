@@ -42,12 +42,21 @@ struct ManualPaystubView: View {
     // Manual Expenses
     @State private var expenseItems: [ManualExpenseItem] = []
 
-    // Fee Percentages
+    // Fee Values (each can be % or $ via FeeMode)
     @State private var driverPayPct: String = "25"
+    @State private var driverPayMode: FeeItem.FeeMode = .percent
+
     @State private var dispatcherFeePct: String = "0"
+    @State private var dispatcherFeeMode: FeeItem.FeeMode = .percent
+
     @State private var factoringFeePct: String = "0"
+    @State private var factoringFeeMode: FeeItem.FeeMode = .percent
+
     @State private var authorityFee: String = "0"
+    @State private var authorityFeeMode: FeeItem.FeeMode = .dollar
+
     @State private var maintenanceReserve: String = "0"
+    @State private var maintenanceReserveMode: FeeItem.FeeMode = .dollar
 
     // State
     @State private var calculation: SettlementCalculation?
@@ -320,18 +329,24 @@ struct ManualPaystubView: View {
     // MARK: - Fees
     private var feesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("Fees & Deductions", icon: "percent")
+            HStack {
+                sectionHeader("Fees & Deductions", icon: "percent")
+                Spacer()
+                Text("Tap $/% to toggle")
+                    .font(.caption2)
+                    .foregroundStyle(Color.spTextSecondary)
+            }
 
             VStack(spacing: 12) {
-                feeRow("Driver Pay %", value: $driverPayPct)
+                feeRow("Driver Pay", value: $driverPayPct, mode: $driverPayMode)
                 Divider().background(Color.spTextSecondary.opacity(0.3))
-                feeRow("Dispatcher Fee %", value: $dispatcherFeePct)
+                feeRow("Dispatcher Fee", value: $dispatcherFeePct, mode: $dispatcherFeeMode)
                 Divider().background(Color.spTextSecondary.opacity(0.3))
-                feeRow("Factoring Fee %", value: $factoringFeePct)
+                feeRow("Factoring Fee", value: $factoringFeePct, mode: $factoringFeeMode)
                 Divider().background(Color.spTextSecondary.opacity(0.3))
-                feeRow("Authority Fee $", value: $authorityFee)
+                feeRow("Authority Fee", value: $authorityFee, mode: $authorityFeeMode)
                 Divider().background(Color.spTextSecondary.opacity(0.3))
-                feeRow("Maint. Reserve $", value: $maintenanceReserve)
+                feeRow("Maint. Reserve", value: $maintenanceReserve, mode: $maintenanceReserveMode)
             }
             .padding()
             .background(Color.spCardBg)
@@ -339,19 +354,47 @@ struct ManualPaystubView: View {
         }
     }
 
-    private func feeRow(_ label: String, value: Binding<String>) -> some View {
-        HStack {
+    private func feeRow(_ label: String, value: Binding<String>, mode: Binding<FeeItem.FeeMode>) -> some View {
+        HStack(spacing: 8) {
             Text(label)
                 .font(.subheadline)
                 .foregroundStyle(Color.spTextPrimary)
             Spacer()
+
+            if mode.wrappedValue == .dollar {
+                Text("$").font(.subheadline.weight(.bold)).foregroundStyle(Color.spGold)
+            }
+
             TextField("0", text: value)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
-                .frame(width: 80)
+                .frame(width: 70)
                 .foregroundStyle(Color.spGold)
                 .font(.subheadline.weight(.semibold))
+
+            if mode.wrappedValue == .percent {
+                Text("%").font(.subheadline.weight(.bold)).foregroundStyle(Color.spGold)
+            }
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    mode.wrappedValue = mode.wrappedValue == .percent ? .dollar : .percent
+                }
+            } label: {
+                Text(mode.wrappedValue == .percent ? "%" : "$")
+                    .font(.caption.weight(.black))
+                    .frame(width: 26, height: 26)
+                    .background(Color.spGold.opacity(0.2))
+                    .foregroundStyle(Color.spGold)
+                    .clipShape(Circle())
+            }
         }
+    }
+
+    /// Convert a raw value + mode into a dollar amount based on a reference base (e.g., revenue).
+    private func feeAmount(value: String, mode: FeeItem.FeeMode, base: Double) -> Double {
+        let n = Double(value) ?? 0
+        return mode == .percent ? (base * n / 100.0) : n
     }
 
     // MARK: - Save Draft Button
@@ -405,7 +448,7 @@ struct ManualPaystubView: View {
                 calcRow("Expenses", "-\(calc.totalExpenses.asCurrency)", color: .spDanger)
                 calcRow("Gross Profit", calc.grossProfit.asCurrency)
                 Divider().background(Color.spTextSecondary.opacity(0.3))
-                calcRow("Driver Pay (\(Int(calc.driverPayPercentage))%)", calc.driverPayAmount.asCurrency)
+                calcRow(driverPayLabel, calc.driverPayAmount.asCurrency)
                 calcRow("Dispatcher Fee", "-\(calc.dispatcherFeeAmount.asCurrency)", color: .spDanger)
                 calcRow("Factoring Fee", "-\(calc.factoringFeeAmount.asCurrency)", color: .spDanger)
                 calcRow("Authority Fee", "-\(calc.authorityFee.asCurrency)", color: .spDanger)
@@ -419,17 +462,51 @@ struct ManualPaystubView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    @State private var showExportPaywall = false
+
     private var exportButton: some View {
-        Button {
-            generateManualPDF()
-        } label: {
-            Label("Export Paystub PDF", systemImage: "square.and.arrow.up.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.spGreenAccent)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+        Group {
+            if SubscriptionService.shared.isEntitled(.pdfExport) {
+                Button {
+                    generateManualPDF()
+                } label: {
+                    Label("Export Paystub PDF", systemImage: "square.and.arrow.up.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.spGreenAccent)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            } else {
+                Button { showExportPaywall = true } label: {
+                    HStack {
+                        Image(systemName: "lock.fill")
+                        Text("Export PDF")
+                        Spacer()
+                        Text("PRO")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.spGold.opacity(0.2))
+                            .clipShape(Capsule())
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Color.spCardBgLight).foregroundStyle(Color.spGold)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .sheet(isPresented: $showExportPaywall) { PaywallView() }
+            }
+        }
+    }
+
+    // Display label for driver pay row in preview (adapts to % or $ mode)
+    private var driverPayLabel: String {
+        if driverPayMode == .percent {
+            let pct = Double(driverPayPct) ?? 0
+            return "Driver Pay (\(Int(pct))%)"
+        } else {
+            return "Driver Pay (flat)"
         }
     }
 
@@ -474,6 +551,11 @@ struct ManualPaystubView: View {
             factoringFeePct = draft.factoringFeePct
             authorityFee = draft.authorityFee
             maintenanceReserve = draft.maintenanceReserve
+            driverPayMode = draft.driverPayMode ?? .percent
+            dispatcherFeeMode = draft.dispatcherFeeMode ?? .percent
+            factoringFeeMode = draft.factoringFeeMode ?? .percent
+            authorityFeeMode = draft.authorityFeeMode ?? .dollar
+            maintenanceReserveMode = draft.maintenanceReserveMode ?? .dollar
 
             // Convert draft loads to ManualLoadItems
             loadItems = draft.loads.map { dl in
@@ -558,6 +640,11 @@ struct ManualPaystubView: View {
             factoringFeePct: factoringFeePct,
             authorityFee: authorityFee,
             maintenanceReserve: maintenanceReserve,
+            driverPayMode: driverPayMode,
+            dispatcherFeeMode: dispatcherFeeMode,
+            factoringFeeMode: factoringFeeMode,
+            authorityFeeMode: authorityFeeMode,
+            maintenanceReserveMode: maintenanceReserveMode,
             createdAt: existingDraft?.createdAt ?? Date(),
             updatedAt: Date()
         )
@@ -587,28 +674,39 @@ struct ManualPaystubView: View {
         }
 
         let grossProfit = totalRevenue - totalExpenses
-        let driverPct = Double(driverPayPct) ?? 25
-        let driverPayAmount = grossProfit * (driverPct / 100.0)
-        let dispPct = Double(dispatcherFeePct) ?? 0
-        let dispatcherFeeAmount = totalRevenue * (dispPct / 100.0)
-        let factPct = Double(factoringFeePct) ?? 0
-        let factoringFeeAmount = totalRevenue * (factPct / 100.0)
-        let authFee = Double(authorityFee) ?? 0
-        let maintReserve = Double(maintenanceReserve) ?? 0
-        let carrierNetPay = grossProfit - driverPayAmount - dispatcherFeeAmount - factoringFeeAmount - authFee - maintReserve
+
+        // Driver pay: % applies to gross profit; $ is a flat amount
+        let driverPayAmount = feeAmount(value: driverPayPct, mode: driverPayMode, base: grossProfit)
+        let driverPctDisplay = driverPayMode == .percent ? (Double(driverPayPct) ?? 0) : 0
+
+        // Dispatcher fee: % on revenue, or flat $
+        let dispatcherFeeAmount = feeAmount(value: dispatcherFeePct, mode: dispatcherFeeMode, base: totalRevenue)
+        let dispPctDisplay = dispatcherFeeMode == .percent ? (Double(dispatcherFeePct) ?? 0) : 0
+
+        // Factoring fee: % on revenue, or flat $
+        let factoringFeeAmount = feeAmount(value: factoringFeePct, mode: factoringFeeMode, base: totalRevenue)
+        let factPctDisplay = factoringFeeMode == .percent ? (Double(factoringFeePct) ?? 0) : 0
+
+        // Authority fee: % on revenue, or flat $
+        let authFeeAmount = feeAmount(value: authorityFee, mode: authorityFeeMode, base: totalRevenue)
+
+        // Maintenance reserve: % on revenue, or flat $
+        let maintReserveAmount = feeAmount(value: maintenanceReserve, mode: maintenanceReserveMode, base: totalRevenue)
+
+        let carrierNetPay = grossProfit - driverPayAmount - dispatcherFeeAmount - factoringFeeAmount - authFeeAmount - maintReserveAmount
 
         calculation = SettlementCalculation(
             totalRevenue: totalRevenue,
             totalExpenses: totalExpenses,
             grossProfit: grossProfit,
-            driverPayPercentage: driverPct,
+            driverPayPercentage: driverPctDisplay,
             driverPayAmount: driverPayAmount,
-            dispatcherFeePercentage: dispPct,
+            dispatcherFeePercentage: dispPctDisplay,
             dispatcherFeeAmount: dispatcherFeeAmount,
-            factoringFeePercentage: factPct,
+            factoringFeePercentage: factPctDisplay,
             factoringFeeAmount: factoringFeeAmount,
-            authorityFee: authFee,
-            maintenanceReserve: maintReserve,
+            authorityFee: authFeeAmount,
+            maintenanceReserve: maintReserveAmount,
             carrierNetPay: carrierNetPay
         )
     }
@@ -616,7 +714,14 @@ struct ManualPaystubView: View {
     private func generateManualPDF() {
         guard let calc = calculation else { return }
 
-        let profileId = supabase.currentProfile?.id ?? UUID()
+        // Never fall back to a random UUID — if the profile isn't loaded,
+        // the paystub would render without carrier branding/defaults and
+        // the in-memory Load/Expense records would carry a bogus profileId.
+        // Surface the state to the user instead of producing a broken PDF.
+        guard let profileId = supabase.currentProfile?.id else {
+            errorMessage = "Still loading your carrier profile — try again in a moment."
+            return
+        }
 
         let loads: [Load] = loadItems.compactMap { item in
             guard let rev = Double(item.revenue), rev > 0 else { return nil }

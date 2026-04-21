@@ -101,7 +101,7 @@ struct BrokerDetailView: View {
             }
 
             if contacts.isEmpty {
-                Text("No contacts detected yet. Scan more documents from this broker.")
+                Text("No contacts yet for this broker. Add them as you work new loads.")
                     .font(.caption).foregroundStyle(Color.spTextSecondary)
                     .padding(.vertical, 8)
             } else {
@@ -147,7 +147,10 @@ struct BrokerDetailView: View {
     private var loadsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: "truck.box.fill").foregroundStyle(Color.spGold)
+                Image("SacredPathwayLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
                 Text("Load History").font(.headline).foregroundStyle(Color.spGold)
                 Spacer()
                 Text("\(loads.count) loads").font(.caption).foregroundStyle(Color.spTextSecondary)
@@ -191,7 +194,14 @@ struct BrokerDetailView: View {
 
     private func loadData() async {
         do {
-            contacts = try await supabase.fetchContacts(forBroker: broker.id ?? UUID())
+            // Only fetch contacts if we have a persisted broker id. A random
+            // UUID fallback would query against a non-existent broker and
+            // silently return empty — confusing if the user expects contacts.
+            if let brokerId = broker.id {
+                contacts = try await supabase.fetchContacts(forBroker: brokerId)
+            } else {
+                contacts = []
+            }
             loads = try await supabase.fetchLoadsForBroker(brokerName: broker.brokerName)
         } catch { print("Error: \(error)") }
         isLoading = false
