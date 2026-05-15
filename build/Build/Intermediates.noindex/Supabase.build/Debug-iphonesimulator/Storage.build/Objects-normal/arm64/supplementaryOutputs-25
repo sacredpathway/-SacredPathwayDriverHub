@@ -1,0 +1,23 @@
+{
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Storage/BucketOptions.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/BucketOptions.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/BucketOptions.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/BucketOptions.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/BucketOptions.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/BucketOptions.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Storage/Codable.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Codable.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Codable.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Codable.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Codable.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Codable.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Storage/Deprecated.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Deprecated.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Deprecated.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Deprecated.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Deprecated.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Storage.build/Objects-normal/arm64/Deprecated.swiftdeps"
+  }
+}

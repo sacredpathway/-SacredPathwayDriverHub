@@ -1,0 +1,37 @@
+{
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/PresenceAction.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PresenceAction.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PresenceAction.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PresenceAction.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PresenceAction.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PresenceAction.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/PushV2.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PushV2.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PushV2.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PushV2.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PushV2.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/PushV2.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/RealtimeChannel+AsyncAwait.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannel+AsyncAwait.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannel+AsyncAwait.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannel+AsyncAwait.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannel+AsyncAwait.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannel+AsyncAwait.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/RealtimeChannelV2.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannelV2.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannelV2.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannelV2.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannelV2.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeChannelV2.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/supabase-swift/Sources/Realtime/RealtimeClientV2.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeClientV2.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeClientV2.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeClientV2.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeClientV2.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Realtime.build/Objects-normal/arm64/RealtimeClientV2.swiftdeps"
+  }
+}

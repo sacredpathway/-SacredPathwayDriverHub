@@ -1,0 +1,697 @@
+import SwiftUI
+
+/// Primary Paystubs tab entry point.
+///
+/// Flow: pick a driver → pick a period → review the saved loads that
+/// match → calculate → optionally export a PDF. Selecting a load
+/// auto-fills its broker, route, miles, and revenue from what was already
+/// logged in the Loads tab — drivers don't re-type anything.
+///
+/// On successful PDF export, every picked load is marked `settled` so it
+/// won't show up in the next paystub by default. The user can flip the
+/// "Show settled loads" toggle to intentionally re-include one.
+struct SettlementGeneratorView: View {
+    @EnvironmentObject var supabase: SupabaseService
+    // Observed so the Export button switches between PDF and locked state
+    // immediately after a Pro/Carrier purchase or restore — no relaunch.
+    @ObservedObject private var subscriptions = SubscriptionService.shared
+
+    // Drivers
+    @State private var drivers: [Driver] = []
+    @State private var selectedDriver: Driver?
+
+    // Period
+    @State private var periodStart = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+    @State private var periodEnd = Date()
+
+    // Loads
+    @State private var allLoads: [Load] = []
+    @State private var selectedLoadIds: Set<UUID> = []
+    @State private var showSettledLoads: Bool = false
+    @State private var isLoadingLoads = false
+
+    // Calculation + export
+    @State private var expenses: [Expense] = []
+    @State private var calculation: SettlementCalculation?
+    @State private var isCalculating = false
+    @State private var pdfData: Data?
+    @State private var showingShareSheet = false
+    @State private var errorMessage: String?
+    @State private var showExportPaywall = false
+    @State private var showDriverPrompt = false
+
+    // Expense review (auto-pull from period + selected loads, with manual edits).
+    @State private var matchResult: PaystubExpenseMatcher.MatchResult?
+    @State private var showExpenseReview = false
+
+    // MARK: - Derived
+
+    /// Loads that match the current driver + period filter, filtered by
+    /// settled state. Drives the picker rows.
+    private var filteredLoads: [Load] {
+        allLoads.filter { load in
+            // Settled filter
+            if !showSettledLoads, load.isSettled, !selectedLoadIds.contains(load.id ?? UUID()) {
+                return false
+            }
+            // Driver filter — if a driver is picked, only show loads
+            // already assigned to that driver OR unassigned (so the
+            // user can attach an unassigned load to this paystub).
+            if let driverId = selectedDriver?.id {
+                if let loadDriver = load.driverId {
+                    if loadDriver != driverId { return false }
+                }
+            }
+            // Period filter — match on pickup date OR delivery date OR
+            // created_at falling within the period.
+            let candidates = [load.pickupDate, load.deliveryDate, load.createdAt].compactMap { $0 }
+            let inPeriod = candidates.contains { date in
+                date >= startOfDay(periodStart) && date <= endOfDay(periodEnd)
+            }
+            return inPeriod || candidates.isEmpty // include undated loads as fallback
+        }
+    }
+
+    private var selectedLoads: [Load] {
+        allLoads.filter { load in
+            guard let id = load.id else { return false }
+            return selectedLoadIds.contains(id)
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.spBackground.ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    periodSection
+                    driverSection
+                    loadsPickerSection
+                    calculateButton
+
+                    if let calc = calculation {
+                        if let result = matchResult {
+                            expenseReviewBanner(result: result)
+                        }
+                        settlementPreview(calc)
+                        exportButton
+                    }
+
+                    NavigationLink {
+                        ManualPaystubView()
+                            .environmentObject(supabase)
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.and.pencil")
+                            Text("Or build a paystub manually")
+                                .font(.subheadline.weight(.medium))
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption)
+                        }
+                        .padding()
+                        .background(Color.spCardBg)
+                        .foregroundStyle(Color.spGold)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+
+                    NavigationLink {
+                        SettlementSheetView()
+                            .environmentObject(supabase)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "doc.richtext.fill")
+                                .foregroundStyle(Color.spGold)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Carrier-Style Settlement Sheet")
+                                    .font(.subheadline.weight(.semibold))
+                                Text("Multi-page B&W settlement PDF — looks like a major carrier's owner statement.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.spTextSecondary)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption)
+                        }
+                        .padding()
+                        .background(Color.spCardBg)
+                        .foregroundStyle(Color.spGold)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+
+                    if let error = errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(Color.spDanger)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .padding()
+            }
+        }
+        .navigationTitle("Generate Paystub")
+        .task {
+            await loadDrivers()
+            await loadLoads()
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            if let data = pdfData {
+                ShareSheet(items: [data])
+            }
+        }
+        .alert("Pick a Driver", isPresented: $showDriverPrompt) {
+            Button("OK") { }
+        } message: {
+            Text("These loads aren't assigned to anyone yet. Select a driver above so the paystub knows who's getting paid.")
+        }
+        .sheet(isPresented: $showExpenseReview) {
+            if let result = matchResult {
+                PaystubExpenseReviewView(initialResult: result) { updated in
+                    matchResult = updated
+                    expenses = updated.includedExpenses
+                    // Re-run the engine with the curated list so the
+                    // settlement preview + PDF reflect user edits.
+                    if let profile = supabase.currentProfile {
+                        let driver = selectedDriver
+                            ?? Driver(profileId: profile.id, name: "Owner-Operator")
+                        calculation = SettlementEngine.calculate(
+                            loads: selectedLoads,
+                            expenses: expenses,
+                            profile: profile,
+                            driver: driver
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Expense review entry point
+
+    /// One-tap link to the dedicated PaystubExpenseReviewView so the user
+    /// can uncheck/edit/manually-add expense lines before exporting the PDF.
+    @ViewBuilder
+    private func expenseReviewBanner(result: PaystubExpenseMatcher.MatchResult) -> some View {
+        Button {
+            showExpenseReview = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "list.bullet.rectangle.portrait")
+                    .foregroundStyle(Color.spGold)
+                    .font(.title3)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Review expenses")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.spTextPrimary)
+                    let included = result.lineItems.filter { $0.included }.count
+                    Text("\(included) of \(result.lineItems.count) included · \(result.includedTotal.asCurrency)")
+                        .font(.caption)
+                        .foregroundStyle(Color.spTextSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.spGold)
+            }
+            .padding(14)
+            .background(Color.spCardBg)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    // MARK: - Period
+
+    private var periodSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader("Settlement Period", icon: "calendar")
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("From").font(.caption).foregroundStyle(Color.spTextSecondary)
+                    DatePicker("", selection: $periodStart, displayedComponents: .date)
+                        .labelsHidden().tint(Color.spGold)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("To").font(.caption).foregroundStyle(Color.spTextSecondary)
+                    DatePicker("", selection: $periodEnd, displayedComponents: .date)
+                        .labelsHidden().tint(Color.spGold)
+                }
+            }
+            .padding().background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    // MARK: - Driver
+
+    private var driverSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader("Driver", icon: "person.fill")
+            if drivers.isEmpty {
+                Text("No drivers added yet. Add drivers under More → Drivers.")
+                    .font(.caption).foregroundStyle(Color.spTextSecondary)
+                    .padding().frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(drivers) { driver in
+                            Button {
+                                selectedDriver = driver
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(systemName: "person.circle.fill").font(.title2)
+                                    Text(driver.name).font(.caption.weight(.semibold))
+                                    if let pct = driver.payPercentage {
+                                        Text("\(Int(pct))%").font(.caption2).foregroundStyle(Color.spTextSecondary)
+                                    }
+                                }
+                                .frame(width: 90, height: 80)
+                                .background(selectedDriver?.id == driver.id ? Color.spGold.opacity(0.2) : Color.spCardBg)
+                                .foregroundStyle(selectedDriver?.id == driver.id ? Color.spGold : Color.spTextPrimary)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(selectedDriver?.id == driver.id ? Color.spGold : .clear, lineWidth: 1.5)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Loads picker
+
+    private var loadsPickerSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                sectionHeader("Loads", icon: "shippingbox.fill")
+                Spacer()
+                Toggle(isOn: $showSettledLoads) {
+                    Text("Show settled")
+                        .font(.caption2)
+                        .foregroundStyle(Color.spTextSecondary)
+                }
+                .toggleStyle(.switch)
+                .tint(Color.spGold)
+                .scaleEffect(0.85)
+            }
+
+            if isLoadingLoads {
+                ProgressView().tint(Color.spGold)
+                    .frame(maxWidth: .infinity).padding()
+                    .background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 12))
+            } else if filteredLoads.isEmpty {
+                emptyLoadsCard
+            } else {
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Button {
+                            selectAllVisible()
+                        } label: {
+                            Text("Select all visible").font(.caption.weight(.semibold))
+                        }
+                        .foregroundStyle(Color.spGold)
+
+                        Spacer()
+
+                        if !selectedLoadIds.isEmpty {
+                            Button {
+                                selectedLoadIds.removeAll()
+                            } label: {
+                                Text("Clear (\(selectedLoadIds.count))")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .foregroundStyle(Color.spDanger.opacity(0.85))
+                        }
+                    }
+                    .padding(.horizontal, 4)
+
+                    ForEach(filteredLoads) { load in
+                        loadRow(load)
+                    }
+                }
+            }
+        }
+    }
+
+    private var emptyLoadsCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("No loads match this period or driver.")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.spTextPrimary)
+            Text("Adjust the date range, pick a different driver, or toggle 'Show settled' to include loads already paid out.")
+                .font(.caption2)
+                .foregroundStyle(Color.spTextSecondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.spCardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func loadRow(_ load: Load) -> some View {
+        let id = load.id ?? UUID()
+        let isSelected = selectedLoadIds.contains(id)
+        return Button {
+            toggleLoad(id: id)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? Color.spGold : Color.spTextSecondary)
+                    .font(.title3)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(load.loadNumber.map { "Load #\($0)" } ?? "Load")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.spTextPrimary)
+                        if load.isSettled {
+                            Text("SETTLED")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(Color.spTextSecondary)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Color.spTextSecondary.opacity(0.2))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                    }
+                    if let broker = load.brokerName {
+                        Text(broker).font(.caption).foregroundStyle(Color.spTextSecondary)
+                    }
+                    HStack(spacing: 4) {
+                        if let origin = load.origin, let dest = load.destination {
+                            Text("\(origin) → \(dest)")
+                                .font(.caption2)
+                                .foregroundStyle(Color.spTextSecondary)
+                        }
+                        if let miles = load.totalMiles {
+                            Text("· \(Int(miles)) mi")
+                                .font(.caption2)
+                                .foregroundStyle(Color.spTextSecondary)
+                        }
+                    }
+                }
+                Spacer()
+                if let revenue = load.totalRevenue {
+                    Text(revenue.asCurrency)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Color.spGold)
+                }
+            }
+            .padding(12)
+            .background(isSelected ? Color.spGold.opacity(0.1) : Color.spCardBg)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? Color.spGold : .clear, lineWidth: 1.5)
+            )
+        }
+    }
+
+    // MARK: - Calculate
+
+    private var calculateButton: some View {
+        Button {
+            Task { await calculateSettlement() }
+        } label: {
+            HStack {
+                if isCalculating { ProgressView().tint(Color.spBlack) }
+                else { Image(systemName: "function") }
+                Text(selectedLoadIds.isEmpty ? "Pick loads to calculate" : "Calculate Settlement (\(selectedLoadIds.count))")
+            }
+            .font(.headline)
+            .frame(maxWidth: .infinity).padding(.vertical, 14)
+            .background(selectedLoadIds.isEmpty ? Color.spGold.opacity(0.4) : Color.spGold)
+            .foregroundStyle(Color.spBlack)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .disabled(isCalculating || selectedLoadIds.isEmpty)
+    }
+
+    private func settlementPreview(_ calc: SettlementCalculation) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("PAYSTUB PREVIEW").font(.caption.weight(.heavy)).foregroundStyle(Color.spGold)
+                Spacer()
+            }
+            .padding(12).background(Color.spCardBg)
+
+            VStack(spacing: 6) {
+                calcRow("Gross Revenue", calc.totalRevenue.asCurrency, bold: true)
+                calcRow("Expenses", "-\(calc.totalExpenses.asCurrency)", color: .spDanger)
+                calcRow("Gross Profit", calc.grossProfit.asCurrency)
+                Divider().background(Color.spTextSecondary.opacity(0.3))
+                calcRow("Driver Pay (\(Int(calc.driverPayPercentage))%)", calc.driverPayAmount.asCurrency)
+                calcRow("Dispatcher Fee", "-\(calc.dispatcherFeeAmount.asCurrency)", color: .spDanger)
+                calcRow("Factoring Fee", "-\(calc.factoringFeeAmount.asCurrency)", color: .spDanger)
+                calcRow("Authority Fee", "-\(calc.authorityFee.asCurrency)", color: .spDanger)
+                calcRow("Maint. Reserve", "-\(calc.maintenanceReserve.asCurrency)", color: .spDanger)
+                Divider().background(Color.spGold)
+                calcRow("NET PAY", calc.carrierNetPay.asCurrency, bold: true, color: calc.carrierNetPay >= 0 ? .spSuccess : .spDanger)
+            }
+            .padding(12)
+        }
+        .background(Color.spCardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var exportButton: some View {
+        Group {
+            if subscriptions.isEntitled(.pdfExport) {
+                Button {
+                    Task { await generatePDF() }
+                } label: {
+                    Label("Export Paystub PDF", systemImage: "square.and.arrow.up.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity).padding(.vertical, 14)
+                        .background(Color.spGreenAccent).foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            } else {
+                Button { showExportPaywall = true } label: {
+                    HStack {
+                        Image(systemName: "lock.fill")
+                        Text("Export PDF")
+                        Spacer()
+                        Text("PRO")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Color.spGold.opacity(0.2))
+                            .clipShape(Capsule())
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Color.spCardBgLight).foregroundStyle(Color.spGold)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .sheet(isPresented: $showExportPaywall) { PaywallView() }
+            }
+        }
+    }
+
+    private func calcRow(_ label: String, _ value: String, bold: Bool = false, color: Color = .spTextPrimary) -> some View {
+        HStack {
+            Text(label).font(bold ? .subheadline.weight(.bold) : .caption).foregroundStyle(Color.spTextSecondary)
+            Spacer()
+            Text(value).font(bold ? .subheadline.weight(.bold) : .caption.weight(.medium)).foregroundStyle(color)
+        }
+    }
+
+    private func sectionHeader(_ title: String, icon: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon).foregroundStyle(Color.spGold)
+            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Color.spTextPrimary)
+        }
+    }
+
+    // MARK: - Date helpers
+
+    private func startOfDay(_ date: Date) -> Date {
+        Calendar.current.startOfDay(for: date)
+    }
+
+    private func endOfDay(_ date: Date) -> Date {
+        let cal = Calendar.current
+        let start = cal.startOfDay(for: date)
+        return cal.date(byAdding: DateComponents(day: 1, second: -1), to: start) ?? date
+    }
+
+    // MARK: - Actions
+
+    private func loadDrivers() async {
+        do { drivers = try await supabase.fetchDrivers() } catch { print("Error: \(error)") }
+    }
+
+    private func loadLoads() async {
+        isLoadingLoads = true
+        defer { isLoadingLoads = false }
+        do {
+            allLoads = try await supabase.fetchLoads()
+        } catch {
+            errorMessage = "Couldn't load saved loads: \(error.localizedDescription)"
+        }
+    }
+
+    private func selectAllVisible() {
+        for load in filteredLoads {
+            if let id = load.id {
+                selectedLoadIds.insert(id)
+            }
+        }
+    }
+
+    private func toggleLoad(id: UUID) {
+        if selectedLoadIds.contains(id) {
+            selectedLoadIds.remove(id)
+        } else {
+            selectedLoadIds.insert(id)
+        }
+    }
+
+    private func calculateSettlement() async {
+        isCalculating = true
+        errorMessage = nil
+        defer { isCalculating = false }
+
+        do {
+            let chosenLoads = selectedLoads
+            guard !chosenLoads.isEmpty else {
+                errorMessage = "Pick at least one load."
+                return
+            }
+
+            // If none of the picked loads have a driver and the user
+            // hasn't selected one, prompt rather than silently labeling
+            // the paystub "Owner-Operator".
+            let allUnassigned = chosenLoads.allSatisfy { $0.driverId == nil }
+            if selectedDriver == nil && allUnassigned {
+                showDriverPrompt = true
+                return
+            }
+
+            // Auto-select driver from the loads if they all share one
+            // and the user hasn't picked manually.
+            if selectedDriver == nil {
+                let driverIds = Set(chosenLoads.compactMap { $0.driverId })
+                if driverIds.count == 1, let onlyId = driverIds.first {
+                    selectedDriver = drivers.first { $0.id == onlyId }
+                }
+            }
+
+            // Pull every expense the user has access to, then run them
+            // through the matcher so:
+            //   • Expenses tied to a chosen load are included.
+            //   • Expenses with NO loadId are included if their receipt
+            //     date falls inside the pay period — this is the fix for
+            //     "fuel/DEF/insurance never showed up on the paystub".
+            //   • Anything else is silently skipped.
+            // The user can later open the review screen to uncheck or edit.
+            let allExpenses = try await supabase.fetchAllExpenses()
+            let chosenLoadIds = Set(chosenLoads.compactMap { $0.id })
+
+            // Preserve any prior manual lines / overrides if the user is
+            // re-calculating after editing.
+            let priorManualLines = matchResult?.lineItems
+                .filter { $0.isManualLine }
+                .map { $0.expense } ?? []
+
+            var newMatch = PaystubExpenseMatcher.match(
+                allExpenses: allExpenses,
+                selectedLoadIds: chosenLoadIds,
+                periodStart: periodStart,
+                periodEnd: periodEnd,
+                manualLines: priorManualLines
+            )
+
+            // Re-apply previous user toggles + overrides if any.
+            if let prior = matchResult {
+                newMatch.lineItems = newMatch.lineItems.map { item in
+                    if let priorItem = prior.lineItems.first(where: { $0.id == item.id }) {
+                        var copy = item
+                        copy.included = priorItem.included
+                        copy.overrideAmount = priorItem.overrideAmount
+                        return copy
+                    }
+                    return item
+                }
+            }
+
+            matchResult = newMatch
+            expenses = newMatch.includedExpenses
+
+            guard let profile = supabase.currentProfile else {
+                errorMessage = "No profile loaded yet."
+                return
+            }
+            let driver = selectedDriver ?? Driver(profileId: profile.id, name: "Owner-Operator")
+            calculation = SettlementEngine.calculate(
+                loads: chosenLoads,
+                expenses: expenses,
+                profile: profile,
+                driver: driver
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func generatePDF() async {
+        guard let calc = calculation, let profile = supabase.currentProfile else { return }
+        let branding = BrandingService.shared
+        do {
+            let data = try PaystubPDFService.generatePaystub(
+                calculation: calc,
+                loads: selectedLoads,
+                expenses: expenses,
+                companyName: profile.companyName ?? "Company",
+                driverName: selectedDriver?.name ?? "Owner-Operator",
+                periodStart: periodStart,
+                periodEnd: periodEnd,
+                logo: branding.logoImage,
+                primaryColor: UIColor(branding.primaryColor)
+            )
+            pdfData = data
+            showingShareSheet = true
+
+            // Mark every picked load as settled. This is the duplicate-
+            // prevention mechanism — settled loads are filtered out of
+            // future paystubs unless the user flips the "Show settled"
+            // toggle and reselects intentionally.
+            let ids = selectedLoads.compactMap { $0.id }
+            try? await supabase.markLoadsAsSettled(loadIds: ids)
+            await loadLoads() // refresh local copy so badges update
+
+            // Save a copy of the paystub PDF to the Document Vault so
+            // the user can re-download it later. Fire and forget — a
+            // failure here shouldn't block the share sheet.
+            let driverLabel = selectedDriver?.name ?? "Owner-Operator"
+            let periodLabel = "\(formatDate(periodStart))–\(formatDate(periodEnd))"
+            let title = "Paystub — \(driverLabel) — \(periodLabel)"
+            Task {
+                _ = try? await supabase.saveDocumentRecord(
+                    pdfData: data,
+                    documentType: "paystub",
+                    title: title,
+                    loadId: nil
+                )
+            }
+        } catch {
+            errorMessage = "PDF error: \(error.localizedDescription)"
+        }
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "MM/dd/yyyy"
+        return f.string(from: date)
+    }
+}
+
+// MARK: - Share Sheet
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}

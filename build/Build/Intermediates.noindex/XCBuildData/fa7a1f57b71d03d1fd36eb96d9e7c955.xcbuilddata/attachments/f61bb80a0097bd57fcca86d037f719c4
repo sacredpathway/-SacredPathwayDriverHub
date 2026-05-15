@@ -1,0 +1,4 @@
+module TPPDF {
+header "TPPDF-Swift.h"
+export *
+}

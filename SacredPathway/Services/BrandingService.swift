@@ -74,21 +74,59 @@ class BrandingService: ObservableObject {
     }
 
     // MARK: - Logo Management
+    /// Persists the user's logo at the highest fidelity we can. PNG is used
+    /// because it's lossless and preserves transparency — critical for logos
+    /// dropped on coloured headers. The cached UIImage exposed via
+    /// `logoImage` is the same in-memory full-resolution copy used for
+    /// PDF/header rendering, so no quality is dropped between upload and
+    /// export.
     func saveLogo(_ image: UIImage) {
         self.logoImage = image
         self.hasCustomBranding = true
         UserDefaults.standard.set(true, forKey: hasCustomBrandingKey)
 
-        // Save to Documents directory
-        guard let data = image.jpegData(compressionQuality: 0.85) else { return }
+        // Prefer PNG (lossless + alpha). Fall back to high-quality JPEG only
+        // if PNG encoding fails (rare — UIImage doesn't always have CGImage).
         let url = Self.logoFileURL()
-        try? data.write(to: url)
+        // Remove any old .jpg copy so we don't read stale data on next launch.
+        try? FileManager.default.removeItem(at: Self.legacyLogoFileURL())
+
+        if let png = image.pngData() {
+            try? png.write(to: url, options: .atomic)
+        } else if let jpg = image.jpegData(compressionQuality: 1.0) {
+            // Lossless-ish JPEG fallback (still better than 0.85).
+            try? jpg.write(to: url, options: .atomic)
+        }
     }
 
     func removeLogo() {
         self.logoImage = nil
-        let url = Self.logoFileURL()
-        try? FileManager.default.removeItem(at: url)
+        try? FileManager.default.removeItem(at: Self.logoFileURL())
+        try? FileManager.default.removeItem(at: Self.legacyLogoFileURL())
+    }
+
+    /// Returns a properly sized rendition of the logo for an arbitrary target
+    /// height in points, using high-quality interpolation and the device
+    /// scale (typically 3x on iPhone). The original full-resolution image is
+    /// preserved on `logoImage`; this is only for places that genuinely need
+    /// a pre-sized bitmap (e.g. UIKit table cells). Most callers — including
+    /// PDF generation — should draw `logoImage` directly into a target rect
+    /// and let Core Graphics scale on demand.
+    func renderLogo(targetHeight: CGFloat) -> UIImage? {
+        guard let logo = logoImage, logo.size.height > 0 else { return nil }
+        let scale = max(1, logo.size.height) / max(1, targetHeight)
+        let newSize = CGSize(
+            width: logo.size.width / scale,
+            height: targetHeight
+        )
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 0  // honor device scale (Retina)
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+        return renderer.image { ctx in
+            ctx.cgContext.interpolationQuality = .high
+            logo.draw(in: CGRect(origin: .zero, size: newSize))
+        }
     }
 
     // MARK: - Reset
@@ -111,14 +149,32 @@ class BrandingService: ObservableObject {
     // MARK: - File Helpers
     private static func logoFileURL() -> URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        return docs.appendingPathComponent("company_logo.png")
+    }
+
+    /// Older builds saved to `company_logo.jpg`. We migrate transparently —
+    /// `loadLogoFromDisk` reads the new PNG first, then falls back to the
+    /// old JPG for users on this build's first launch.
+    private static func legacyLogoFileURL() -> URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return docs.appendingPathComponent("company_logo.jpg")
     }
 
     private static func loadLogoFromDisk() -> UIImage? {
-        let url = logoFileURL()
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return UIImage(data: data)
+        let png = logoFileURL()
+        if FileManager.default.fileExists(atPath: png.path),
+           let data = try? Data(contentsOf: png),
+           let image = UIImage(data: data) {
+            return image
+        }
+        // Migrate legacy JPEG users without losing their old logo.
+        let jpg = legacyLogoFileURL()
+        if FileManager.default.fileExists(atPath: jpg.path),
+           let data = try? Data(contentsOf: jpg),
+           let image = UIImage(data: data) {
+            return image
+        }
+        return nil
     }
 }
 

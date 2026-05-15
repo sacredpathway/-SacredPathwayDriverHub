@@ -7,6 +7,11 @@ struct BrokerDetailView: View {
     @State private var loads: [Load] = []
     @State private var isLoading = true
 
+    // Local-only extras (address + notes) — see LocalBrokerStore.swift
+    @State private var address: String = ""
+    @State private var notes: String = ""
+    @State private var extrasDirty = false
+
     var avgRevenuePerLoad: Double {
         guard let total = broker.totalLoads, total > 0 else { return 0 }
         return (broker.totalRevenue ?? 0) / Double(total)
@@ -24,6 +29,9 @@ struct BrokerDetailView: View {
                     // Stats grid
                     statsSection
 
+                    // Address + notes (local-only)
+                    extrasSection
+
                     // Contacts
                     contactsSection
 
@@ -35,8 +43,76 @@ struct BrokerDetailView: View {
         }
         .navigationTitle(broker.brokerName)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .task { await loadData() }
+        .onAppear(perform: loadExtras)
+        .onDisappear(perform: persistExtrasIfDirty)
+    }
+
+    // MARK: - Address + notes (local-only via LocalBrokerStore)
+
+    private var extrasSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "mappin.and.ellipse").foregroundStyle(Color.spGold)
+                Text("Address & Notes").font(.headline).foregroundStyle(Color.spGold)
+                Spacer()
+                if extrasDirty {
+                    Button {
+                        persistExtrasIfDirty()
+                    } label: {
+                        Text("Save")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 10).padding(.vertical, 4)
+                            .background(Color.spGold)
+                            .foregroundStyle(Color.spBlack)
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Address").font(.caption2).foregroundStyle(Color.spTextSecondary)
+                TextField("123 Main St, City, ST 12345",
+                          text: $address, axis: .vertical)
+                    .lineLimit(1...3)
+                    .padding(10)
+                    .background(Color.spCardBgLight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .foregroundStyle(Color.spTextPrimary)
+                    .onChange(of: address) { _, _ in extrasDirty = true }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Notes").font(.caption2).foregroundStyle(Color.spTextSecondary)
+                TextField("Detention policy, billing rules, etc.",
+                          text: $notes, axis: .vertical)
+                    .lineLimit(2...6)
+                    .padding(10)
+                    .background(Color.spCardBgLight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .foregroundStyle(Color.spTextPrimary)
+                    .onChange(of: notes) { _, _ in extrasDirty = true }
+            }
+        }
+        .padding()
+        .background(Color.spCardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func loadExtras() {
+        guard let id = broker.id,
+              let extras = LocalBrokerStore.extras(forBrokerId: id) else { return }
+        address = extras.mailingAddress ?? ""
+        notes   = extras.notes ?? ""
+        extrasDirty = false
+    }
+
+    private func persistExtrasIfDirty() {
+        guard extrasDirty, let id = broker.id else { return }
+        LocalBrokerStore.save(.init(
+            brokerId: id,
+            mailingAddress: address.trimmingCharacters(in: .whitespaces).isEmpty ? nil : address,
+            notes: notes.trimmingCharacters(in: .whitespaces).isEmpty ? nil : notes
+        ))
+        extrasDirty = false
     }
 
     private var brokerHeaderCard: some View {

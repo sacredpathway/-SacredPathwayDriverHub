@@ -1,0 +1,114 @@
+{
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Config.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Config.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Config.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Config.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Config.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Config.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/ContentView.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/ContentView.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/ContentView.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Driver.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Driver.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Driver.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Driver.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Driver.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Driver.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Expense.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Expense.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Expense.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Expense.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Expense.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Expense.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Load.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Load.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Load.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Load.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Load.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Load.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Profile.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Profile.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Profile.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Profile.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Profile.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Profile.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Settlement.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Settlement.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Settlement.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Settlement.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Settlement.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/Settlement.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/TruckDocument.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/TruckDocument.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/TruckDocument.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/TruckDocument.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/TruckDocument.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/TruckDocument.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/SacredPathwayApp.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SettlementEngine.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SettlementEngine.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SettlementEngine.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SettlementEngine.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SettlementEngine.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SettlementEngine.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SupabaseService.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SupabaseService.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SupabaseService.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SupabaseService.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SupabaseService.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/SupabaseService.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Utilities/BrandColors.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/BrandColors.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/BrandColors.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/BrandColors.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/BrandColors.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/BrandColors.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Utilities/CurrencyExtensions.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/LoginView.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/LoginView.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/LoginView.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/LoginView.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/LoginView.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/LoginView.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/OnboardingView.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/OnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/OnboardingView.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/OnboardingView.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/OnboardingView.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/OnboardingView.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Dashboard/DashboardView.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/DashboardView.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/DashboardView.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/DashboardView.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/DashboardView.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/SacredPathway.build/Debug-iphonesimulator/SacredPathway.build/Objects-normal/arm64/DashboardView.swiftdeps"
+  }
+}

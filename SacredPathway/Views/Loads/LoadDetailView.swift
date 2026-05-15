@@ -2,8 +2,15 @@ import SwiftUI
 
 struct LoadDetailView: View {
     @EnvironmentObject var supabase: SupabaseService
+    @Environment(\.dismiss) private var dismiss
     let load: Load
     @State private var expenses: [Expense] = []
+
+    // Edit / delete state
+    @State private var showingEditSheet = false
+    @State private var showingDeleteConfirm = false
+    @State private var deleteError: String?
+    @State private var isDeleting = false
 
     var totalExpenses: Double { expenses.reduce(0) { $0 + $1.amount } }
     var profit: Double { (load.totalRevenue ?? 0) - totalExpenses }
@@ -148,12 +155,70 @@ struct LoadDetailView: View {
             }
             .navigationTitle("Load #\(load.loadNumber ?? "—")")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showingEditSheet = true
+                        } label: {
+                            Label("Edit Load", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            showingDeleteConfirm = true
+                        } label: {
+                            Label("Delete Load", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(Color.spGold)
+                    }
+                    .disabled(isDeleting)
+                }
+            }
+            .sheet(isPresented: $showingEditSheet) {
+                ManualLoadEntryView(existingLoad: load)
+                    .environmentObject(supabase)
+            }
+            .confirmationDialog(
+                "Delete this load?",
+                isPresented: $showingDeleteConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Delete Load", role: .destructive) {
+                    performDelete()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will permanently remove Load \(load.loadNumber ?? "—") and any expenses or documents attached to it. This cannot be undone.")
+            }
+            .alert("Couldn't delete load",
+                   isPresented: Binding(
+                       get: { deleteError != nil },
+                       set: { if !$0 { deleteError = nil } }
+                   )) {
+                Button("OK") { deleteError = nil }
+            } message: {
+                Text(deleteError ?? "")
+            }
             .task {
                 if let loadId = load.id {
                     do { expenses = try await supabase.fetchExpenses(forLoad: loadId) }
                     catch { print("Error loading expenses: \(error)") }
                 }
+            }
+        }
+    }
+
+    private func performDelete() {
+        guard let loadId = load.id else { return }
+        isDeleting = true
+        Task {
+            do {
+                try await supabase.deleteLoad(id: loadId)
+                dismiss()
+            } catch {
+                deleteError = "Delete failed: \(error.localizedDescription)"
+                isDeleting = false
             }
         }
     }

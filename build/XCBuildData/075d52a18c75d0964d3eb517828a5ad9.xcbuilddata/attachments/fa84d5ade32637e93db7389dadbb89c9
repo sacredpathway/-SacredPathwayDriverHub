@@ -1,0 +1,386 @@
+{
+  "" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary.dia",
+    "emit-module-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary-emit-module.dia",
+    "pch" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathway-primary.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Config.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Config.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Config.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Config.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/ContentView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ContentView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Broker.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Broker.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Broker.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Broker.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/BrokerContact.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerContact.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerContact.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerContact.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/ComplianceDocument.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceDocument.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceDocument.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceDocument.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/DailyInspection.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspection.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspection.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspection.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Driver.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Driver.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Driver.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Driver.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Expense.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Expense.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Expense.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Expense.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/IFTAEntry.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAEntry.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAEntry.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAEntry.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/IFTAJurisdiction.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAJurisdiction.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAJurisdiction.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAJurisdiction.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Load.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Load.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Load.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Load.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Profile.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Profile.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Profile.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Profile.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/Settlement.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Settlement.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Settlement.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/Settlement.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Models/TruckDocument.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/TruckDocument.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/TruckDocument.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/TruckDocument.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/SacredPathwayApp.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SacredPathwayApp.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/BrandingService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandingService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandingService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandingService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/BrokerIntelligenceService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerIntelligenceService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerIntelligenceService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerIntelligenceService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/CustomFeeService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/CustomFeeService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/CustomFeeService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/CustomFeeService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/DemoMode.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DemoMode.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DemoMode.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DemoMode.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/DocumentExtractionService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentExtractionService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentExtractionService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentExtractionService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/DocumentScannerCoordinator.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentScannerCoordinator.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentScannerCoordinator.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentScannerCoordinator.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/DraftStorageService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DraftStorageService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DraftStorageService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DraftStorageService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/IFTACalculator.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTACalculator.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTACalculator.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTACalculator.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/IFTAPDFService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAPDFService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAPDFService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAPDFService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/InsightsService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/InsightsService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/InsightsService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/InsightsService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaystubPDFService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaystubPDFService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaystubPDFService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PinLockService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinLockService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinLockService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinLockService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SettlementEngine.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettlementEngine.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettlementEngine.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettlementEngine.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SubscriptionService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SubscriptionService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SubscriptionService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SubscriptionService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SupabaseService.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SupabaseService.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SupabaseService.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SupabaseService.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Utilities/BrandColors.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandColors.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandColors.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandColors.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Utilities/CurrencyExtensions.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/CurrencyExtensions.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/DeleteAccountView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DeleteAccountView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DeleteAccountView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DeleteAccountView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/LoginView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoginView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoginView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoginView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/OnboardingView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/OnboardingView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/OnboardingView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/OnboardingView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/PinLockView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinLockView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinLockView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinLockView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Brokers/BrokerDetailView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerDetailView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerDetailView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokerDetailView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Brokers/BrokersListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokersListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokersListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrokersListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Brokers/ContactDetailView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ContactDetailView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ContactDetailView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ContactDetailView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/AddComplianceDocumentView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddComplianceDocumentView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddComplianceDocumentView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddComplianceDocumentView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/AddDailyInspectionView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddDailyInspectionView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddDailyInspectionView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddDailyInspectionView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/ComplianceDocumentDetailView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceDocumentDetailView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceDocumentDetailView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceDocumentDetailView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/ComplianceHubView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceHubView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceHubView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceHubView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/ComplianceListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ComplianceListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/DailyInspectionDetailView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspectionDetailView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspectionDetailView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspectionDetailView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/DailyInspectionListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspectionListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspectionListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DailyInspectionListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/MissingDocumentsChecklistView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/MissingDocumentsChecklistView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/MissingDocumentsChecklistView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/MissingDocumentsChecklistView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/RoadsideQuickView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/RoadsideQuickView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/RoadsideQuickView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/RoadsideQuickView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Dashboard/DashboardView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DashboardView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DashboardView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DashboardView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Documents/DocumentVaultView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentVaultView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentVaultView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentVaultView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Drivers/DriversListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DriversListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DriversListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DriversListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Expenses/AddEditExpenseView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddEditExpenseView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddEditExpenseView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddEditExpenseView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Expenses/ExpensesListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ExpensesListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ExpensesListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ExpensesListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/IFTA/AddIFTAEntryView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddIFTAEntryView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddIFTAEntryView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/AddIFTAEntryView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/IFTA/IFTAHubView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAHubView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAHubView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAHubView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/IFTA/IFTAReportView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAReportView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAReportView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/IFTAReportView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Insights/SmartInsightsView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SmartInsightsView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SmartInsightsView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SmartInsightsView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Loads/LoadDetailView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoadDetailView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoadDetailView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoadDetailView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Loads/LoadsListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoadsListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoadsListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/LoadsListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/More/MoreTabView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/MoreTabView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/MoreTabView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/MoreTabView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Scanner/DocumentReviewView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentReviewView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentReviewView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/DocumentReviewView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Scanner/ManualLoadEntryView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ManualLoadEntryView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ManualLoadEntryView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ManualLoadEntryView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Scanner/ScanUploadView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ScanUploadView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ScanUploadView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ScanUploadView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/BrandingSettingsView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandingSettingsView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandingSettingsView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/BrandingSettingsView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/EditCompanyView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/EditCompanyView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/EditCompanyView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/EditCompanyView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/FeeSettingsView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/FeeSettingsView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/FeeSettingsView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/FeeSettingsView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/PinSettingsView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinSettingsView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinSettingsView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PinSettingsView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/SettingsView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettingsView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settlements/ManualPaystubView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ManualPaystubView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ManualPaystubView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/ManualPaystubView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settlements/PaystubDraftsListView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaystubDraftsListView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaystubDraftsListView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaystubDraftsListView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settlements/SettlementGeneratorView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettlementGeneratorView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettlementGeneratorView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SettlementGeneratorView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Subscription/FeatureLockedView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/FeatureLockedView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/FeatureLockedView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/FeatureLockedView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Subscription/PaywallView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaywallView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaywallView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/PaywallView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Subscription/SubscriptionSettingsView.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SubscriptionSettingsView.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SubscriptionSettingsView.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/SubscriptionSettingsView.o"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SacredPathway.build/Release-iphoneos/SacredPathway.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

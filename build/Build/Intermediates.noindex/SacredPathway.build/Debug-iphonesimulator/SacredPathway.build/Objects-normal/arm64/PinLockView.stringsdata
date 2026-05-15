@@ -1,0 +1,24 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Auth/PinLockView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Enter PIN",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "Unlock with Face ID",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 49
+        }
+      }
+    ]
+  },
+  "version": 1
+}

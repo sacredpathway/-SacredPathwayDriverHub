@@ -82,7 +82,6 @@ struct ContactDetailView: View {
         }
         .navigationTitle("Contact")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
     private func infoRow(_ label: String, value: String, icon: String, color: Color) -> some View {

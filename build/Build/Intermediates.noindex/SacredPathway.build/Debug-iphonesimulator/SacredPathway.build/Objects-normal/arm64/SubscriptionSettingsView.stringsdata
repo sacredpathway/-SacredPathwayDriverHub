@@ -1,0 +1,56 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Subscription/SubscriptionSettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Subscription",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Upgrade to Carrier",
+        "location": {
+          "startingColumn": 63,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "View Plans",
+        "location": {
+          "startingColumn": 86,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restore Purchases",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "CURRENT PLAN",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage subscription in App Store",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 117
+        }
+      }
+    ]
+  },
+  "version": 1
+}

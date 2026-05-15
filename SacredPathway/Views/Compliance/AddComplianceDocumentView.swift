@@ -40,7 +40,6 @@ struct AddComplianceDocumentView: View {
             }
             .navigationTitle("Add Document")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }

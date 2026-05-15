@@ -1,20 +1,46 @@
 import SwiftUI
 
-/// Shows the AI-extracted data for user review before saving as a Load or Expense.
-/// Users can edit any field before confirming.
+/// Shows the AI-extracted data for user review before saving as a Load
+/// or Expense. The actual extraction happens server-side — this view
+/// orchestrates the upload → enqueue → wait → display loop.
+///
+/// Pipeline:
+///   1. `.task` → uploadOriginalFile → createDocument(status=pending)
+///   2. callExtractionFunction (with 3-attempt retry/back-off in
+///      DocumentExtractionService)
+///   3. populateFields(from: result.structured) → user edits
+///   4. saveDocument → patches `documents` row with edited fields,
+///      creates the Load/Expense, links broker (CRM)
+///
+/// Fallbacks:
+///   - "Try Again" rerun of the Edge Function (with `retry_count` bumped)
+///   - "Enter Manually" jumps the user past extraction; row marked
+///     `status = manual`, `is_manual = true`, `provider = 'manual'`
 struct DocumentReviewView: View {
     @EnvironmentObject var supabase: SupabaseService
     @Environment(\.dismiss) var dismiss
 
     let scannedImage: UIImage
+    var originalFileData: Data? = nil
+    var originalFileMime: String? = nil
+
+    // MARK: - State
+
     @State private var extractedData: ExtractedData?
+    @State private var rawExtractionText = ""
+    @State private var documentRow: TruckDocument?
     @State private var isProcessing = true
     @State private var errorMessage: String?
+    @State private var errorDetails: String?
+    @State private var errorCode: String?
+    @State private var showErrorDetails = false
     @State private var isSaving = false
     @State private var showSavedAlert = false
     @State private var brokerLinkResult: BrokerLinkResult?
+    @State private var retryCount = 0
+    @State private var showRawTextFallback = false
 
-    // Editable fields — populated from AI extraction
+    // Editable fields
     @State private var documentType = ""
     @State private var brokerName = ""
     @State private var loadNumber = ""
@@ -37,6 +63,8 @@ struct DocumentReviewView: View {
         ["fuel_receipt", "lumper_fee", "toll", "repair"].contains(documentType)
     }
 
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -52,7 +80,6 @@ struct DocumentReviewView: View {
             }
             .navigationTitle("Review Document")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(Color.spBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
@@ -78,16 +105,13 @@ struct DocumentReviewView: View {
                 }
             }
         }
-        .task {
-            await processImage()
-        }
+        .task { await initialProcess() }
     }
 
     // MARK: - Processing View
 
     private var processingView: some View {
         VStack(spacing: 24) {
-            // Show the scanned image as thumbnail
             Image(uiImage: scannedImage)
                 .resizable()
                 .scaledToFit()
@@ -100,13 +124,14 @@ struct DocumentReviewView: View {
                     .scaleEffect(1.5)
                     .tint(Color.spGold)
 
-                Text("Claude AI is reading your document...")
+                Text("AI is reading your document…")
                     .font(.headline)
                     .foregroundStyle(Color.spTextPrimary)
 
-                Text("Extracting rates, dates, locations, and amounts")
+                Text("Uploading and extracting rates, dates, locations, and amounts")
                     .font(.caption)
                     .foregroundStyle(Color.spTextSecondary)
+                    .multilineTextAlignment(.center)
             }
         }
         .padding()
@@ -130,8 +155,41 @@ struct DocumentReviewView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
+            // Collapsible technical details — never shown unless present.
+            if let details = errorDetails, !details.isEmpty {
+                VStack(spacing: 6) {
+                    Button(action: { showErrorDetails.toggle() }) {
+                        HStack(spacing: 4) {
+                            Text(showErrorDetails ? "Hide details" : "Show details")
+                            Image(systemName: showErrorDetails ? "chevron.up" : "chevron.down")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(Color.spGoldLight)
+                    }
+                    if showErrorDetails {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let code = errorCode {
+                                Text("Code: \(code)")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(Color.spTextSecondary)
+                            }
+                            Text(details)
+                                .font(.caption2)
+                                .foregroundStyle(Color.spTextSecondary)
+                                .multilineTextAlignment(.leading)
+                                .textSelection(.enabled)
+                        }
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.spCardBg)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .padding(.horizontal, 32)
+                    }
+                }
+            }
+
             VStack(spacing: 12) {
-                Button(action: { Task { await processImage() } }) {
+                Button(action: { Task { await retryExtraction() } }) {
                     Label("Try Again", systemImage: "arrow.clockwise")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
@@ -141,14 +199,11 @@ struct DocumentReviewView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
-                Button("Enter Manually") {
-                    // Switch to manual mode with empty fields
-                    documentType = "rate_confirmation"
-                    errorMessage = nil
-                    isProcessing = false
+                Button(action: { Task { await fallBackToManual() } }) {
+                    Label("Enter Manually", systemImage: "square.and.pencil")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.spGoldLight)
                 }
-                .font(.subheadline)
-                .foregroundStyle(Color.spGoldLight)
             }
             .padding(.horizontal, 32)
         }
@@ -156,10 +211,39 @@ struct DocumentReviewView: View {
 
     // MARK: - Review Form
 
+    /// Shown above the form when the backend hit the salvage path — user
+    /// gets the raw OCR text so they can copy the missing fields into the
+    /// form below instead of being told the scan "failed."
+    private var rawTextBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "text.magnifyingglass")
+                Text("We couldn't auto-fill the fields — here's the raw text we extracted. Copy anything useful into the form below.")
+                    .font(.caption)
+            }
+            .foregroundStyle(Color.spWarning)
+
+            ScrollView {
+                Text(rawExtractionText.isEmpty ? "(no text)" : rawExtractionText)
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(Color.spTextPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+            .frame(maxHeight: 160)
+            .padding(10)
+            .background(Color.spCardBg)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .padding(.horizontal)
+    }
+
     private var reviewForm: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Document image thumbnail
+                if showRawTextFallback {
+                    rawTextBanner
+                }
                 Image(uiImage: scannedImage)
                     .resizable()
                     .scaledToFit()
@@ -167,7 +251,6 @@ struct DocumentReviewView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .padding(.horizontal)
 
-                // Confidence badge
                 if !confidence.isEmpty {
                     HStack {
                         Image(systemName: confidenceIcon)
@@ -181,7 +264,6 @@ struct DocumentReviewView: View {
                     .clipShape(Capsule())
                 }
 
-                // Document type picker
                 docTypeSection
 
                 if isExpenseType {
@@ -190,7 +272,6 @@ struct DocumentReviewView: View {
                     loadFields
                 }
 
-                // Save button
                 Button(action: saveDocument) {
                     if isSaving {
                         ProgressView()
@@ -261,10 +342,8 @@ struct DocumentReviewView: View {
             fieldRow("Accessorials", text: $accessorialCharges, keyboard: .decimalPad, prefix: "$")
             fieldRow("Total Revenue", text: $totalRevenue, keyboard: .decimalPad, prefix: "$")
 
-            if !notes.isEmpty {
-                sectionHeader("Notes")
-                fieldRow("Notes", text: $notes)
-            }
+            sectionHeader("Notes")
+            fieldRow("Notes", text: $notes)
         }
     }
 
@@ -281,10 +360,8 @@ struct DocumentReviewView: View {
                 fieldRow("$/Gallon", text: $pricePerGallon, keyboard: .decimalPad, prefix: "$")
             }
 
-            if !notes.isEmpty {
-                sectionHeader("Notes")
-                fieldRow("Notes", text: $notes)
-            }
+            sectionHeader("Notes")
+            fieldRow("Notes", text: $notes)
         }
     }
 
@@ -340,22 +417,252 @@ struct DocumentReviewView: View {
         }
     }
 
-    // MARK: - Actions
+    // MARK: - Pipeline (upload → row → backend extract → patch row)
 
-    private func processImage() async {
+    private func initialProcess() async {
         isProcessing = true
         errorMessage = nil
+        errorDetails = nil
+        errorCode = nil
+
+        guard let profileId = supabase.client.auth.currentUser?.id else {
+            errorMessage = "Your session expired. Sign out and sign back in."
+            errorCode = "AUTH_EXPIRED"
+            errorDetails = "client: no currentUser.id"
+            isProcessing = false
+            return
+        }
+
+        #if DEBUG
+        print("[DocumentReview] initialProcess start profileId=\(profileId)")
+        #endif
 
         do {
-            let data = try await ClaudeAIService.shared.extractData(from: scannedImage)
-            populateFields(from: data)
-            extractedData = data
-            isProcessing = false
+            // 1) Upload original file (JPEG re-encode; PDFs are pre-rendered upstream)
+            let upload = try await uploadOriginalFile(profileId: profileId)
+            #if DEBUG
+            print("[DocumentReview] upload ok path=\(upload.path) size=\(upload.size) mime=\(upload.mime)")
+            #endif
+
+            // 2) Insert pending documents row
+            let pending = TruckDocument(
+                id: nil,
+                profileId: profileId,
+                loadId: nil,
+                documentType: nil,
+                storagePath: upload.path,
+                extractedData: nil,
+                rawText: nil,
+                confidence: nil,
+                status: DocumentStatus.pending.rawValue,
+                errorMessage: nil,
+                isManual: false,
+                provider: "openai",
+                model: nil,
+                fileMimeType: upload.mime,
+                fileSize: upload.size,
+                retryCount: 0,
+                processed: false,
+                createdAt: nil,
+                updatedAt: nil
+            )
+            documentRow = try await supabase.createDocument(pending)
+            #if DEBUG
+            print("[DocumentReview] row created id=\(documentRow?.id?.uuidString ?? "nil")")
+            #endif
+
+            // 3) Trigger backend extraction
+            await runExtraction()
         } catch {
-            errorMessage = error.localizedDescription
+            // The upload / createDocument path uses raw Supabase/Storage SDK
+            // errors. Never surface their text to the user — map to a friendly
+            // message and keep the underlying cause under "Show details".
+            #if DEBUG
+            print("[DocumentReview] initialProcess error: \(error)")
+            #endif
+            errorMessage = "Something went wrong while uploading. Tap Try Again, or enter it manually."
+            errorCode = "UPLOAD_FAILED"
+            errorDetails = clipDetail("upload: \(error.localizedDescription)")
             isProcessing = false
         }
     }
+
+    private func runExtraction() async {
+        guard let docId = documentRow?.id else {
+            errorMessage = "Something went wrong while scanning. Tap Try Again, or enter it manually."
+            errorCode = "INTERNAL"
+            errorDetails = "client: missing document row id"
+            isProcessing = false
+            return
+        }
+        isProcessing = true
+        errorMessage = nil
+        errorDetails = nil
+        errorCode = nil
+
+        #if DEBUG
+        print("[DocumentReview] runExtraction start docId=\(docId)")
+        #endif
+
+        do {
+            let result = try await DocumentExtractionService.extract(
+                documentId: docId,
+                supabase: supabase
+            )
+            populateFields(from: result.structured)
+            extractedData = result.structured
+            rawExtractionText = result.rawText
+            confidence = result.confidence
+            if result.needsManualReview {
+                // Not an error — the backend salvaged partial data. Show the
+                // review form with whatever we got AND the raw OCR text, so
+                // the user can copy missing fields by hand instead of being
+                // told the scan failed.
+                showRawTextFallback = true
+                #if DEBUG
+                print("[DocumentReview] extraction needs manual review (parse_stage=\(result.parseStage ?? "nil")) rawTextLen=\(result.rawText.count)")
+                #endif
+            } else {
+                showRawTextFallback = false
+                #if DEBUG
+                print("[DocumentReview] extraction ok model=\(result.model) confidence=\(result.confidence)")
+                #endif
+            }
+            isProcessing = false
+        } catch let extractionError as ExtractionError {
+            // All five ExtractionError cases have fixed user-facing copy;
+            // technical detail goes under the "Show details" disclosure.
+            #if DEBUG
+            print("[DocumentReview] extraction error code=\(extractionError.code) details=\(extractionError.technicalDetails ?? "nil")")
+            #endif
+            errorMessage = extractionError.localizedDescription
+            errorCode = extractionError.code
+            errorDetails = extractionError.technicalDetails
+            isProcessing = false
+        } catch {
+            #if DEBUG
+            print("[DocumentReview] extraction unknown error: \(error)")
+            #endif
+            errorMessage = "Something went wrong while scanning. Tap Try Again, or enter it manually."
+            errorCode = "UNKNOWN_SCAN_ERROR"
+            errorDetails = clipDetail("client: \(error.localizedDescription)")
+            isProcessing = false
+        }
+    }
+
+    /// Try Again restarts the whole pipeline when we don't yet have a
+    /// documents row (upload failed) and just re-runs extraction when we
+    /// do. Either way, clears stale error state first so the user sees
+    /// fresh progress.
+    private func retryExtraction() async {
+        retryCount += 1
+        errorMessage = nil
+        errorDetails = nil
+        errorCode = nil
+        showErrorDetails = false
+        if documentRow?.id == nil {
+            await initialProcess()
+        } else {
+            await runExtraction()
+        }
+    }
+
+    private func clipDetail(_ s: String, max: Int = 200) -> String {
+        guard s.count > max else { return s }
+        let idx = s.index(s.startIndex, offsetBy: max)
+        return String(s[..<idx])
+    }
+
+    /// User-initiated escape hatch — give them an empty form to fill in
+    /// manually. Marks the document row as `manual` so analytics can
+    /// distinguish AI-extracted vs. hand-keyed entries.
+    private func fallBackToManual() async {
+        documentType = "rate_confirmation"
+        confidence = ""
+        errorMessage = nil
+        isProcessing = false
+
+        if let id = documentRow?.id {
+            try? await supabase.patchDocument(id: id, fields: [
+                "status": AnyEncodable(DocumentStatus.manual.rawValue),
+                "is_manual": AnyEncodable(true),
+                "provider": AnyEncodable("manual")
+            ])
+        }
+    }
+
+    // MARK: - Upload helpers
+
+    private struct UploadedFile {
+        let path: String
+        let mime: String
+        let size: Int
+    }
+
+    /// Upload the canonical document image to Storage.
+    ///
+    /// We deliberately upload a JPEG render of `scannedImage` — never the
+    /// raw PDF bytes — because OpenAI's Chat Completions vision endpoint
+    /// only accepts image MIME types. The on-screen `scannedImage` is
+    /// already the first-page render of any PDF the user picked, so the
+    /// JPEG here is exactly what the AI will see.
+    ///
+    /// (If we ever want to preserve the raw PDF too, do it as a sibling
+    ///  upload at `<path>.original.pdf` and add a column for the path.)
+    private func uploadOriginalFile(profileId: UUID) async throws -> UploadedFile {
+        // Re-encode at a quality that fits OpenAI's 20 MB ceiling. High-res
+        // iPhone scans can push ~8 MB at q=0.85 — safe. Bump down only if
+        // the first encode is over cap.
+        var quality: CGFloat = 0.85
+        guard var jpeg = scannedImage.jpegData(compressionQuality: quality) else {
+            throw NSError(domain: "ScanUpload", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "Failed to encode the scanned image."
+            ])
+        }
+
+        // Retry once at lower quality if absurdly large.
+        let maxBytes = 20 * 1024 * 1024
+        if jpeg.count > maxBytes {
+            quality = 0.6
+            if let smaller = scannedImage.jpegData(compressionQuality: quality),
+               smaller.count <= maxBytes {
+                jpeg = smaller
+            }
+        }
+
+        // Validate before we spend a network round trip.
+        guard jpeg.count >= 1024 else {
+            throw NSError(domain: "ScanUpload", code: 2, userInfo: [
+                NSLocalizedDescriptionKey: "The scanned image is too small or empty. Rescan and try again."
+            ])
+        }
+        guard jpeg.count <= maxBytes else {
+            throw NSError(domain: "ScanUpload", code: 3, userInfo: [
+                NSLocalizedDescriptionKey: "The scanned image is too large. Try rescanning at a lower resolution."
+            ])
+        }
+
+        let mime = "image/jpeg"
+        // Storage RLS compares the first folder to `auth.uid()::text`, which is
+        // lowercase in Postgres. Swift's UUID.uuidString is UPPERCASE by default,
+        // so we must lowercase BOTH segments or RLS rejects the insert with
+        // "new row violates row-level security policy".
+        let path = "\(profileId.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
+
+        #if DEBUG
+        print("[DocumentReview] uploading bytes=\(jpeg.count) quality=\(quality) path=\(path)")
+        #endif
+
+        try await supabase.uploadDocument(data: jpeg, path: path, contentType: mime)
+        // `originalFileData`/`originalFileMime` are accepted from the picker
+        // but intentionally unused right now — we always upload a JPEG so
+        // OpenAI's vision endpoint accepts it.
+        _ = originalFileData
+        _ = originalFileMime
+        return UploadedFile(path: path, mime: mime, size: jpeg.count)
+    }
+
+    // MARK: - Field plumbing
 
     private func populateFields(from data: ExtractedData) {
         documentType = data.documentType ?? "rate_confirmation"
@@ -377,14 +684,46 @@ struct DocumentReviewView: View {
         confidence = data.confidence ?? "medium"
     }
 
+    /// Build the edited ExtractedData payload from current text fields.
+    /// This is what we persist back to the documents row on Save so the
+    /// audit trail reflects what the user approved (not just what the
+    /// AI initially produced).
+    private func currentEditedData() -> ExtractedData {
+        ExtractedData(
+            documentType: documentType.isEmpty ? nil : documentType,
+            brokerName: brokerName.isEmpty ? nil : brokerName,
+            brokerMcNumber: nil,
+            loadNumber: loadNumber.isEmpty ? nil : loadNumber,
+            pickupDate: extractedData?.pickupDate,
+            deliveryDate: extractedData?.deliveryDate,
+            origin: origin.isEmpty ? nil : origin,
+            destination: destination.isEmpty ? nil : destination,
+            totalMiles: Double(totalMiles),
+            lineHaulRate: Double(lineHaulRate),
+            fuelSurcharge: Double(fuelSurcharge),
+            accessorialCharges: Double(accessorialCharges),
+            totalRevenue: Double(totalRevenue),
+            expenseAmount: Double(expenseAmount),
+            expenseCategory: expenseCategory.isEmpty ? nil : expenseCategory,
+            vendorName: vendorName.isEmpty ? nil : vendorName,
+            gallons: Double(gallons),
+            pricePerGallon: Double(pricePerGallon),
+            notes: notes.isEmpty ? nil : notes,
+            confidence: confidence.isEmpty ? "medium" : confidence
+        )
+    }
+
+    // MARK: - Save
+
     private func saveDocument() {
         guard let profileId = supabase.client.auth.currentUser?.id else { return }
         isSaving = true
 
         Task {
             do {
+                var createdLoadId: UUID? = nil
+
                 if isExpenseType {
-                    // Save as Expense
                     let expense = Expense(
                         profileId: profileId,
                         category: expenseCategory.isEmpty ? documentType : expenseCategory,
@@ -396,7 +735,6 @@ struct DocumentReviewView: View {
                     )
                     _ = try await supabase.createExpense(expense)
                 } else {
-                    // Save as Load
                     let load = Load(
                         profileId: profileId,
                         loadNumber: loadNumber.isEmpty ? nil : loadNumber,
@@ -410,22 +748,32 @@ struct DocumentReviewView: View {
                         totalRevenue: Double(totalRevenue),
                         status: "pending"
                     )
-                    _ = try await supabase.createLoad(load)
+                    let createdLoad = try await supabase.createLoad(load)
+                    createdLoadId = createdLoad.id
 
-                    // Auto-detect and link broker + contact (AI CRM)
-                    if let data = extractedData {
-                        brokerLinkResult = try? await BrokerIntelligenceService.shared.processExtractedData(
-                            data,
-                            loadRevenue: Double(totalRevenue),
-                            supabase: supabase
-                        )
-                    }
+                    let dataForCRM = extractedData ?? currentEditedData()
+                    brokerLinkResult = try? await BrokerIntelligenceService.shared.processExtractedData(
+                        dataForCRM,
+                        loadRevenue: Double(totalRevenue),
+                        supabase: supabase
+                    )
                 }
 
-                // Upload the scanned image
-                if let imageData = scannedImage.jpegData(compressionQuality: 0.6) {
-                    let path = "\(profileId)/\(UUID().uuidString).jpg"
-                    _ = try? await supabase.uploadDocument(data: imageData, path: path)
+                // Persist user edits + link to created load
+                if let id = documentRow?.id {
+                    var fields: [String: AnyEncodable] = [
+                        "extracted_data": AnyEncodable(currentEditedData()),
+                        "document_type": AnyEncodable(documentType),
+                        "confidence": AnyEncodable(confidence.isEmpty ? "medium" : confidence),
+                        "status": AnyEncodable(documentRow?.isManual == true
+                                               ? DocumentStatus.manual.rawValue
+                                               : DocumentStatus.processed.rawValue),
+                        "processed": AnyEncodable(true)
+                    ]
+                    if let loadId = createdLoadId {
+                        fields["load_id"] = AnyEncodable(loadId)
+                    }
+                    try? await supabase.patchDocument(id: id, fields: fields)
                 }
 
                 showSavedAlert = true

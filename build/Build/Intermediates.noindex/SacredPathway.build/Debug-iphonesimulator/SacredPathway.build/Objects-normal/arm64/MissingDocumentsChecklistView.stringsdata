@@ -1,0 +1,24 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/MissingDocumentsChecklistView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Missing Documents",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "Added",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 100
+        }
+      }
+    ]
+  },
+  "version": 1
+}

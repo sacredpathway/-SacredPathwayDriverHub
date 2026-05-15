@@ -1,0 +1,414 @@
+//
+//  SettlementHTMLPDFService.swift
+//  Sacred Pathway Driver Hub
+//
+//  Renders the canonical SPH settlement PDF using sph_template.html via
+//  WKWebView → createPDF(). Output is byte-identical in design to the
+//  WeasyPrint reference: SF Pro / Inter typography, route pills, navy NET PAY
+//  callout, gold accents, true vector PDF (text rendered as PDF text ops, not
+//  rasterized).
+//
+//  Replaces the previous TPPDF-based PaystubPDFService for settlement PDFs.
+//
+
+import UIKit
+import WebKit
+import CoreImage.CIFilterBuiltins
+
+@MainActor
+final class SettlementHTMLPDFService {
+
+    // Same parameter shape as PaystubPDFService.generatePaystub for drop-in replacement
+    static func generate(
+        calculation: SettlementCalculation,
+        loads: [Load],
+        expenses: [Expense],
+        companyName: String,
+        driverName: String,
+        periodStart: Date,
+        periodEnd: Date,
+        logo: UIImage? = nil,
+        primaryColor: UIColor? = nil,        // unused — design dictates colors
+        truckNumber: String? = nil,
+        dispatcherName: String? = nil,
+        mcNumber: String? = nil,
+        dotNumber: String? = nil,
+        notes: [String] = [],
+        theme: PaystubTheme = .defaultTheme,
+        statementId: String? = nil,
+        status: PaystubStatus? = nil,
+        paymentMethod: String? = nil,
+        ytd: YTDSummary? = nil,
+        adjustments: [PaystubAdjustment] = [],
+        escrowBalance: Double? = nil,
+        showSignatureLines: Bool = true,
+        // Optional driver contact info (passed if the caller has it)
+        driverAddress: String? = nil,
+        driverEmail: String? = nil,
+        driverPhone: String? = nil,
+        paymentAccountSuffix: String? = nil
+    ) async throws -> Data {
+
+        let html = try buildHTML(
+            calculation: calculation,
+            loads: loads,
+            expenses: expenses,
+            companyName: companyName,
+            driverName: driverName,
+            periodStart: periodStart,
+            periodEnd: periodEnd,
+            logo: logo,
+            mcNumber: mcNumber,
+            dotNumber: dotNumber,
+            statementId: statementId,
+            status: status,
+            paymentMethod: paymentMethod,
+            driverAddress: driverAddress,
+            driverEmail: driverEmail,
+            driverPhone: driverPhone,
+            paymentAccountSuffix: paymentAccountSuffix
+        )
+        return try await Renderer.render(html: html)
+    }
+
+    // MARK: - HTML construction
+
+    private static func buildHTML(
+        calculation: SettlementCalculation,
+        loads: [Load],
+        expenses: [Expense],
+        companyName: String,
+        driverName: String,
+        periodStart: Date,
+        periodEnd: Date,
+        logo: UIImage?,
+        mcNumber: String?,
+        dotNumber: String?,
+        statementId: String?,
+        status: PaystubStatus?,
+        paymentMethod: String?,
+        driverAddress: String?,
+        driverEmail: String?,
+        driverPhone: String?,
+        paymentAccountSuffix: String?
+    ) throws -> String {
+
+        // Load template from bundle
+        guard
+            let url = Bundle.main.url(forResource: "sph_template", withExtension: "html"),
+            var template = try? String(contentsOf: url, encoding: .utf8)
+        else {
+            throw NSError(
+                domain: "SettlementHTMLPDFService", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Bundle resource sph_template.html not found"]
+            )
+        }
+
+        // Date formatting
+        let dfPayDate = DateFormatter(); dfPayDate.dateFormat = "MMM d, yyyy"
+        let dfStart   = DateFormatter(); dfStart.dateFormat   = "MMM d"
+        let dfEnd     = DateFormatter(); dfEnd.dateFormat     = "d, yyyy"
+        let dfStamp   = DateFormatter(); dfStamp.dateFormat   = "yyyyMMdd"
+
+        let payDate    = dfPayDate.string(from: periodEnd)
+        let payPeriod  = "\(dfStart.string(from: periodStart)) – \(dfEnd.string(from: periodEnd))"
+        let dateStamp  = dfStamp.string(from: periodEnd)
+
+        // Logo as base64 data URI
+        var logoHTML = ""
+        if let logo = logo,
+           let png = logo.pngData() {
+            let b64 = png.base64EncodedString()
+            logoHTML = "<img class=\"logo-img\" alt=\"\(escape(companyName))\" src=\"data:image/png;base64,\(b64)\">"
+        }
+
+        // Carrier MC# / DOT# meta
+        var metaParts: [String] = []
+        if let mc = mcNumber, !mc.isEmpty {
+            metaParts.append("<span class=\"kv-tag\">MC#</span> \(escape(mc))")
+        }
+        if let dot = dotNumber, !dot.isEmpty {
+            metaParts.append("<span class=\"kv-tag\">DOT#</span> \(escape(dot))")
+        }
+        let carrierMeta = metaParts.isEmpty
+            ? "&nbsp;"
+            : metaParts.joined(separator: "<span class=\"pipe\">|</span>")
+
+        // Payroll number — use statementId if provided, else build from dateStamp
+        let payroll = (statementId?.isEmpty == false)
+            ? statementId!
+            : "PY\(String(dateStamp.suffix(5)))"
+
+        // Status pill
+        let statusStr = (status?.label ?? "PAID").uppercased()
+
+        // Reference id
+        let initials = driverName.split(separator: " ")
+            .compactMap { $0.first.map { String($0) } }
+            .joined()
+            .uppercased()
+        let refId = "SPH-\(payroll)-\(initials)-\(dateStamp)"
+
+        // Loads table rows
+        let loadsRows = buildLoadsRows(loads: loads)
+
+        // Deductions rows
+        let displayedExpenseTotal = expenses
+            .map { $0.amount }
+            .reduce(0, +)
+        let totalDeductions = displayedExpenseTotal
+            + calculation.factoringFeeAmount
+            + calculation.dispatcherFeeAmount
+            + calculation.authorityFee
+            + calculation.maintenanceReserve
+        let deductionsRows = buildDeductionsRows(
+            expenses: expenses,
+            calculation: calculation
+        )
+
+        // QR
+        let verifyURL = "sacredpathway.app/v/\(payroll)"
+        let qrB64 = generateQRBase64(payload: refId)
+
+        let replacements: [String: String] = [
+            "{{LOGO_BLOCK}}":         logoHTML,
+            "{{carrier_name}}":       escape(companyName),
+            "{{carrier_meta_html}}":  carrierMeta,
+            "{{payroll_no}}":         escape(payroll),
+            "{{pay_date}}":           escape(payDate),
+            "{{pay_period}}":         escape(payPeriod),
+            "{{status}}":             escape(statusStr),
+            "{{driver_name}}":        escape(driverName),
+            "{{driver_address}}":     escape(driverAddress ?? "—"),
+            "{{driver_email}}":       escape(driverEmail ?? "—"),
+            "{{driver_phone}}":       escape(driverPhone ?? "—"),
+            "{{payment_method}}":     escape(paymentMethod ?? "Direct Deposit"),
+            "{{payment_account}}":    paymentAccountSuffix.map { "Account ending •••• \(escape($0))  •  ACH Transfer" } ?? "ACH Transfer",
+            "{{reference_id}}":       escape(refId),
+            "{{LOADS_ROWS}}":         loadsRows,
+            "{{gross_pay}}":          calculation.totalRevenue.asCurrency,
+            "{{DEDUCTION_ROWS}}":     deductionsRows,
+            "{{total_deductions}}":   totalDeductions.asCurrency,
+            "{{net_pay_no_dollar}}":  formatPlainAmount(calculation.carrierNetPay),
+            "{{verify_url_short}}":   escape(verifyURL),
+            "{{QR_B64}}":             qrB64
+        ]
+
+        for (k, v) in replacements {
+            template = template.replacingOccurrences(of: k, with: v)
+        }
+        return template
+    }
+
+    // MARK: - Row builders
+
+    private static func buildLoadsRows(loads: [Load]) -> String {
+        let f = DateFormatter(); f.dateFormat = "MM/dd/yy"
+        var html = ""
+        for load in loads {
+            let originLabel = stateOrCity(load.origin)
+            let destLabel   = stateOrCity(load.destination)
+            let date        = (load.deliveryDate ?? load.pickupDate).map { f.string(from: $0) } ?? ""
+            let revenue     = load.totalRevenue ?? 0
+            let amount      = revenue.asCurrency
+
+            html += """
+              <tr>
+                <td>
+                  <span class="route">
+                    <span class="from">\(escape(originLabel))</span>
+                    <span class="arrow"></span>
+                    <span class="to">\(escape(destLabel))</span>
+                    <span class="date">\(escape(date))</span>
+                  </span>
+                </td>
+                <td class="num">1</td>
+                <td class="num">\(amount)</td>
+                <td class="num">\(amount)</td>
+              </tr>
+            """
+        }
+        return html
+    }
+
+    private static func buildDeductionsRows(
+        expenses: [Expense],
+        calculation: SettlementCalculation
+    ) -> String {
+        let f = DateFormatter(); f.dateFormat = "MM/dd/yy"
+        var html = ""
+
+        for exp in expenses {
+            let label = (exp.description?.isEmpty == false)
+                ? exp.description!
+                : exp.category.capitalized
+            let dateStr = exp.receiptDate.map { f.string(from: $0) }
+            let sub = dateStr.map { " <span class=\"ded-sub\">\(escape($0))</span>" } ?? ""
+            html += """
+              <tr>
+                <td><span class="ded-label">\(escape(label))</span>\(sub)</td>
+                <td class="num">\(exp.amount.asCurrency)</td>
+              </tr>
+            """
+        }
+
+        if calculation.factoringFeeAmount > 0 {
+            html += deductionRow(label: "Factoring Fee", sub: "% of gross",
+                                 amount: calculation.factoringFeeAmount)
+        }
+        if calculation.dispatcherFeeAmount > 0 {
+            html += deductionRow(label: "Dispatcher Fee", sub: nil,
+                                 amount: calculation.dispatcherFeeAmount)
+        }
+        if calculation.authorityFee > 0 {
+            html += deductionRow(label: "Authority Lease", sub: "% of gross",
+                                 amount: calculation.authorityFee)
+        }
+        if calculation.maintenanceReserve > 0 {
+            html += deductionRow(label: "Maintenance Reserve", sub: nil,
+                                 amount: calculation.maintenanceReserve)
+        }
+        return html
+    }
+
+    private static func deductionRow(label: String, sub: String?, amount: Double) -> String {
+        let subSpan = sub.map { " <span class=\"ded-sub\">\(escape($0))</span>" } ?? ""
+        return """
+          <tr>
+            <td><span class="ded-label">\(escape(label))</span>\(subSpan)</td>
+            <td class="num">\(amount.asCurrency)</td>
+          </tr>
+        """
+    }
+
+    // MARK: - Utilities
+
+    private static func stateOrCity(_ raw: String?) -> String {
+        let s = (raw ?? "").trimmingCharacters(in: .whitespaces)
+        if s.isEmpty { return "—" }
+        // Heuristic: pull a 2-letter state suffix if present (e.g. "Houston, TX" → "TX")
+        if let comma = s.lastIndex(of: ",") {
+            let tail = s[s.index(after: comma)...].trimmingCharacters(in: .whitespaces)
+            if tail.count == 2 { return tail.uppercased() }
+        }
+        // If it's already 2 chars, keep it
+        if s.count <= 3 { return s.uppercased() }
+        // Otherwise return first 12 chars uppercased
+        return String(s.prefix(12)).uppercased()
+    }
+
+    private static func formatPlainAmount(_ v: Double) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.minimumFractionDigits = 2
+        f.maximumFractionDigits = 2
+        f.usesGroupingSeparator = true
+        f.locale = Locale(identifier: "en_US")
+        return f.string(from: NSNumber(value: v)) ?? "0.00"
+    }
+
+    private static func generateQRBase64(payload: String) -> String {
+        let context = CIContext()
+        let filter  = CIFilter.qrCodeGenerator()
+        filter.message = Data(payload.utf8)
+        filter.correctionLevel = "Q"
+        guard let out = filter.outputImage else { return "" }
+        let scaled = out.transformed(by: CGAffineTransform(scaleX: 8, y: 8))
+        guard let cg = context.createCGImage(scaled, from: scaled.extent) else { return "" }
+        return UIImage(cgImage: cg).pngData()?.base64EncodedString() ?? ""
+    }
+
+    private static func escape(_ s: String) -> String {
+        s.replacingOccurrences(of: "&",  with: "&amp;")
+         .replacingOccurrences(of: "<",  with: "&lt;")
+         .replacingOccurrences(of: ">",  with: "&gt;")
+         .replacingOccurrences(of: "\"", with: "&quot;")
+    }
+
+    // MARK: - Renderer
+
+    @MainActor
+    private final class Renderer: NSObject, WKNavigationDelegate {
+        // Strong ref so the renderer survives until the continuation resumes
+        private static var liveRenderers: [Renderer] = []
+
+        static func render(html: String) async throws -> Data {
+            let r = Renderer()
+            liveRenderers.append(r)
+            defer { liveRenderers.removeAll { $0 === r } }
+            return try await r.run(html: html)
+        }
+
+        private var continuation: CheckedContinuation<Data, Error>?
+        private var webView: WKWebView!
+
+        private func run(html: String) async throws -> Data {
+            // US Letter at 72 DPI
+            let pageSize = CGSize(width: 612, height: 792)
+            let cfg = WKWebViewConfiguration()
+            // Off-screen — give it a real frame so layout uses the right viewport
+            webView = WKWebView(frame: CGRect(origin: .zero, size: pageSize), configuration: cfg)
+            webView.navigationDelegate = self
+
+            return try await withCheckedThrowingContinuation { cont in
+                continuation = cont
+                webView.loadHTMLString(html, baseURL: nil)
+            }
+        }
+
+        // didFinish called on MainActor automatically because WebKit dispatches there
+        nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            Task { @MainActor in
+                // Tiny delay so any web fonts / data-URI images are fully laid out
+                try? await Task.sleep(nanoseconds: 250_000_000)
+
+                let cfg = WKPDFConfiguration()
+                cfg.rect = CGRect(x: 0, y: 0, width: 612, height: 792)
+
+                webView.createPDF(configuration: cfg) { [weak self] result in
+                    guard let self else { return }
+                    switch result {
+                    case .success(let data):
+                        self.continuation?.resume(returning: data)
+                    case .failure(let err):
+                        self.continuation?.resume(throwing: err)
+                    }
+                    self.continuation = nil
+                }
+            }
+        }
+
+        nonisolated func webView(
+            _ webView: WKWebView,
+            didFail navigation: WKNavigation!,
+            withError error: Error
+        ) {
+            Task { @MainActor in
+                self.continuation?.resume(throwing: error)
+                self.continuation = nil
+            }
+        }
+
+        nonisolated func webView(
+            _ webView: WKWebView,
+            didFailProvisionalNavigation navigation: WKNavigation!,
+            withError error: Error
+        ) {
+            Task { @MainActor in
+                self.continuation?.resume(throwing: error)
+                self.continuation = nil
+            }
+        }
+    }
+}
+
+// MARK: - Local helpers
+
+private extension Double {
+    var asCurrency: String {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.locale = Locale(identifier: "en_US")
+        return f.string(from: NSNumber(value: self)) ?? "$0.00"
+    }
+}

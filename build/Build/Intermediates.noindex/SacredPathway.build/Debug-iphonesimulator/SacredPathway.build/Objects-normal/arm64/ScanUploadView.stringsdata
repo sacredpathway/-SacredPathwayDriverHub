@@ -1,0 +1,168 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Scanner/ScanUploadView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Choose a source",
+        "location": {
+          "startingColumn": 13,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Camera access needed",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 237
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Load",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 175
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add a Load",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 76
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quick entry with auto-calculated revenue, rate per mile, and profit.",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 79
+        }
+      },
+      {
+        "comment": "",
+        "key": "Camera, Photos, or Files. On-device OCR fills the form for you.",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 115
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reading document…",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 112
+        }
+      },
+      {
+        "comment": "",
+        "key": "Smart Scan a Rate Con",
+        "location": {
+          "startingColumn": 78,
+          "startingLine": 112
+        }
+      },
+      {
+        "comment": "",
+        "key": "Auto-fill (AI)",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 145
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cloud-AI extraction (legacy path).",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manual entry · instant calculations",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "Camera",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "Photo Library",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 194
+        }
+      },
+      {
+        "comment": "",
+        "key": "Files (PDF / image)",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 195
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "Smart Scan reads the document on your device — nothing is uploaded.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 198
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open Settings",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 239
+        }
+      },
+      {
+        "comment": "",
+        "key": "Use Photo Library",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 244
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enable camera access in Settings → Sacred Pathway to scan documents. You can also upload from Photos or Files instead.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 247
+        }
+      }
+    ]
+  },
+  "version": 1
+}

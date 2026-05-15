@@ -1,0 +1,288 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settlements/SettlementGeneratorView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Generate Paystub",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 133
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pick a Driver",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Or build a paystub manually",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 113
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 149
+        }
+      },
+      {
+        "comment": "",
+        "key": "These loads aren't assigned to anyone yet. Select a driver above so the paystub knows who's getting paid.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 151
+        }
+      },
+      {
+        "comment": "",
+        "key": "Review expenses",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld of %lld included · %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "Truck #",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 215
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g. 2580",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 216
+        }
+      },
+      {
+        "comment": "",
+        "key": "Trailer #",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 225
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g. T-2418",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 226
+        }
+      },
+      {
+        "comment": "",
+        "key": "From",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 249
+        }
+      },
+      {
+        "comment": "",
+        "key": "To",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 253
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 254
+        }
+      },
+      {
+        "comment": "",
+        "key": "No drivers added yet. Add drivers under More → Drivers.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 268
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 283
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show settled",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 310
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select all visible",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 331
+        }
+      },
+      {
+        "comment": "",
+        "key": "Clear (%lld)",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 341
+        }
+      },
+      {
+        "comment": "",
+        "key": "No loads match this period or driver.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 359
+        }
+      },
+      {
+        "comment": "",
+        "key": "Adjust the date range, pick a different driver, or toggle 'Show settled' to include loads already paid out.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 362
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 385
+        }
+      },
+      {
+        "comment": "",
+        "key": "SETTLED",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 389
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load #%@",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 385
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 71,
+          "startingLine": 385
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ → %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 402
+        }
+      },
+      {
+        "comment": "",
+        "key": "· %lld mi",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 407
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pick loads to calculate",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 439
+        }
+      },
+      {
+        "comment": "",
+        "key": "Calculate Settlement (%lld)",
+        "location": {
+          "startingColumn": 76,
+          "startingLine": 439
+        }
+      },
+      {
+        "comment": "",
+        "key": "PAYSTUB PREVIEW",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 453
+        }
+      },
+      {
+        "comment": "",
+        "key": "Preview PDF",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 483
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export Paystub PDF",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 493
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export PDF",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 503
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRO",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 505
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -9,6 +9,9 @@ struct ManualLoadItem: Identifiable {
     var destination: String = ""
     var miles: String = ""
     var revenue: String = ""
+    /// If this row was populated from a saved Load, the source row's ID
+    /// so the Paystubs flow can mark it `settled` after PDF generation.
+    var sourceLoadId: UUID? = nil
 }
 
 struct ManualExpenseItem: Identifiable {
@@ -22,6 +25,9 @@ struct ManualExpenseItem: Identifiable {
 struct ManualPaystubView: View {
     @EnvironmentObject var supabase: SupabaseService
     @Environment(\.dismiss) var dismiss
+    // Observed so the Export button switches between PDF and locked state
+    // the instant a Pro/Carrier purchase or restore lifts the entitlement.
+    @ObservedObject private var subscriptions = SubscriptionService.shared
 
     // Draft support
     var existingDraft: PaystubDraft?
@@ -35,6 +41,11 @@ struct ManualPaystubView: View {
     @State private var driverName: String = ""
     @State private var periodStart = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
     @State private var periodEnd = Date()
+
+    // Equipment (printed on the PDF carrier meta line). Persisted across
+    // sessions via @AppStorage so drivers don't re-type them every paystub.
+    @AppStorage("sph.lastTruckNumber")   private var truckNumber: String = ""
+    @AppStorage("sph.lastTrailerNumber") private var trailerNumber: String = ""
 
     // Manual Loads
     @State private var loadItems: [ManualLoadItem] = [ManualLoadItem()]
@@ -62,7 +73,13 @@ struct ManualPaystubView: View {
     @State private var calculation: SettlementCalculation?
     @State private var pdfData: Data?
     @State private var showingShareSheet = false
+    @State private var showingPreview = false
     @State private var errorMessage: String?
+
+    // Saved-load import
+    @State private var showSavedLoadPicker = false
+    @State private var savedLoadsForPicker: [Load] = []
+    @State private var savedLoadsLoading = false
 
     let expenseCategories = ["Fuel", "Lumper", "Toll", "Repair", "Insurance", "Parking", "Scale", "DEF", "Tires", "Other"]
 
@@ -106,7 +123,6 @@ struct ManualPaystubView: View {
                 }
             }
             .navigationTitle(existingDraft != nil ? "Edit Paystub" : "Create Paystub")
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -127,6 +143,11 @@ struct ManualPaystubView: View {
                     ShareSheet(items: [data])
                 }
             }
+        .sheet(isPresented: $showingPreview) {
+            if let data = pdfData {
+                PDFPreviewView(data: data, title: "Settlement Preview")
+            }
+        }
             .alert("Draft Saved", isPresented: $showingSavedConfirmation) {
                 Button("Keep Editing") {}
                 Button("Close") { dismiss() }
@@ -181,6 +202,20 @@ struct ManualPaystubView: View {
                     TextField("Driver Name", text: $driverName)
                         .foregroundStyle(Color.spTextPrimary)
                 }
+                Divider().background(Color.spTextSecondary.opacity(0.3))
+                HStack(spacing: 12) {
+                    Image(systemName: "truck.box.fill")
+                        .foregroundStyle(Color.spGold)
+                        .frame(width: 24)
+                    TextField("Truck #", text: $truckNumber)
+                        .foregroundStyle(Color.spTextPrimary)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.characters)
+                    TextField("Trailer #", text: $trailerNumber)
+                        .foregroundStyle(Color.spTextPrimary)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.characters)
+                }
             }
             .padding()
             .background(Color.spCardBg)
@@ -217,6 +252,16 @@ struct ManualPaystubView: View {
                 sectionHeader("Loads", icon: "shippingbox.fill")
                 Spacer()
                 Button {
+                    Task { await openSavedLoadPicker() }
+                } label: {
+                    Label("Import saved", systemImage: "tray.and.arrow.down.fill")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Color.spGold.opacity(0.15))
+                        .foregroundStyle(Color.spGold)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                Button {
                     loadItems.append(ManualLoadItem())
                 } label: {
                     Image(systemName: "plus.circle.fill")
@@ -227,6 +272,161 @@ struct ManualPaystubView: View {
 
             ForEach($loadItems) { $item in
                 loadCard(item: $item)
+            }
+        }
+        .sheet(isPresented: $showSavedLoadPicker) {
+            savedLoadPickerSheet
+        }
+    }
+
+    private var savedLoadPickerSheet: some View {
+        NavigationStack {
+            ZStack {
+                Color.spBackground.ignoresSafeArea()
+
+                Group {
+                    if savedLoadsLoading {
+                        ProgressView().tint(Color.spGold)
+                    } else if savedLoadsForPicker.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "shippingbox")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Color.spGold.opacity(0.5))
+                            Text("No saved loads yet.")
+                                .font(.headline)
+                                .foregroundStyle(Color.spTextPrimary)
+                            Text("Add a load on the Loads tab and it will appear here.")
+                                .font(.caption)
+                                .foregroundStyle(Color.spTextSecondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 8) {
+                                ForEach(savedLoadsForPicker) { load in
+                                    Button {
+                                        importSavedLoad(load)
+                                        showSavedLoadPicker = false
+                                    } label: {
+                                        savedLoadRow(load)
+                                    }
+                                }
+                            }
+                            .padding()
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Import Saved Load")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showSavedLoadPicker = false }
+                        .foregroundStyle(Color.spGold)
+                }
+            }
+        }
+    }
+
+    private func savedLoadRow(_ load: Load) -> some View {
+        let alreadyImported = loadItems.contains { $0.sourceLoadId == load.id }
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(load.loadNumber.map { "Load #\($0)" } ?? "Load")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.spTextPrimary)
+                    if load.isSettled {
+                        Text("SETTLED")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color.spTextSecondary)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.spTextSecondary.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                    if alreadyImported {
+                        Text("ADDED")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color.spGold)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.spGold.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                }
+                if let broker = load.brokerName {
+                    Text(broker).font(.caption).foregroundStyle(Color.spTextSecondary)
+                }
+                if let origin = load.origin, let dest = load.destination {
+                    Text("\(origin) → \(dest)")
+                        .font(.caption2)
+                        .foregroundStyle(Color.spTextSecondary)
+                }
+            }
+            Spacer()
+            if let revenue = load.totalRevenue {
+                Text(revenue.asCurrency)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.spGold)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.spCardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .opacity(alreadyImported ? 0.5 : 1.0)
+    }
+
+    /// Pull saved loads from Supabase. Settled and already-imported loads
+    /// are still listed but marked so the user can see why a familiar
+    /// load is greyed out.
+    private func openSavedLoadPicker() async {
+        savedLoadsLoading = true
+        showSavedLoadPicker = true
+        defer { savedLoadsLoading = false }
+        do {
+            savedLoadsForPicker = try await supabase.fetchLoads()
+        } catch {
+            savedLoadsForPicker = []
+            errorMessage = "Couldn't load saved loads: \(error.localizedDescription)"
+        }
+    }
+
+    /// Auto-fill a `ManualLoadItem` from a saved Load. Auto-selects the
+    /// load's assigned driver if the Driver field is still empty. Skips
+    /// when the load is already on the form.
+    private func importSavedLoad(_ load: Load) {
+        if loadItems.contains(where: { $0.sourceLoadId == load.id }) {
+            return
+        }
+
+        // Drop the empty placeholder row if it's still pristine.
+        if loadItems.count == 1, let first = loadItems.first,
+           first.loadNumber.isEmpty, first.broker.isEmpty,
+           first.origin.isEmpty, first.destination.isEmpty,
+           first.miles.isEmpty, first.revenue.isEmpty {
+            loadItems.removeAll()
+        }
+
+        var item = ManualLoadItem()
+        item.loadNumber = load.loadNumber ?? ""
+        item.broker = load.brokerName ?? ""
+        item.origin = load.origin ?? ""
+        item.destination = load.destination ?? ""
+        if let miles = load.totalMiles { item.miles = String(format: "%g", miles) }
+        if let rev = load.totalRevenue { item.revenue = String(format: "%.2f", rev) }
+        item.sourceLoadId = load.id
+        loadItems.append(item)
+
+        // Auto-fill driver name if the load has one assigned and the
+        // user hasn't typed a driver yet.
+        if driverName.trimmingCharacters(in: .whitespaces).isEmpty,
+           let driverId = load.driverId {
+            Task {
+                if let drivers = try? await supabase.fetchDrivers(),
+                   let driver = drivers.first(where: { $0.id == driverId }) {
+                    await MainActor.run { driverName = driver.name }
+                }
             }
         }
     }
@@ -466,7 +666,7 @@ struct ManualPaystubView: View {
 
     private var exportButton: some View {
         Group {
-            if SubscriptionService.shared.isEntitled(.pdfExport) {
+            if subscriptions.isEntitled(.pdfExport) {
                 Button {
                     generateManualPDF()
                 } label: {
@@ -747,22 +947,51 @@ struct ManualPaystubView: View {
         }
 
         let branding = BrandingService.shared
-        do {
-            let data = try PaystubPDFService.generatePaystub(
-                calculation: calc,
-                loads: loads,
-                expenses: expenses,
-                companyName: companyName.isEmpty ? "Company" : companyName,
-                driverName: driverName.isEmpty ? "Driver" : driverName,
-                periodStart: periodStart,
-                periodEnd: periodEnd,
-                logo: branding.logoImage,
-                primaryColor: UIColor(branding.primaryColor)
-            )
-            pdfData = data
-            showingShareSheet = true
-        } catch {
-            errorMessage = "PDF error: \(error.localizedDescription)"
+        Task { @MainActor in
+            do {
+                let data = try await SettlementHTMLPDFService.generate(
+                    calculation: calc,
+                    loads: loads,
+                    expenses: expenses,
+                    companyName: companyName.isEmpty ? "Company" : companyName,
+                    driverName: driverName.isEmpty ? "Driver" : driverName,
+                    periodStart: periodStart,
+                    periodEnd: periodEnd,
+                    logo: branding.logoImage,
+                    primaryColor: UIColor(branding.primaryColor),
+                    truckNumber: truckNumber.isEmpty ? nil : truckNumber,
+                    trailerNumber: trailerNumber.isEmpty ? nil : trailerNumber
+                )
+                pdfData = data
+                showingPreview = true
+
+                // Mark any imported saved-load rows as `settled` so they're
+                // hidden from future paystub pickers by default. Manual rows
+                // typed in (no `sourceLoadId`) are unaffected — they were
+                // never connected to a saved Load row.
+                let importedIds = loadItems.compactMap { $0.sourceLoadId }
+                if !importedIds.isEmpty {
+                    Task {
+                        try? await supabase.markLoadsAsSettled(loadIds: importedIds)
+                    }
+                }
+
+                // Save a copy of the manual paystub PDF to the Document Vault.
+                let driverLabel = driverName.isEmpty ? "Driver" : driverName
+                let f = DateFormatter()
+                f.dateFormat = "MM/dd/yyyy"
+                let title = "Paystub — \(driverLabel) — \(f.string(from: periodStart))–\(f.string(from: periodEnd))"
+                Task {
+                    _ = try? await supabase.saveDocumentRecord(
+                        pdfData: data,
+                        documentType: "paystub",
+                        title: title,
+                        loadId: nil
+                    )
+                }
+            } catch {
+                errorMessage = "PDF error: \(error.localizedDescription)"
+            }
         }
     }
 }

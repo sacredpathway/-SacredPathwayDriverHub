@@ -2,9 +2,18 @@ import SwiftUI
 
 struct DriversListView: View {
     @EnvironmentObject var supabase: SupabaseService
+    // Observed so the "Add Driver" button reactivates the moment a Carrier
+    // purchase or restore lifts the multiDriver entitlement — no relaunch.
+    @ObservedObject private var subscriptions = SubscriptionService.shared
     @State private var drivers: [Driver] = []
     @State private var isLoading = true
     @State private var showingAddDriver = false
+    @State private var showingPaywall = false
+
+    private var canAddMore: Bool {
+        // Carrier: unlimited. Free/Pro: capped at 1 driver.
+        subscriptions.isEntitled(.multiDriver) || drivers.count < 1
+    }
 
     var body: some View {
         ZStack {
@@ -24,7 +33,11 @@ struct DriversListView: View {
                             Text("Add drivers to assign loads and generate individual settlements")
                                 .font(.subheadline).foregroundStyle(Color.spTextSecondary).multilineTextAlignment(.center).padding(.horizontal, 40)
                             Button {
-                                showingAddDriver = true
+                                if canAddMore {
+                                    showingAddDriver = true
+                                } else {
+                                    showingPaywall = true
+                                }
                             } label: {
                                 Label("Add First Driver", systemImage: "person.badge.plus")
                                     .font(.headline).padding(.vertical, 12).padding(.horizontal, 24)
@@ -45,14 +58,20 @@ struct DriversListView: View {
                     }
                 }
                 .navigationTitle("Drivers")
-                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { showingAddDriver = true } label: {
+                        Button {
+                            if canAddMore {
+                                showingAddDriver = true
+                            } else {
+                                showingPaywall = true
+                            }
+                        } label: {
                             Image(systemName: "plus.circle.fill").foregroundStyle(Color.spGold).font(.title3)
                         }
                     }
                 }
+                .sheet(isPresented: $showingPaywall) { PaywallView() }
                 .sheet(isPresented: $showingAddDriver) {
                     AddDriverView { newDriver in
                         drivers.append(newDriver)
@@ -74,9 +93,20 @@ struct DriversListView: View {
                 Text(driver.name).font(.subheadline.weight(.semibold)).foregroundStyle(Color.spTextPrimary)
                 HStack(spacing: 12) {
                     if let truck = driver.truckNumber {
-                        Label(truck, systemImage: "truck.box.fill").font(.caption).foregroundStyle(Color.spTextSecondary)
+                        Label {
+                            Text(truck)
+                        } icon: {
+                            Image("SacredPathwayLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 14, height: 14)
+                        }
+                        .font(.caption).foregroundStyle(Color.spTextSecondary)
                     }
-                    if let pct = driver.payPercentage {
+                    if driver.isFlatRate, let flat = driver.flatRate {
+                        Label("$\(Int(flat)) flat", systemImage: "dollarsign.circle.fill")
+                            .font(.caption).foregroundStyle(Color.spGold)
+                    } else if let pct = driver.payPercentage {
                         Label("\(Int(pct))%", systemImage: "percent").font(.caption).foregroundStyle(Color.spGold)
                     }
                 }
@@ -103,7 +133,9 @@ struct AddDriverView: View {
 
     @State private var name = ""
     @State private var truckNumber = ""
+    @State private var payType: String = "percent"   // "percent" or "flat"
     @State private var payPercentage = ""
+    @State private var flatRate = ""
     @State private var phone = ""
     @State private var email = ""
     @State private var isSaving = false
@@ -116,8 +148,39 @@ struct AddDriverView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         field("Driver Name", text: $name, icon: "person.fill")
-                        field("Truck Number", text: $truckNumber, icon: "truck.box.fill")
-                        field("Pay Percentage", text: $payPercentage, icon: "percent", keyboard: .decimalPad)
+                        HStack(spacing: 10) {
+                            Image("SacredPathwayLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                            TextField("Truck Number", text: $truckNumber)
+                                .foregroundStyle(Color.spTextPrimary)
+                        }
+                        .padding(12).background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 10))
+
+                        // Pay type picker
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "dollarsign.circle.fill")
+                                    .foregroundStyle(Color.spGold).frame(width: 24)
+                                Text("Pay Type").foregroundStyle(Color.spTextPrimary)
+                                Spacer()
+                            }
+                            Picker("Pay Type", selection: $payType) {
+                                Text("Percent of Profit").tag("percent")
+                                Text("Flat Rate").tag("flat")
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                        .padding(12).background(Color.spCardBg)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                        if payType == "percent" {
+                            field("Pay Percentage", text: $payPercentage, icon: "percent", keyboard: .decimalPad)
+                        } else {
+                            field("Flat Rate per Settlement ($)", text: $flatRate, icon: "dollarsign.circle.fill", keyboard: .decimalPad)
+                        }
+
                         field("Phone", text: $phone, icon: "phone.fill", keyboard: .phonePad)
                         field("Email", text: $email, icon: "envelope.fill", keyboard: .emailAddress)
 
@@ -143,7 +206,6 @@ struct AddDriverView: View {
             }
             .navigationTitle("Add Driver")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.spGold)
@@ -163,9 +225,17 @@ struct AddDriverView: View {
     private func save() async {
         guard let profileId = supabase.currentProfile?.id else { errorMessage = "Not signed in"; return }
         isSaving = true
-        let driver = Driver(profileId: profileId, name: name, truckNumber: truckNumber.isEmpty ? nil : truckNumber,
-                           payPercentage: Double(payPercentage), phone: phone.isEmpty ? nil : phone,
-                           email: email.isEmpty ? nil : email, active: true)
+        let driver = Driver(
+            profileId: profileId,
+            name: name,
+            truckNumber: truckNumber.isEmpty ? nil : truckNumber,
+            payPercentage: payType == "percent" ? Double(payPercentage) : nil,
+            payType: payType,
+            flatRate: payType == "flat" ? Double(flatRate) : nil,
+            phone: phone.isEmpty ? nil : phone,
+            email: email.isEmpty ? nil : email,
+            active: true
+        )
         do {
             let created = try await supabase.createDriver(driver)
             onSave(created)

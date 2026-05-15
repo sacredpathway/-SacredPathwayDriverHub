@@ -3,6 +3,11 @@ import PhotosUI
 
 struct BrandingSettingsView: View {
     @StateObject private var branding = BrandingService.shared
+    // Observed so SwiftUI re-renders the locked/unlocked branch the instant
+    // SubscriptionService.activeTier flips after a Carrier purchase or
+    // Restore Purchases. Without this, reading `.shared.isEntitled(...)`
+    // directly was a non-reactive snapshot and the UI stayed locked.
+    @ObservedObject private var subscriptions = SubscriptionService.shared
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingResetAlert = false
     @State private var savedMessage = false
@@ -11,32 +16,44 @@ struct BrandingSettingsView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    // MARK: - Logo Section
-                    logoSection
+            if !subscriptions.isEntitled(.whiteLabelBranding) {
+                FeatureLockedView(
+                    feature: "White-Label Branding",
+                    description: "Add your own logo and color scheme to paystubs and documents. Make Sacred Pathway look like your company.",
+                    requiredTier: .carrier,
+                    icon: "paintpalette.fill"
+                )
+            } else {
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // MARK: - Logo Section
+                        logoSection
 
-                    // MARK: - Color Scheme Section
-                    colorSection
+                        // MARK: - Color Scheme Section
+                        colorSection
 
-                    // MARK: - Preview Section
-                    previewSection
+                        // MARK: - Preview Section
+                        previewSection
 
-                    // MARK: - Reset Button
-                    resetSection
+                        // MARK: - Reset Button
+                        resetSection
+                    }
+                    .padding()
                 }
-                .padding()
             }
         }
         .navigationTitle("Branding")
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .onChange(of: selectedPhotoItem) { _, newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
                    let image = UIImage(data: data) {
-                    // Resize to reasonable size for logo
-                    let resized = resizeImage(image, maxDimension: 512)
-                    branding.saveLogo(resized)
+                    // Preserve the original at full resolution. We only cap at
+                    // 4096px as a sanity bound to avoid 50MP DSLR shots — well
+                    // above what any PDF or app header needs, and the Core
+                    // Graphics scaler will downsample with high interpolation
+                    // when drawing into a smaller rect.
+                    let prepared = resizeIfHuge(image, maxDimension: 4096)
+                    branding.saveLogo(prepared)
                     showSavedFeedback()
                 }
             }
@@ -234,9 +251,11 @@ struct BrandingSettingsView: View {
                             .frame(width: 32, height: 32)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                     } else {
-                        Image(systemName: "truck.box.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.white)
+                        Image("SacredPathwayLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
                     Text("Your Company Name")
                         .font(.subheadline.weight(.bold))
@@ -336,13 +355,21 @@ struct BrandingSettingsView: View {
         }
     }
 
-    private func resizeImage(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+    /// Sanity-cap only — returns the original UIImage untouched if it's
+    /// already within bounds. Used to keep memory in check for absurdly
+    /// large source images while still letting "normal" 1024–2048px logos
+    /// pass through at full resolution.
+    private func resizeIfHuge(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
         let size = image.size
         let ratio = min(maxDimension / size.width, maxDimension / size.height)
         if ratio >= 1 { return image }
         let newSize = CGSize(width: size.width * ratio, height: size.height * ratio)
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        return renderer.image { _ in
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = image.scale  // preserve original scale (likely Retina)
+        format.opaque = false       // keep transparency
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+        return renderer.image { ctx in
+            ctx.cgContext.interpolationQuality = .high
             image.draw(in: CGRect(origin: .zero, size: newSize))
         }
     }

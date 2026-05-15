@@ -1,0 +1,94 @@
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/IFTA/AddIFTAEntryView.swift:301:36: warning: result of call to 'createExpense' is unused
+                try await supabase.createExpense(expense)
+                                   ^            ~~~~~~~~~
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/IFTA/IFTAReportView.swift:231:17: warning: variable 'xPositions' was never mutated; consider changing to 'let' constant
+            var xPositions: [CGFloat] = [20, 100, 150, 200]
+            ~~~ ^
+            let
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/IFTAPDFService.swift:107:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/IFTAPDFService.swift:167:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:254:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: .white, fill: theme.primary),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:261:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: UIColor.white.withAlphaComponent(0.85), fill: theme.primary),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:269:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: UIColor.white.withAlphaComponent(0.85), fill: theme.primary),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:442:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: status.textColor, fill: status.fillColor),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:465:25: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                colors: (text: .darkGray, fill: theme.bandFill),
+                        ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:475:25: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                colors: (text: .darkGray, fill: theme.bandFill),
+                        ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:499:25: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                colors: (text: .darkGray, fill: theme.bandFill.withAlphaComponent(0.55)),
+                        ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:514:25: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                colors: (text: .darkGray, fill: theme.bandFill.withAlphaComponent(0.55)),
+                        ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:563:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:646:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:701:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:764:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:797:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: .darkGray, fill: theme.bandFill),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:803:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: theme.positiveText, fill: theme.bandFill),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:852:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:902:29: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                    colors: (text: textColor, fill: fill),
+                            ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:927:25: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                colors: (text: .clear, fill: .white),
+                        ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:938:25: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+                colors: (text: .darkGray, fill: .white),
+                        ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:950:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: theme.primary, fill: .white),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:956:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: theme.primary, fill: .white),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/PaystubPDFService.swift:972:21: warning: implicit reordering of tuple elements from 'text:fill:' to 'fill:text:' is deprecated; this will be an error in a future Swift language mode
+            colors: (text: .white, fill: theme.primary),
+                    ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/BrandingSettingsView.swift:110:36: warning: main actor-isolated property 'logoImage' can not be referenced from a Sendable closure
+                    Label(branding.logoImage == nil ? "Upload Logo" : "Change Logo", systemImage: "photo.on.rectangle")
+                                   ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/BrandingService.swift:11:20: note: property declared here
+    @Published var logoImage: UIImage?
+                   ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/BrandingSettingsView.swift:114:46: warning: main actor-isolated property 'primaryColor' can not be referenced from a Sendable closure
+                        .background(branding.primaryColor.opacity(0.15))
+                                             ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/BrandingService.swift:12:20: note: property declared here
+    @Published var primaryColor: Color
+                   ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settings/BrandingSettingsView.swift:115:51: warning: main actor-isolated property 'primaryColor' can not be referenced from a Sendable closure
+                        .foregroundStyle(branding.primaryColor)
+                                                  ^
+/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/BrandingService.swift:12:20: note: property declared here
+    @Published var primaryColor: Color
+                   ^

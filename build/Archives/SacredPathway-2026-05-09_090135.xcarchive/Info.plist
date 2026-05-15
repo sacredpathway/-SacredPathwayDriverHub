@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ApplicationProperties</key>
+	<dict>
+		<key>ApplicationPath</key>
+		<string>Applications/SacredPathway.app</string>
+		<key>Architectures</key>
+		<array>
+			<string>arm64</string>
+		</array>
+		<key>CFBundleIdentifier</key>
+		<string>com.demarquishinton.sacredpathway</string>
+		<key>CFBundleShortVersionString</key>
+		<string>1.2</string>
+		<key>CFBundleVersion</key>
+		<string>26</string>
+		<key>SigningIdentity</key>
+		<string>Apple Development: Demarquis Hinton (U6669FS2HX)</string>
+		<key>Team</key>
+		<string>DCCSGYD5A4</string>
+	</dict>
+	<key>ArchiveVersion</key>
+	<integer>2</integer>
+	<key>CreationDate</key>
+	<date>2026-05-09T14:04:17Z</date>
+	<key>Name</key>
+	<string>SacredPathway</string>
+	<key>SchemeName</key>
+	<string>SacredPathway</string>
+</dict>
+</plist>

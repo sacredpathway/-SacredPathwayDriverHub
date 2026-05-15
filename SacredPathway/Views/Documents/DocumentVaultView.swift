@@ -7,7 +7,19 @@ struct DocumentVaultView: View {
     @State private var searchText = ""
     @State private var filterType: String? = nil
 
-    private let docTypes = ["rate_confirmation", "fuel_receipt", "lumper_fee", "toll", "repair", "bol", "invoice"]
+    private let docTypes = [
+        "paystub",
+        "ifta_report",
+        "settlement",
+        "rate_confirmation",
+        "fuel_receipt",
+        "lumper_fee",
+        "toll",
+        "repair",
+        "bol",
+        "invoice",
+        "compliance"
+    ]
 
     var filteredDocuments: [TruckDocument] {
         var result = documents
@@ -18,7 +30,13 @@ struct DocumentVaultView: View {
             result = result.filter { doc in
                 let data = doc.extractedData
                 let searchable = [
-                    data?.brokerName, data?.loadNumber, data?.origin, data?.destination, data?.vendorName, doc.documentType
+                    data?.brokerName,
+                    data?.loadNumber,
+                    data?.origin,
+                    data?.destination,
+                    data?.vendorName,
+                    data?.notes, // saveDocumentRecord stores the title here
+                    doc.documentType
                 ].compactMap { $0 }.joined(separator: " ").lowercased()
                 return searchable.contains(searchText.lowercased())
             }
@@ -80,7 +98,6 @@ struct DocumentVaultView: View {
                     }
                 }
                 .navigationTitle("Document Vault")
-                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Text("\(filteredDocuments.count) docs")
@@ -103,6 +120,17 @@ struct DocumentVaultView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(docTypeLabel(doc.documentType ?? "unknown"))
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Color.spTextPrimary)
+                // Generated PDFs (paystubs, IFTA reports) store their
+                // human-readable title in extractedData.notes; show that
+                // when there's no broker / load number to display.
+                if let notes = doc.extractedData?.notes,
+                   doc.extractedData?.brokerName == nil,
+                   doc.extractedData?.loadNumber == nil {
+                    Text(notes)
+                        .font(.caption)
+                        .foregroundStyle(Color.spTextSecondary)
+                        .lineLimit(2)
+                }
                 HStack(spacing: 8) {
                     if let broker = doc.extractedData?.brokerName {
                         Text(broker).font(.caption).foregroundStyle(Color.spTextSecondary)
@@ -147,6 +175,9 @@ struct DocumentVaultView: View {
 
     private func docTypeLabel(_ type: String) -> String {
         switch type.lowercased() {
+        case "paystub": return "Paystub"
+        case "ifta_report": return "IFTA"
+        case "settlement": return "Settlement"
         case "rate_confirmation": return "Rate Con"
         case "fuel_receipt": return "Fuel Receipt"
         case "lumper_fee": return "Lumper"
@@ -154,12 +185,16 @@ struct DocumentVaultView: View {
         case "repair": return "Repair"
         case "bol": return "BOL"
         case "invoice": return "Invoice"
+        case "compliance": return "Compliance"
         default: return type.capitalized
         }
     }
 
     private func docTypeIcon(_ type: String) -> String {
         switch type.lowercased() {
+        case "paystub": return "doc.text.fill"
+        case "ifta_report": return "fuelpump.fill"
+        case "settlement": return "creditcard.fill"
         case "rate_confirmation": return "doc.text.fill"
         case "fuel_receipt": return "fuelpump.fill"
         case "lumper_fee": return "person.2.fill"
@@ -167,17 +202,22 @@ struct DocumentVaultView: View {
         case "repair": return "wrench.and.screwdriver.fill"
         case "bol": return "shippingbox.fill"
         case "invoice": return "doc.richtext.fill"
+        case "compliance": return "checkmark.shield.fill"
         default: return "doc.fill"
         }
     }
 
     private func docTypeColor(_ type: String) -> Color {
         switch type.lowercased() {
+        case "paystub": return .spGold
+        case "ifta_report": return Color(red: 0.2, green: 0.7, blue: 0.4)
+        case "settlement": return Color(red: 0.4, green: 0.8, blue: 0.6)
         case "rate_confirmation": return .spGold
         case "fuel_receipt": return Color(red: 0.2, green: 0.6, blue: 0.9)
         case "lumper_fee": return Color(red: 0.8, green: 0.5, blue: 0.2)
         case "toll": return Color(red: 0.6, green: 0.4, blue: 0.8)
         case "repair": return .spDanger
+        case "compliance": return Color(red: 0.5, green: 0.7, blue: 0.9)
         default: return .spTextSecondary
         }
     }

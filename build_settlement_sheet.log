@@ -1,0 +1,38 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme SacredPathway -destination "platform=iOS Simulator,name=iPhone 16 Pro" -configuration Debug build
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  TPPDF: https://github.com/techprimate/TPPDF.git @ 2.6.1
+  swift-asn1: https://github.com/apple/swift-asn1.git @ 1.7.0
+  swift-clocks: https://github.com/pointfreeco/swift-clocks @ 1.0.6
+  xctest-dynamic-overlay: https://github.com/pointfreeco/xctest-dynamic-overlay @ 1.9.0
+  swift-concurrency-extras: https://github.com/pointfreeco/swift-concurrency-extras @ 1.3.2
+  swift-crypto: https://github.com/apple/swift-crypto.git @ 4.4.0
+  swift-http-types: https://github.com/apple/swift-http-types.git @ 1.5.1
+  Supabase: https://github.com/supabase/supabase-swift.git @ 2.43.1
+
+2026-05-07 17:29:46.679 xcodebuild[58700:6319835] Writing error result bundle to /var/folders/nk/xy6nthd905z_7ztwqsg4_j0h0000gn/T/ResultBundle_2026-07-05_17-29-0046.xcresult
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+		{ platform:iOS Simulator, OS:latest, name:iPhone 16 Pro }
+
+	The requested device could not be found because no available devices matched the request.
+
+	Available destinations for the "SacredPathway" scheme:
+		{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00008140-0018052436FB001C, name:My Mac }
+		{ platform:iOS, arch:arm64, id:00008130-000A55E83601001C, name:8894 }
+		{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+		{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
+		{ platform:iOS Simulator, arch:arm64, id:B6B81C78-546E-4FD5-93C3-E2B471B4450F, OS:26.4.1, name:iPad (A16) }
+		{ platform:iOS Simulator, arch:arm64, id:ABE67D9A-8BE7-4098-93FC-AC7E10D82141, OS:26.4.1, name:iPad Air 11-inch (M4) }
+		{ platform:iOS Simulator, arch:arm64, id:426139CD-476D-450D-BE44-E2E5C9EE68EF, OS:26.4.1, name:iPad Air 13-inch (M4) }
+		{ platform:iOS Simulator, arch:arm64, id:EF62E66A-A783-4304-9701-1A1C6C9141F6, OS:26.4.1, name:iPad Pro 11-inch (M5) }
+		{ platform:iOS Simulator, arch:arm64, id:AB6F21E0-2644-4BF2-9C0B-1973380596FB, OS:26.4.1, name:iPad Pro 13-inch (M5) }
+		{ platform:iOS Simulator, arch:arm64, id:DEE811E1-A582-4C93-BA9B-0D6A297FE578, OS:26.4.1, name:iPad mini (A17 Pro) }
+		{ platform:iOS Simulator, arch:arm64, id:B4118124-61F0-4B94-A0DB-12D630B68F65, OS:26.4.1, name:iPhone 17 }
+		{ platform:iOS Simulator, arch:arm64, id:369181D8-AE46-45A9-ACD5-6DAB46BC6965, OS:26.4.1, name:iPhone 17 Pro }
+		{ platform:iOS Simulator, arch:arm64, id:23A82AC9-1F9F-4861-A85A-29C731E359F0, OS:26.4.1, name:iPhone 17 Pro Max }
+		{ platform:iOS Simulator, arch:arm64, id:BC16406A-82EB-4A33-B515-105624861BB8, OS:26.4.1, name:iPhone 17e }
+		{ platform:iOS Simulator, arch:arm64, id:DF87E96D-9AFF-4DF2-A09C-6F8D63A83B23, OS:26.4.1, name:iPhone Air }

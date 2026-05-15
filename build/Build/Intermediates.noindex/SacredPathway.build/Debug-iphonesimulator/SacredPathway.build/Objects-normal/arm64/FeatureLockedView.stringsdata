@@ -1,0 +1,24 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Subscription/FeatureLockedView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Requires %@ plan",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "Upgrade to %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 67
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,176 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Scanner/DocumentReviewView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Review Document",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 81
+        }
+      },
+      {
+        "comment": "",
+        "key": "Saved!",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 87
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load created and new broker '%@' auto-detected and added to your CRM.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load created and linked to existing broker '%@'. Stats updated.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 99
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load created successfully.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 101
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expense added successfully.",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load created successfully.",
+        "location": {
+          "startingColumn": 74,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI is reading your document…",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 127
+        }
+      },
+      {
+        "comment": "",
+        "key": "Uploading and extracting rates, dates, locations, and amounts",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Couldn't Read Document",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hide details",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show details",
+        "location": {
+          "startingColumn": 70,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Code: %@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 172
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try Again",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter Manually",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 203
+        }
+      },
+      {
+        "comment": "",
+        "key": "We couldn't auto-fill the fields — here's the raw text we extracted. Copy anything useful into the form below.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 221
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI Confidence: %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 257
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Expense",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 282
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Load",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 282
+        }
+      }
+    ]
+  },
+  "version": 1
+}

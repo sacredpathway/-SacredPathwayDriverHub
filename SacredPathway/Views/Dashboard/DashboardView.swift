@@ -59,8 +59,11 @@ struct DashboardView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     HStack(spacing: 8) {
-                        Image(systemName: "truck.box.fill")
-                            .foregroundStyle(Color.spGold)
+                        Image("SacredPathwayLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 28, height: 28)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
                         Text(supabase.currentProfile?.companyName ?? "Dashboard")
                             .font(.headline)
                             .foregroundStyle(Color.spGold)
@@ -73,16 +76,36 @@ struct DashboardView: View {
     }
 
     // MARK: - Header
+    // The toolbar already shows the company logo + name in the navigation
+    // bar, so the in-content header doesn't repeat the company name. Instead
+    // it's a quick at-a-glance: greeting + today's date. Saves ~30 vertical
+    // points and removes a redundancy.
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Welcome back")
+            Text(greeting)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(Color.spTextPrimary)
+            Text(todayString)
                 .font(.subheadline)
                 .foregroundStyle(Color.spTextSecondary)
-            Text(supabase.currentProfile?.companyName ?? "Dashboard")
-                .font(.title2.weight(.bold))
-                .foregroundStyle(Color.spGold)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:  return "Good morning"
+        case 12..<17: return "Good afternoon"
+        case 17..<22: return "Good evening"
+        default:      return "Welcome back"
+        }
+    }
+
+    private var todayString: String {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, MMM d"
+        return f.string(from: Date())
     }
 
     // MARK: - Period Picker
@@ -167,9 +190,10 @@ struct DashboardView: View {
             let sorted = grouped.sorted { $0.value.reduce(0) { $0 + $1.amount } > $1.value.reduce(0) { $0 + $1.amount } }
 
             if sorted.isEmpty {
-                Text("No expenses recorded")
+                Text("Start tracking your finances to see your overview.")
                     .font(.caption)
                     .foregroundStyle(Color.spTextSecondary)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.spCardBg)
@@ -220,7 +244,7 @@ struct DashboardView: View {
                     Text("No loads yet")
                         .font(.headline)
                         .foregroundStyle(Color.spTextSecondary)
-                    Text("Scan or upload a rate confirmation to get started")
+                    Text("Tap the + tab to add your first load")
                         .font(.subheadline)
                         .foregroundStyle(Color.spTextSecondary)
                         .multilineTextAlignment(.center)
@@ -248,9 +272,10 @@ struct DashboardView: View {
                 .foregroundStyle(Color.spGold)
 
             if allExpenses.isEmpty {
-                Text("No expenses recorded yet")
+                Text("Start tracking your finances to see your overview.")
                     .font(.subheadline)
                     .foregroundStyle(Color.spTextSecondary)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.spCardBg)
@@ -297,15 +322,27 @@ struct DashboardView: View {
     // MARK: - Filtering
     private func filterByPeriod<T>(_ items: [T], keyPath: KeyPath<T, Date?>) -> [T] {
         guard selectedPeriod != .allTime else { return items }
-        let cal = Calendar.current
         let now = Date()
-        let start: Date
         switch selectedPeriod {
-        case .week: start = cal.date(byAdding: .day, value: -7, to: now)!
-        case .month: start = cal.date(byAdding: .month, value: -1, to: now)!
-        case .allTime: return items
+        case .week:
+            // ISO week (Mon → Sun) so totals reset every Monday at midnight.
+            var cal = Calendar(identifier: .iso8601)
+            cal.firstWeekday = 2
+            guard let week = cal.dateInterval(of: .weekOfYear, for: now) else { return items }
+            return items.filter {
+                let d = $0[keyPath: keyPath] ?? .distantPast
+                return d >= week.start && d < week.end
+            }
+        case .month:
+            let cal = Calendar.current
+            guard let month = cal.dateInterval(of: .month, for: now) else { return items }
+            return items.filter {
+                let d = $0[keyPath: keyPath] ?? .distantPast
+                return d >= month.start && d < month.end
+            }
+        case .allTime:
+            return items
         }
-        return items.filter { ($0[keyPath: keyPath] ?? .distantPast) >= start }
     }
 
     // MARK: - Category Helpers

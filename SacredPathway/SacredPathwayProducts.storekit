@@ -1,0 +1,223 @@
+{
+  "identifier" : "9A3B5C7D-1234-5678-9ABC-DEF012345678",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6762287642",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "sacred_pathway_subscriptions",
+      "localizations" : [
+
+      ],
+      "name" : "Sacred Pathway Subscriptions",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "SP_DRIVERHUB_PRO_MONTHLY",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "DRIVERHUB_PRO_MONTHLY_FREE_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited loads, PDF paystub export, broker intelligence — 7-day free trial",
+              "displayName" : "Driver Hub Pro",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.demarquishinton.sacredpathway.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Driver Hub Pro Monthly",
+          "subscriptionGroupID" : "sacred_pathway_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "14.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "SP_PRO_MONTHLY",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "PRO_MONTHLY_FREE_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited loads, PDF paystub export, priority support",
+              "displayName" : "Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.sacredpathway.pro_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "sacred_pathway_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "199.00",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "SP_PRO_ANNUAL",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "PRO_ANNUAL_FREE_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited loads, PDF paystub export, priority support — save 17%",
+              "displayName" : "Pro Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.sacredpathway.driverhub_pro.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro Annual",
+          "subscriptionGroupID" : "sacred_pathway_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "SP_CARRIER_MONTHLY",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "CARRIER_MONTHLY_FREE_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Everything in Pro + unlimited drivers, white-label, IFTA",
+              "displayName" : "Carrier Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.sacredpathway.driverhub.carrier_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Carrier Monthly",
+          "subscriptionGroupID" : "sacred_pathway_subscriptions",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "299.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "SP_CARRIER_ANNUAL",
+          "introductoryOffer" : {
+            "displayPrice" : "0",
+            "internalID" : "CARRIER_ANNUAL_FREE_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Full fleet management suite — save 17%",
+              "displayName" : "Carrier Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.sacredpathway.driverhub.carrier_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Carrier Annual",
+          "subscriptionGroupID" : "sacred_pathway_subscriptions",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

@@ -1,13 +1,20 @@
 import SwiftUI
 
-/// Manual entry form for adding loads without scanning.
-/// Used when a driver doesn't have the physical document handy.
+/// Manual entry form for adding AND editing loads without scanning.
+///
+/// - Pass `existingLoad: nil` (default) to create a brand-new load.
+/// - Pass `existingLoad: someLoad` to edit that load; fields pre-fill from
+///   it and Save performs an update instead of an insert.
 struct ManualLoadEntryView: View {
     @EnvironmentObject var supabase: SupabaseService
     @Environment(\.dismiss) var dismiss
 
+    /// If set, the form edits this load instead of creating a new one.
+    let existingLoad: Load?
+
     @State private var loadNumber = ""
     @State private var brokerName = ""
+    @State private var brokerMcNumber = ""
     @State private var origin = ""
     @State private var destination = ""
     @State private var totalMiles = ""
@@ -17,6 +24,22 @@ struct ManualLoadEntryView: View {
     @State private var isSaving = false
     @State private var showSavedAlert = false
     @State private var errorMessage: String?
+    @State private var didPrefill = false
+
+    // Broker autocomplete
+    @State private var savedBrokers: [Broker] = []
+    @State private var matchedBroker: Broker?
+    @State private var showAddBrokerPrompt = false
+
+    init(existingLoad: Load? = nil) {
+        self.existingLoad = existingLoad
+    }
+
+    /// True only when we're editing an existing row (has a real id).
+    /// A duplicate template sets `existingLoad` but leaves its id nil so
+    /// Save creates a fresh row — the UI should read "Add Load" / "Save
+    /// Load" in that case, not "Edit Load" / "Save Changes".
+    private var isEditing: Bool { existingLoad?.id != nil }
 
     private var computedRevenue: Double {
         (Double(lineHaulRate) ?? 0) +
@@ -41,6 +64,18 @@ struct ManualLoadEntryView: View {
                         sectionCard("Load Info") {
                             formField("Load #", text: $loadNumber, placeholder: "e.g. LD-2841")
                             formField("Broker", text: $brokerName, placeholder: "e.g. CH Robinson")
+                            brokerSuggestionStrip
+                            formField("MC #", text: $brokerMcNumber, placeholder: "e.g. 128156", keyboard: .numberPad)
+                            if let m = matchedBroker {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .foregroundStyle(Color.spSuccess)
+                                    Text("Matched · \(m.brokerName)")
+                                        .font(.caption2)
+                                        .foregroundStyle(Color.spSuccess)
+                                    Spacer()
+                                }
+                            }
                         }
 
                         // Route
@@ -100,7 +135,8 @@ struct ManualLoadEntryView: View {
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 50)
                             } else {
-                                Label("Save Load", systemImage: "checkmark.circle.fill")
+                                Label(isEditing ? "Save Changes" : "Save Load",
+                                      systemImage: "checkmark.circle.fill")
                                     .fontWeight(.bold)
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 50)
@@ -117,9 +153,8 @@ struct ManualLoadEntryView: View {
                 }
                 .scrollContentBackground(.hidden)
             }
-            .navigationTitle("Add Load")
+            .navigationTitle(isEditing ? "Edit Load" : "Add Load")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(Color.spBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
@@ -128,12 +163,131 @@ struct ManualLoadEntryView: View {
                         .foregroundStyle(Color.spGoldLight)
                 }
             }
-            .alert("Load Saved!", isPresented: $showSavedAlert) {
+            .alert(isEditing ? "Changes Saved!" : "Load Saved!",
+                   isPresented: $showSavedAlert) {
                 Button("OK") { dismiss() }
             } message: {
-                Text("Load \(loadNumber.isEmpty ? "" : loadNumber + " ")added successfully.")
+                Text(isEditing
+                     ? "Load \(loadNumber.isEmpty ? "" : loadNumber + " ")updated successfully."
+                     : "Load \(loadNumber.isEmpty ? "" : loadNumber + " ")added successfully.")
+            }
+            .alert("Add this broker to contacts?",
+                   isPresented: $showAddBrokerPrompt) {
+                Button("Skip") { showSavedAlert = true }
+                Button("Add Broker") { Task { await addBrokerAndFinish() } }
+            } message: {
+                Text("\(brokerName) isn't in your broker list. Save it for one-tap selection on future loads?")
+            }
+            .onAppear(perform: prefillIfNeeded)
+            .task { await loadBrokers() }
+            .onChange(of: brokerName) { _, _ in updateMatchedBroker() }
+        }
+    }
+
+    // MARK: - Broker autocomplete
+
+    private var brokerSuggestionStrip: some View {
+        let lower = brokerName.lowercased().trimmingCharacters(in: .whitespaces)
+        let suggestions: [Broker] = lower.isEmpty
+            ? []
+            : Array(savedBrokers.filter {
+                $0.brokerName.lowercased().contains(lower) &&
+                $0.brokerName.lowercased() != lower
+            }.prefix(3))
+        return Group {
+            if !suggestions.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(suggestions, id: \.id) { b in
+                            Button {
+                                brokerName = b.brokerName
+                                if brokerMcNumber.isEmpty, let mc = b.mcNumber {
+                                    brokerMcNumber = mc
+                                }
+                                matchedBroker = b
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "building.2.fill")
+                                        .font(.caption2)
+                                    Text(b.brokerName)
+                                        .font(.caption)
+                                }
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(Color.spGold.opacity(0.18))
+                                .foregroundStyle(Color.spGoldLight)
+                                .clipShape(Capsule())
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private func loadBrokers() async {
+        do {
+            savedBrokers = try await supabase.fetchBrokers()
+            updateMatchedBroker()
+        } catch {
+            // Non-fatal; manual entry still works without broker list.
+        }
+    }
+
+    private func updateMatchedBroker() {
+        let trimmed = brokerName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            matchedBroker = nil
+            return
+        }
+        let target = Broker.normalize(trimmed)
+        if let m = savedBrokers.first(where: {
+            ($0.normalizedName ?? Broker.normalize($0.brokerName)) == target
+        }) {
+            matchedBroker = m
+            if brokerMcNumber.isEmpty, let mc = m.mcNumber { brokerMcNumber = mc }
+        } else {
+            matchedBroker = nil
+        }
+    }
+
+    private func addBrokerAndFinish() async {
+        guard let profileId = supabase.client.auth.currentUser?.id else {
+            showSavedAlert = true
+            return
+        }
+        let trimmed = brokerName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { showSavedAlert = true; return }
+        do {
+            let broker = Broker(
+                profileId: profileId,
+                brokerName: trimmed,
+                normalizedName: Broker.normalize(trimmed),
+                mcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                totalLoads: 0,
+                totalRevenue: 0
+            )
+            _ = try await supabase.createBroker(broker)
+        } catch {
+            // Don't block the load-saved flow if broker insert fails.
+            print("⚠️ Broker save failed: \(error)")
+        }
+        showSavedAlert = true
+    }
+
+    // MARK: - Prefill (edit mode)
+
+    private func prefillIfNeeded() {
+        guard !didPrefill, let load = existingLoad else { return }
+        didPrefill = true
+        loadNumber = load.loadNumber ?? ""
+        brokerName = load.brokerName ?? ""
+        brokerMcNumber = load.brokerMcNumber ?? ""
+        origin = load.origin ?? ""
+        destination = load.destination ?? ""
+        totalMiles = load.totalMiles.map { String(format: "%.0f", $0) } ?? ""
+        lineHaulRate = load.lineHaulRate.map { String(format: "%.2f", $0) } ?? ""
+        fuelSurcharge = load.fuelSurcharge.map { String(format: "%.2f", $0) } ?? ""
+        accessorialCharges = load.accessorialCharges.map { String(format: "%.2f", $0) } ?? ""
     }
 
     // MARK: - Components
@@ -190,21 +344,48 @@ struct ManualLoadEntryView: View {
 
         Task {
             do {
-                let load = Load(
-                    profileId: profileId,
-                    loadNumber: loadNumber.isEmpty ? nil : loadNumber,
-                    brokerName: brokerName.isEmpty ? nil : brokerName,
-                    origin: origin.isEmpty ? nil : origin,
-                    destination: destination.isEmpty ? nil : destination,
-                    totalMiles: Double(totalMiles),
-                    lineHaulRate: Double(lineHaulRate),
-                    fuelSurcharge: Double(fuelSurcharge),
-                    accessorialCharges: Double(accessorialCharges),
-                    totalRevenue: computedRevenue > 0 ? computedRevenue : nil,
-                    status: "pending"
-                )
-                _ = try await supabase.createLoad(load)
-                showSavedAlert = true
+                if let existing = existingLoad, existing.id != nil {
+                    // UPDATE path — pre-existing row, edit in place.
+                    var updated = existing
+                    updated.loadNumber = loadNumber.isEmpty ? nil : loadNumber
+                    updated.brokerName = brokerName.isEmpty ? nil : brokerName
+                    updated.brokerMcNumber = brokerMcNumber.isEmpty ? nil : brokerMcNumber
+                    updated.origin = origin.isEmpty ? nil : origin
+                    updated.destination = destination.isEmpty ? nil : destination
+                    updated.totalMiles = Double(totalMiles)
+                    updated.lineHaulRate = Double(lineHaulRate)
+                    updated.fuelSurcharge = Double(fuelSurcharge)
+                    updated.accessorialCharges = Double(accessorialCharges)
+                    updated.totalRevenue = computedRevenue > 0 ? computedRevenue : nil
+                    try await supabase.updateLoad(updated)
+                    showSavedAlert = true
+                } else {
+                    // CREATE path
+                    let load = Load(
+                        profileId: profileId,
+                        loadNumber: loadNumber.isEmpty ? nil : loadNumber,
+                        brokerName: brokerName.isEmpty ? nil : brokerName,
+                        brokerMcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                        origin: origin.isEmpty ? nil : origin,
+                        destination: destination.isEmpty ? nil : destination,
+                        totalMiles: Double(totalMiles),
+                        lineHaulRate: Double(lineHaulRate),
+                        fuelSurcharge: Double(fuelSurcharge),
+                        accessorialCharges: Double(accessorialCharges),
+                        totalRevenue: computedRevenue > 0 ? computedRevenue : nil,
+                        status: "pending"
+                    )
+                    _ = try await supabase.createLoad(load)
+                    // Refresh broker match in case the user just typed
+                    // a broker that had been added in another tab.
+                    updateMatchedBroker()
+                    let trimmed = brokerName.trimmingCharacters(in: .whitespaces)
+                    if !trimmed.isEmpty, matchedBroker == nil {
+                        showAddBrokerPrompt = true
+                    } else {
+                        showSavedAlert = true
+                    }
+                }
             } catch {
                 errorMessage = "Failed to save: \(error.localizedDescription)"
             }

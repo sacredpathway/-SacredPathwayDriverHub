@@ -1,6 +1,23 @@
 import Foundation
 import Supabase
 
+// MARK: - Cross-screen change notifications
+//
+// Posted whenever an Expense / Load row is created, updated, or deleted so
+// any view (Paystub generator, Dashboard, Insights, etc.) can react and
+// re-fetch without depending on tab switches or manual pull-to-refresh.
+//
+// IMPORTANT — Paystub freshness:
+//   The Settlement / Paystub generator listens for `.expensesDidChange`
+//   and auto re-runs the matcher + calculation so a brand-new fuel receipt
+//   added in the Expenses tab shows up on the in-progress paystub the
+//   instant the user navigates back. This is the fix for the bug where
+//   newly added expenses were missing from generated PDFs.
+extension Notification.Name {
+    static let expensesDidChange = Notification.Name("sph.expensesDidChange")
+    static let loadsDidChange    = Notification.Name("sph.loadsDidChange")
+}
+
 @MainActor
 class SupabaseService: ObservableObject {
 
@@ -19,6 +36,17 @@ class SupabaseService: ObservableObject {
             supabaseURL: Config.supabaseURL,
             supabaseKey: Config.supabaseAnonKey
         )
+
+        // SCREENSHOT MODE — short-circuit auth so the app boots straight into
+        // the main UI with the seed profile, no Supabase round-trip. The
+        // launch arg is the only gate; absent it, we run the normal flow
+        // below. See ScreenshotMode.swift for full rationale.
+        if ScreenshotMode.isActive {
+            self.currentProfile = ScreenshotMode.seedProfile
+            self.isAuthenticated = true
+            self.isLoading = false
+            return
+        }
 
         // Immediately set loading to false after a short delay
         // This prevents the black screen from hanging
@@ -61,9 +89,9 @@ class SupabaseService: ObservableObject {
     /// first-time and returning users both hit this same call.
     ///
     /// Requires the Apple provider to be enabled in Supabase Auth settings
-    /// with the app's Services ID + secret. Until that's configured server-
-    /// side this throws; LoginView shows a friendly "Apple sign-in isn't set
-    /// up yet — use email instead" message.
+    /// with the app's Services ID + secret. Until backend re-verification is
+    /// complete, LoginView hides the Apple sign-in button entirely
+    /// (LoginFeatureFlags.appleSignInEnabled = false).
     func signInWithApple(idToken: String, nonce: String) async throws {
         try await client.auth.signInWithIdToken(
             credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
@@ -92,6 +120,76 @@ class SupabaseService: ObservableObject {
         try await client.auth.signOut()
         self.currentProfile = nil
         self.isAuthenticated = false
+    }
+
+    /// Send a password-reset email. Supabase routes the user back to the
+    /// app via the `redirectTo` URL configured in Supabase Auth settings.
+    /// We pass nil so Supabase falls back to the project default — that
+    /// avoids hard-coding a URL that might drift from the dashboard.
+    ///
+    /// Always returns success (no throw) for unknown emails so attackers
+    /// can't enumerate registered addresses by triggering errors.
+    func resetPassword(email: String) async throws {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !trimmed.isEmpty else {
+            throw NSError(
+                domain: "SacredPathway.Auth",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Enter the email address on your account."]
+            )
+        }
+        try await client.auth.resetPasswordForEmail(trimmed)
+    }
+
+    // MARK: - Account deletion (App Store Guideline 5.1.1(v))
+    //
+    // Apple requires an in-app path to INITIATE account deletion for any app
+    // that lets users create accounts. The client cannot delete auth rows
+    // directly — that needs the service role key, which must never ship in
+    // the app. So we invoke a Supabase Edge Function (`delete-account`) that
+    // performs the deletion server-side with the service role key.
+    //
+    // Deploy this function from `supabase/functions/delete-account` before
+    // release. It should:
+    //   1. Read the caller's JWT (req.headers.authorization) to get userId
+    //   2. Delete the user's rows from app tables (loads, expenses, etc.)
+    //   3. Delete the user's storage objects under `<userId>/*`
+    //   4. Call supabaseAdmin.auth.admin.deleteUser(userId)
+    //
+    // On the client, we invoke it, then sign out locally regardless of
+    // outcome so the user is never left in a half-deleted state that keeps
+    // them signed in.
+    func deleteAccount() async throws {
+        struct EmptyBody: Encodable {}
+        struct DeleteResponse: Decodable { let success: Bool? }
+
+        // Run the server-side delete first, capture any error, but do not
+        // rethrow yet — we still need to clear the local session below so
+        // the user is never left "authenticated but non-existent".
+        var thrownError: Error?
+        do {
+            _ = try await invokeFunction(
+                name: Config.deleteAccountFunction,
+                body: EmptyBody()
+            ) as DeleteResponse
+        } catch {
+            thrownError = error
+        }
+
+        // Always drop local session — even on error. AWAITED (not a
+        // detached `Task`) so by the time this function returns, sign-out
+        // has actually completed and `isAuthenticated == false` is
+        // observable by SwiftUI. Apple's 5.1.1(v) screen recording must
+        // deterministically return to the login screen; the previous
+        // `defer { Task { ... } }` pattern left a brief window where a
+        // recording could capture a stale authenticated state.
+        try? await client.auth.signOut()
+        self.currentProfile = nil
+        self.isAuthenticated = false
+
+        if let thrownError {
+            throw thrownError
+        }
     }
 
     // MARK: - Profile
@@ -123,6 +221,7 @@ class SupabaseService: ObservableObject {
     // MARK: - Loads
 
     func fetchLoads() async throws -> [Load] {
+        if ScreenshotMode.isActive { return ScreenshotMode.seedLoads }
         let loads: [Load] = try await client.from("loads")
             .select()
             .order("created_at", ascending: false)
@@ -138,6 +237,7 @@ class SupabaseService: ObservableObject {
             .single()
             .execute()
             .value
+        NotificationCenter.default.post(name: .loadsDidChange, object: nil)
         return created
     }
 
@@ -147,12 +247,50 @@ class SupabaseService: ObservableObject {
             .update(load)
             .eq("id", value: loadId)
             .execute()
+        NotificationCenter.default.post(name: .loadsDidChange, object: nil)
+    }
+
+    /// Mark a batch of loads as `settled` after a paystub is generated.
+    /// Uses the existing `loads.status` text column so no migration is
+    /// needed. Loads in this state are filtered out of the Paystub
+    /// Maker picker by default to prevent double-billing.
+    func markLoadsAsSettled(loadIds: [UUID]) async throws {
+        guard !loadIds.isEmpty else { return }
+        struct StatusPatch: Encodable { let status: String }
+        for id in loadIds {
+            try await client.from("loads")
+                .update(StatusPatch(status: LoadStatus.settled.rawValue))
+                .eq("id", value: id)
+                .execute()
+        }
+        NotificationCenter.default.post(name: .loadsDidChange, object: nil)
+    }
+
+    /// Reverse of `markLoadsAsSettled` — used when the user explicitly
+    /// reselects a settled load in the Paystub Maker (intentional re-bill).
+    func markLoadsAsUnsettled(loadIds: [UUID]) async throws {
+        guard !loadIds.isEmpty else { return }
+        struct StatusPatch: Encodable { let status: String }
+        for id in loadIds {
+            try await client.from("loads")
+                .update(StatusPatch(status: LoadStatus.assigned.rawValue))
+                .eq("id", value: id)
+                .execute()
+        }
+        NotificationCenter.default.post(name: .loadsDidChange, object: nil)
     }
 
     /// Delete a load and any documents/expenses linked to it via load_id.
     /// Supabase cascades aren't assumed — we wipe children first so the
     /// parent delete never fails on FK constraints.
     func deleteLoad(id loadId: UUID) async throws {
+        // Fire notifications on exit regardless of success path so any
+        // dependent view (Dashboard, Paystub) re-pulls. A redundant refresh
+        // is cheap; a missed delete that hides revenue is not.
+        defer {
+            NotificationCenter.default.post(name: .expensesDidChange, object: nil)
+            NotificationCenter.default.post(name: .loadsDidChange, object: nil)
+        }
         try await client.from("documents")
             .delete()
             .eq("load_id", value: loadId)
@@ -170,6 +308,9 @@ class SupabaseService: ObservableObject {
     // MARK: - Expenses
 
     func fetchExpenses(forLoad loadId: UUID) async throws -> [Expense] {
+        if ScreenshotMode.isActive {
+            return ScreenshotMode.seedExpenses.filter { $0.loadId == loadId }
+        }
         let expenses: [Expense] = try await client.from("expenses")
             .select()
             .eq("load_id", value: loadId)
@@ -179,6 +320,7 @@ class SupabaseService: ObservableObject {
     }
 
     func fetchAllExpenses() async throws -> [Expense] {
+        if ScreenshotMode.isActive { return ScreenshotMode.seedExpenses }
         guard let userId = client.auth.currentUser?.id else { return [] }
         let expenses: [Expense] = try await client.from("expenses")
             .select()
@@ -221,7 +363,10 @@ class SupabaseService: ObservableObject {
             // Step 2: decode the bytes we just logged.
             let decoder = JSONDecoder()
             do {
-                return try decoder.decode(Expense.self, from: raw.data)
+                let decoded = try decoder.decode(Expense.self, from: raw.data)
+                // Broadcast so any in-progress paystub/dashboard re-pulls fresh data.
+                NotificationCenter.default.post(name: .expensesDidChange, object: nil)
+                return decoded
             } catch {
                 #if DEBUG
                 print("[createExpense] decode failed: \(error)")
@@ -242,6 +387,7 @@ class SupabaseService: ObservableObject {
             .update(expense)
             .eq("id", value: expenseId)
             .execute()
+        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
     }
 
     func deleteExpense(_ expenseId: UUID) async throws {
@@ -249,11 +395,13 @@ class SupabaseService: ObservableObject {
             .delete()
             .eq("id", value: expenseId)
             .execute()
+        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
     }
 
     // MARK: - Drivers
 
     func fetchDrivers() async throws -> [Driver] {
+        if ScreenshotMode.isActive { return [] }
         let drivers: [Driver] = try await client.from("drivers")
             .select()
             .eq("active", value: true)
@@ -276,6 +424,7 @@ class SupabaseService: ObservableObject {
     // MARK: - Documents
 
     func fetchDocuments() async throws -> [TruckDocument] {
+        if ScreenshotMode.isActive { return [] }
         guard let userId = client.auth.currentUser?.id else { return [] }
         let documents: [TruckDocument] = try await client.from("documents")
             .select()
@@ -294,6 +443,72 @@ class SupabaseService: ObservableObject {
             .execute()
             .value
         return created
+    }
+
+    /// Upload a generated PDF (paystub, IFTA worksheet, settlement, etc.) to
+    /// the user's private `documents` Supabase Storage bucket and create a
+    /// matching row in the `documents` table so the PDF shows up in the
+    /// Document Vault tab. Returns the storage path.
+    ///
+    /// - Parameters:
+    ///   - pdfData: The bytes of the generated PDF.
+    ///   - documentType: Free-text type tag — used by `DocumentVaultView`
+    ///     filter chips. Recommended values: "paystub", "ifta_report",
+    ///     "settlement", "compliance", "fuel_receipt", "rate_confirmation".
+    ///   - title: Human-readable name for the document (e.g.
+    ///     "Paystub — Marcus Reed — Week ending 04/19/2026").
+    ///   - loadId: Optional load this document is tied to (paystubs cover
+    ///     multiple loads, so this is usually nil for paystubs).
+    @discardableResult
+    func saveDocumentRecord(
+        pdfData: Data,
+        documentType: String,
+        title: String,
+        loadId: UUID? = nil
+    ) async throws -> TruckDocument {
+        guard let userId = client.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseService", code: 401,
+                          userInfo: [NSLocalizedDescriptionKey: "Not signed in."])
+        }
+
+        // Path: <userId-lowercase>/<docType>/<timestamp>-<uuid>.pdf
+        // Lowercased UUID per the Storage RLS rule (Postgres auth.uid()::text
+        // is lowercase; mismatched case → 403 from RLS).
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let docId = UUID().uuidString.lowercased()
+        let path = "\(userId.uuidString.lowercased())/\(documentType)/\(timestamp)-\(docId).pdf"
+
+        try await uploadDocument(data: pdfData, path: path, contentType: "application/pdf")
+
+        // Build the row. `extractedData.notes` holds the human-readable
+        // title so DocumentVaultView's existing search-by-text logic finds
+        // it without a schema change.
+        var extracted = ExtractedData()
+        extracted.notes = title
+
+        let row = TruckDocument(
+            id: nil,
+            profileId: userId,
+            loadId: loadId,
+            documentType: documentType,
+            storagePath: path,
+            extractedData: extracted,
+            rawText: nil,
+            confidence: "high",
+            status: "processed",
+            errorMessage: nil,
+            isManual: true,
+            provider: "manual",
+            model: nil,
+            fileMimeType: "application/pdf",
+            fileSize: pdfData.count,
+            retryCount: 0,
+            processed: true,
+            createdAt: nil,
+            updatedAt: nil
+        )
+
+        return try await createDocument(row)
     }
 
     /// Full-row update — re-reads the row from the DB afterwards.
@@ -322,6 +537,7 @@ class SupabaseService: ObservableObject {
     // MARK: - Settlements
 
     func fetchSettlements() async throws -> [Settlement] {
+        if ScreenshotMode.isActive { return [] }
         let settlements: [Settlement] = try await client.from("settlements")
             .select()
             .order("created_at", ascending: false)
@@ -343,6 +559,7 @@ class SupabaseService: ObservableObject {
     // MARK: - Brokers
 
     func fetchBrokers() async throws -> [Broker] {
+        if ScreenshotMode.isActive { return [] }
         guard let userId = client.auth.currentUser?.id else { return [] }
         let brokers: [Broker] = try await client.from("brokers")
             .select()
@@ -469,6 +686,7 @@ class SupabaseService: ObservableObject {
     // MARK: - Compliance Documents
 
     func fetchComplianceDocuments() async throws -> [ComplianceDocument] {
+        if ScreenshotMode.isActive { return [] }
         guard let userId = client.auth.currentUser?.id else { return [] }
         let documents: [ComplianceDocument] = try await client.from("compliance_documents")
             .select()
@@ -565,6 +783,7 @@ class SupabaseService: ObservableObject {
     // MARK: - IFTA Entries
 
     func fetchIFTAEntries() async throws -> [IFTAEntry] {
+        if ScreenshotMode.isActive { return [] }
         guard let userId = client.auth.currentUser?.id else { return [] }
         let entries: [IFTAEntry] = try await client.from("ifta_entries")
             .select()
@@ -649,6 +868,7 @@ class SupabaseService: ObservableObject {
 
     /// History list, most-recent first. Drives DailyInspectionListView.
     func fetchDailyInspections() async throws -> [DailyInspection] {
+        if ScreenshotMode.isActive { return [] }
         guard let userId = client.auth.currentUser?.id else { return [] }
         let inspections: [DailyInspection] = try await client.from("daily_inspections")
             .select()

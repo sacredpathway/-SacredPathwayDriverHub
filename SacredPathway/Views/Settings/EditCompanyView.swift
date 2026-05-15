@@ -101,7 +101,6 @@ struct EditCompanyView: View {
             }
         }
         .navigationTitle("Edit Company")
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .onAppear { loadCurrentValues() }
     }
 

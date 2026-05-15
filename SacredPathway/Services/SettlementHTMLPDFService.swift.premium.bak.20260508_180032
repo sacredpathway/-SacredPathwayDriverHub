@@ -1,0 +1,461 @@
+//
+//  SettlementHTMLPDFService.swift  (v2 — proper WKWebView layout pipeline)
+//  Sacred Pathway Driver Hub
+//
+//  Renders the canonical SPH settlement PDF using sph_template.html via
+//  WKWebView → createPDF(). Output is byte-identical in design to the
+//  WeasyPrint reference: SF Pro / Inter typography, route pills, navy NET PAY
+//  callout, gold accents, true vector PDF.
+//
+//  v2 fixes vs v1:
+//   - WKWebView is added to a hidden host window so iOS actually performs
+//     layout (and applies CSS / loads fonts / decodes data-URI images).
+//   - Waits for document.readyState === 'complete' AND document.fonts.status
+//     === 'loaded' before snapshotting.
+//   - Sets baseURL = Bundle.main.bundleURL so resource resolution works.
+//   - Resizes the webview to the natural document height before createPDF,
+//     so multi-page content doesn't get clipped.
+//   - Drops the explicit `createPDF` rect (let WebKit use the layout box).
+//
+
+import UIKit
+import WebKit
+import CoreImage.CIFilterBuiltins
+
+@MainActor
+final class SettlementHTMLPDFService {
+
+    static func generate(
+        calculation: SettlementCalculation,
+        loads: [Load],
+        expenses: [Expense],
+        companyName: String,
+        driverName: String,
+        periodStart: Date,
+        periodEnd: Date,
+        logo: UIImage? = nil,
+        primaryColor: UIColor? = nil,
+        truckNumber: String? = nil,
+        dispatcherName: String? = nil,
+        mcNumber: String? = nil,
+        dotNumber: String? = nil,
+        notes: [String] = [],
+        theme: PaystubTheme = .defaultTheme,
+        statementId: String? = nil,
+        status: PaystubStatus? = nil,
+        paymentMethod: String? = nil,
+        ytd: YTDSummary? = nil,
+        adjustments: [PaystubAdjustment] = [],
+        escrowBalance: Double? = nil,
+        showSignatureLines: Bool = true,
+        driverAddress: String? = nil,
+        driverEmail: String? = nil,
+        driverPhone: String? = nil,
+        paymentAccountSuffix: String? = nil
+    ) async throws -> Data {
+
+        let html = try buildHTML(
+            calculation: calculation,
+            loads: loads,
+            expenses: expenses,
+            companyName: companyName,
+            driverName: driverName,
+            periodStart: periodStart,
+            periodEnd: periodEnd,
+            logo: logo,
+            mcNumber: mcNumber,
+            dotNumber: dotNumber,
+            statementId: statementId,
+            status: status,
+            paymentMethod: paymentMethod,
+            driverAddress: driverAddress,
+            driverEmail: driverEmail,
+            driverPhone: driverPhone,
+            paymentAccountSuffix: paymentAccountSuffix
+        )
+        return try await Renderer.render(html: html)
+    }
+
+    // MARK: - HTML construction
+
+    private static func buildHTML(
+        calculation: SettlementCalculation,
+        loads: [Load],
+        expenses: [Expense],
+        companyName: String,
+        driverName: String,
+        periodStart: Date,
+        periodEnd: Date,
+        logo: UIImage?,
+        mcNumber: String?,
+        dotNumber: String?,
+        statementId: String?,
+        status: PaystubStatus?,
+        paymentMethod: String?,
+        driverAddress: String?,
+        driverEmail: String?,
+        driverPhone: String?,
+        paymentAccountSuffix: String?
+    ) throws -> String {
+
+        guard
+            let url = Bundle.main.url(forResource: "sph_template", withExtension: "html"),
+            var template = try? String(contentsOf: url, encoding: .utf8)
+        else {
+            throw NSError(
+                domain: "SettlementHTMLPDFService", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Bundle resource sph_template.html not found"]
+            )
+        }
+
+        let dfPayDate = DateFormatter(); dfPayDate.dateFormat = "MMM d, yyyy"
+        let dfStart   = DateFormatter(); dfStart.dateFormat   = "MMM d"
+        let dfEnd     = DateFormatter(); dfEnd.dateFormat     = "d, yyyy"
+        let dfStamp   = DateFormatter(); dfStamp.dateFormat   = "yyyyMMdd"
+
+        let payDate    = dfPayDate.string(from: periodEnd)
+        let payPeriod  = "\(dfStart.string(from: periodStart)) – \(dfEnd.string(from: periodEnd))"
+        let dateStamp  = dfStamp.string(from: periodEnd)
+
+        var logoHTML = ""
+        if let logo = logo {
+            // Embed at 4x the CSS display height (which the template uses ~48pt for).
+            // That gives ~192px tall PNG embedded — sharp through 400% zoom and beyond.
+            let cssHeight: CGFloat = 48
+            let upscaled = upscaleLogoForPDF(logo, displayHeight: cssHeight, scale: 4.0)
+            if let png = upscaled.pngData() {
+                let b64 = png.base64EncodedString()
+                logoHTML = "<img class=\"logo-img\" alt=\"\(escape(companyName))\" src=\"data:image/png;base64,\(b64)\">"
+            }
+        }
+
+        var metaParts: [String] = []
+        if let mc = mcNumber, !mc.isEmpty {
+            metaParts.append("<span class=\"kv-tag\">MC#</span> \(escape(mc))")
+        }
+        if let dot = dotNumber, !dot.isEmpty {
+            metaParts.append("<span class=\"kv-tag\">DOT#</span> \(escape(dot))")
+        }
+        let carrierMeta = metaParts.isEmpty
+            ? "&nbsp;"
+            : metaParts.joined(separator: "<span class=\"pipe\">|</span>")
+
+        let payroll = (statementId?.isEmpty == false)
+            ? statementId!
+            : "PY\(String(dateStamp.suffix(5)))"
+
+        let statusStr = (status?.label ?? "PAID").uppercased()
+
+        let initials = driverName.split(separator: " ")
+            .compactMap { $0.first.map { String($0) } }
+            .joined()
+            .uppercased()
+        let refId = "SPH-\(payroll)-\(initials)-\(dateStamp)"
+
+        let loadsRows = buildLoadsRows(loads: loads)
+
+        let displayedExpenseTotal = expenses.map { $0.amount }.reduce(0, +)
+        let totalDeductions = displayedExpenseTotal
+            + calculation.factoringFeeAmount
+            + calculation.dispatcherFeeAmount
+            + calculation.authorityFee
+            + calculation.maintenanceReserve
+        let deductionsRows = buildDeductionsRows(expenses: expenses, calculation: calculation)
+
+        let verifyURL = "sacredpathway.app/v/\(payroll)"
+        let qrB64 = generateQRBase64(payload: refId)
+
+        let replacements: [String: String] = [
+            "{{LOGO_BLOCK}}":         logoHTML,
+            "{{carrier_name}}":       escape(companyName),
+            "{{carrier_meta_html}}":  carrierMeta,
+            "{{payroll_no}}":         escape(payroll),
+            "{{pay_date}}":           escape(payDate),
+            "{{pay_period}}":         escape(payPeriod),
+            "{{status}}":             escape(statusStr),
+            "{{driver_name}}":        escape(driverName),
+            "{{driver_address}}":     escape(driverAddress ?? "—"),
+            "{{driver_email}}":       escape(driverEmail ?? "—"),
+            "{{driver_phone}}":       escape(driverPhone ?? "—"),
+            "{{payment_method}}":     escape(paymentMethod ?? "Direct Deposit"),
+            "{{payment_account}}":    paymentAccountSuffix.map { "Account ending •••• \(escape($0))  •  ACH Transfer" } ?? "ACH Transfer",
+            "{{reference_id}}":       escape(refId),
+            "{{LOADS_ROWS}}":         loadsRows,
+            "{{gross_pay}}":          calculation.totalRevenue.asCurrency,
+            "{{DEDUCTION_ROWS}}":     deductionsRows,
+            "{{total_deductions}}":   totalDeductions.asCurrency,
+            "{{net_pay_no_dollar}}":  formatPlainAmount(calculation.carrierNetPay),
+            "{{verify_url_short}}":   escape(verifyURL),
+            "{{QR_B64}}":             qrB64
+        ]
+
+        for (k, v) in replacements {
+            template = template.replacingOccurrences(of: k, with: v)
+        }
+        return template
+    }
+
+    // MARK: - Row builders
+
+    private static func buildLoadsRows(loads: [Load]) -> String {
+        let f = DateFormatter(); f.dateFormat = "MM/dd/yy"
+        var html = ""
+        for load in loads {
+            let originLabel = stateOrCity(load.origin)
+            let destLabel   = stateOrCity(load.destination)
+            let date        = (load.deliveryDate ?? load.pickupDate).map { f.string(from: $0) } ?? ""
+            let revenue     = load.totalRevenue ?? 0
+            let amount      = revenue.asCurrency
+            html += """
+              <tr>
+                <td>
+                  <span class="route">
+                    <span class="from">\(escape(originLabel))</span>
+                    <span class="arrow"></span>
+                    <span class="to">\(escape(destLabel))</span>
+                    <span class="date">\(escape(date))</span>
+                  </span>
+                </td>
+                <td class="num">1</td>
+                <td class="num">\(amount)</td>
+                <td class="num">\(amount)</td>
+              </tr>
+            """
+        }
+        return html
+    }
+
+    private static func buildDeductionsRows(
+        expenses: [Expense],
+        calculation: SettlementCalculation
+    ) -> String {
+        let f = DateFormatter(); f.dateFormat = "MM/dd/yy"
+        var html = ""
+        for exp in expenses {
+            let label = (exp.description?.isEmpty == false) ? exp.description! : exp.category.capitalized
+            let dateStr = exp.receiptDate.map { f.string(from: $0) }
+            let sub = dateStr.map { " <span class=\"ded-sub\">\(escape($0))</span>" } ?? ""
+            html += """
+              <tr>
+                <td><span class="ded-label">\(escape(label))</span>\(sub)</td>
+                <td class="num">\(exp.amount.asCurrency)</td>
+              </tr>
+            """
+        }
+        if calculation.factoringFeeAmount > 0 {
+            html += deductionRow(label: "Factoring Fee", sub: "% of gross", amount: calculation.factoringFeeAmount)
+        }
+        if calculation.dispatcherFeeAmount > 0 {
+            html += deductionRow(label: "Dispatcher Fee", sub: nil, amount: calculation.dispatcherFeeAmount)
+        }
+        if calculation.authorityFee > 0 {
+            html += deductionRow(label: "Authority Lease", sub: "% of gross", amount: calculation.authorityFee)
+        }
+        if calculation.maintenanceReserve > 0 {
+            html += deductionRow(label: "Maintenance Reserve", sub: nil, amount: calculation.maintenanceReserve)
+        }
+        return html
+    }
+
+    private static func deductionRow(label: String, sub: String?, amount: Double) -> String {
+        let subSpan = sub.map { " <span class=\"ded-sub\">\(escape($0))</span>" } ?? ""
+        return """
+          <tr>
+            <td><span class="ded-label">\(escape(label))</span>\(subSpan)</td>
+            <td class="num">\(amount.asCurrency)</td>
+          </tr>
+        """
+    }
+
+    // MARK: - Utilities
+
+    private static func stateOrCity(_ raw: String?) -> String {
+        let s = (raw ?? "").trimmingCharacters(in: .whitespaces)
+        if s.isEmpty { return "—" }
+        if let comma = s.lastIndex(of: ",") {
+            let tail = s[s.index(after: comma)...].trimmingCharacters(in: .whitespaces)
+            if tail.count == 2 { return tail.uppercased() }
+        }
+        if s.count <= 3 { return s.uppercased() }
+        return String(s.prefix(12)).uppercased()
+    }
+
+    private static func formatPlainAmount(_ v: Double) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.minimumFractionDigits = 2
+        f.maximumFractionDigits = 2
+        f.usesGroupingSeparator = true
+        f.locale = Locale(identifier: "en_US")
+        return f.string(from: NSNumber(value: v)) ?? "0.00"
+    }
+
+    private static func generateQRBase64(payload: String) -> String {
+        let context = CIContext()
+        let filter  = CIFilter.qrCodeGenerator()
+        filter.message = Data(payload.utf8)
+        filter.correctionLevel = "Q"
+        guard let out = filter.outputImage else { return "" }
+        let scaled = out.transformed(by: CGAffineTransform(scaleX: 12, y: 12))
+        guard let cg = context.createCGImage(scaled, from: scaled.extent) else { return "" }
+        return UIImage(cgImage: cg).pngData()?.base64EncodedString() ?? ""
+    }
+
+    private static func escape(_ s: String) -> String {
+        s.replacingOccurrences(of: "&",  with: "&amp;")
+         .replacingOccurrences(of: "<",  with: "&lt;")
+         .replacingOccurrences(of: ">",  with: "&gt;")
+         .replacingOccurrences(of: "\"", with: "&quot;")
+    }
+
+    // MARK: - Renderer (proper WKWebView layout pipeline)
+
+    @MainActor
+    private final class Renderer: NSObject, WKNavigationDelegate {
+
+        // Strong refs so renderers + the host window survive until createPDF resumes
+        private static var liveRenderers: [Renderer] = []
+        private static var hostWindow: UIWindow?
+
+        static func render(html: String) async throws -> Data {
+            let r = Renderer()
+            liveRenderers.append(r)
+            defer { liveRenderers.removeAll { $0 === r } }
+            return try await r.run(html: html)
+        }
+
+        private var continuation: CheckedContinuation<Data, Error>?
+        private var webView: WKWebView!
+
+        private func run(html: String) async throws -> Data {
+
+            // Create / reuse a hidden host window so iOS actually performs layout
+            // (off-screen WKWebViews skip layout, which is why CSS appeared "missing").
+            if Self.hostWindow == nil {
+                let scene = UIApplication.shared.connectedScenes
+                    .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+                let win: UIWindow = (scene != nil) ? UIWindow(windowScene: scene!) : UIWindow(frame: .zero)
+                win.windowLevel = .alert + 1
+                win.rootViewController = UIViewController()
+                win.alpha = 0.001          // effectively invisible
+                win.frame = CGRect(x: -2000, y: -2000, width: 612, height: 1100)
+                win.isHidden = false       // must be visible (off-screen) for layout
+                Self.hostWindow = win
+            }
+
+            // US Letter at 72 DPI = 612pt wide. Initial height generous for layout.
+            let pageWidth: CGFloat = 612
+            let initialHeight: CGFloat = 1500
+            let cfg = WKWebViewConfiguration()
+            cfg.suppressesIncrementalRendering = false
+
+            webView = WKWebView(
+                frame: CGRect(x: 0, y: 0, width: pageWidth, height: initialHeight),
+                configuration: cfg
+            )
+            webView.isOpaque = true
+            webView.backgroundColor = .white
+            webView.scrollView.backgroundColor = .white
+            webView.navigationDelegate = self
+            Self.hostWindow?.rootViewController?.view.addSubview(webView)
+
+            return try await withCheckedThrowingContinuation { cont in
+                continuation = cont
+                // baseURL = Bundle.main.bundleURL so resource resolution + remote
+                // origin permissions behave correctly.
+                webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
+            }
+        }
+
+        // MARK: - WKNavigationDelegate
+
+        nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            Task { @MainActor in
+                await self.snapshotWhenReady()
+            }
+        }
+
+        nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            Task { @MainActor in
+                self.continuation?.resume(throwing: error)
+                self.continuation = nil
+                self.cleanup()
+            }
+        }
+
+        nonisolated func webView(_ webView: WKWebView,
+                                 didFailProvisionalNavigation navigation: WKNavigation!,
+                                 withError error: Error) {
+            Task { @MainActor in
+                self.continuation?.resume(throwing: error)
+                self.continuation = nil
+                self.cleanup()
+            }
+        }
+
+        // MARK: - Snapshot pipeline
+
+        @MainActor
+        private func snapshotWhenReady() async {
+            // 1. Wait until DOM is parsed AND fonts are loaded (poll up to ~3s)
+            for _ in 0..<30 {
+                let readyJS = """
+                  (document.readyState === 'complete') &&
+                  (!document.fonts || document.fonts.status === 'loaded')
+                """
+                let ready = (try? await webView.evaluateJavaScript(readyJS)) as? Bool ?? false
+                if ready { break }
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            }
+
+            // 2. Measure the natural content height
+            let measureJS = """
+              (function () {
+                document.documentElement.style.width = '612px';
+                document.documentElement.style.margin = '0';
+                document.body.style.width = '612px';
+                document.body.style.margin = '0';
+                return Math.max(
+                  document.documentElement.scrollHeight,
+                  document.body.scrollHeight
+                );
+              })();
+            """
+            let h = (try? await webView.evaluateJavaScript(measureJS)) as? CGFloat ?? 792
+            let contentHeight = max(792, ceil(h) + 24)
+
+            // 3. Resize the web view so createPDF captures the full document
+            webView.frame = CGRect(x: 0, y: 0, width: 612, height: contentHeight)
+            webView.setNeedsLayout()
+            webView.layoutIfNeeded()
+
+            // 4. Tiny final delay so the resized layout settles
+            try? await Task.sleep(nanoseconds: 150_000_000)
+
+            // 5. createPDF — let WebKit auto-page using the natural document size
+            let pdfCfg = WKPDFConfiguration()
+            // Specify the rect we want captured (full content, paginated to letter)
+            pdfCfg.rect = CGRect(x: 0, y: 0, width: 612, height: contentHeight)
+
+            webView.createPDF(configuration: pdfCfg) { [weak self] result in
+                guard let self else { return }
+                switch result {
+                case .success(let data):
+                    self.continuation?.resume(returning: data)
+                case .failure(let err):
+                    self.continuation?.resume(throwing: err)
+                }
+                self.continuation = nil
+                self.cleanup()
+            }
+        }
+
+        @MainActor
+        private func cleanup() {
+            webView?.removeFromSuperview()
+            webView?.navigationDelegate = nil
+            webView = nil
+        }
+    }
+}
+

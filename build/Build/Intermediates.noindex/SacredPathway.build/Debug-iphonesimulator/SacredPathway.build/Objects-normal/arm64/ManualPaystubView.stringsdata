@@ -1,0 +1,360 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settlements/ManualPaystubView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Edit Paystub",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Create Paystub",
+        "location": {
+          "startingColumn": 70,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Draft Saved",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 151
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "Keep Editing",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 152
+        }
+      },
+      {
+        "comment": "",
+        "key": "Close",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your paystub draft has been saved. You can find it in Payroll Drafts.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 155
+        }
+      },
+      {
+        "comment": "",
+        "key": "DRAFT",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 169
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g. Week of Apr 7 - John",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 165
+        }
+      },
+      {
+        "comment": "",
+        "key": "Company Name",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 194
+        }
+      },
+      {
+        "comment": "",
+        "key": "Driver Name",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 202
+        }
+      },
+      {
+        "comment": "",
+        "key": "Truck #",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 210
+        }
+      },
+      {
+        "comment": "",
+        "key": "Trailer #",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 214
+        }
+      },
+      {
+        "comment": "",
+        "key": "From",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 233
+        }
+      },
+      {
+        "comment": "",
+        "key": "To",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 237
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 238
+        }
+      },
+      {
+        "comment": "",
+        "key": "Import saved",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 257
+        }
+      },
+      {
+        "comment": "",
+        "key": "Import Saved Load",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 321
+        }
+      },
+      {
+        "comment": "",
+        "key": "No saved loads yet.",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 295
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add a load on the Loads tab and it will appear here.",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 298
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 325
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ → %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 361
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 337
+        }
+      },
+      {
+        "comment": "",
+        "key": "SETTLED",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 341
+        }
+      },
+      {
+        "comment": "",
+        "key": "ADDED",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 349
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load #%@",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 337
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 67,
+          "startingLine": 337
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 437
+        }
+      },
+      {
+        "comment": "",
+        "key": "No expenses — tap + to add fuel, lumper, toll, etc.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 483
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 501
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap $/% to toggle",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 535
+        }
+      },
+      {
+        "comment": "",
+        "key": "$",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 565
+        }
+      },
+      {
+        "comment": "",
+        "key": "%",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 576
+        }
+      },
+      {
+        "comment": "",
+        "key": "0",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 568
+        }
+      },
+      {
+        "comment": "",
+        "key": "%",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 584
+        }
+      },
+      {
+        "comment": "",
+        "key": "$",
+        "location": {
+          "startingColumn": 60,
+          "startingLine": 584
+        }
+      },
+      {
+        "comment": "",
+        "key": "Update Draft",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 607
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save as Draft",
+        "location": {
+          "startingColumn": 56,
+          "startingLine": 607
+        }
+      },
+      {
+        "comment": "",
+        "key": "Calculate Settlement",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 626
+        }
+      },
+      {
+        "comment": "",
+        "key": "SETTLEMENT PREVIEW",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 641
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export Paystub PDF",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 673
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export PDF",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 685
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRO",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 687
+        }
+      }
+    ]
+  },
+  "version": 1
+}

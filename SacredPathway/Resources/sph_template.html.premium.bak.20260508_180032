@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=612, initial-scale=1.0">
+<title>{{carrier_name}} — Driver Settlement {{payroll_no}}</title>
+<style>
+  @page { size: Letter; margin: 0.42in 0.50in 0.40in 0.50in; }
+
+  :root {
+    --ink:#0a0e14; --ink-2:#1a1f2b; --ink-3:#2d3340; --ink-soft:#475063;
+    --muted:#8a93a0; --muted-2:#a8afba;
+    --line:#dee1e6; --line-soft:#ebedf0;
+    --bg-soft:#f4f6f9; --bg-card:#f1f4f8;
+    --gold:#c9a96e; --gold-deep:#a48650; --gold-soft:#e8d7b0;
+    --good:#0e7a3d; --good-bg:rgba(14,122,61,0.08);
+  }
+
+  * { box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html, body {
+    margin:0; padding:0; color:var(--ink);
+    font-family:-apple-system,"SF Pro Text","SF Pro","Helvetica Neue","Inter",Arial,sans-serif;
+    font-size:10.4pt; line-height:1.45;
+    -webkit-font-smoothing:antialiased; text-rendering:geometricPrecision;
+    font-feature-settings:"kern" 1, "liga" 1, "tnum" 1;
+  }
+
+  /* HEADER ------------------------------------------------------------- */
+  .header {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding-bottom:11px; border-bottom:1.5px solid var(--ink);
+    margin-bottom:14px; position:relative;
+  }
+  .header::after {
+    content:""; position:absolute; left:0; right:0; bottom:-3.5px;
+    height:1.5px; background:var(--gold);
+  }
+  .brand {
+    display:flex; align-items:center; gap:13px;
+    flex:1 1 auto; min-width:0; margin-right:18px;
+  }
+  .logo-img {
+    height:48px; width:auto; max-width:130px;
+    object-fit:contain; flex:0 0 auto;
+    image-rendering:-webkit-optimize-contrast;
+  }
+  .brand-divider { width:1px; height:46px; background:var(--line); flex:0 0 1px; }
+  .brand-text { display:flex; flex-direction:column; min-width:0; flex:1 1 auto; }
+  .brand-name {
+    font-family:-apple-system,"SF Pro Display","SF Pro","Helvetica Neue",sans-serif;
+    font-size:13.5pt; font-weight:800; letter-spacing:-0.25px;
+    line-height:1.1; color:var(--ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .brand-sub {
+    margin-top:4px; font-size:7.6pt; color:var(--ink-soft);
+    line-height:1.45; font-weight:500; letter-spacing:0.1px;
+  }
+  .brand-sub .pipe { color:var(--gold); margin:0 5px; font-weight:800; }
+  .brand-sub .kv-tag { color:var(--muted); font-weight:700; letter-spacing:0.4px; }
+
+  .doc-title { text-align:right; min-width:230px; flex:0 0 auto; }
+  .doc-title .h1-tag {
+    display:block; font-size:7.8pt; font-weight:700;
+    letter-spacing:2.2px; text-transform:uppercase;
+    color:var(--muted); margin-bottom:5px;
+  }
+  .doc-title h1 {
+    margin:0 0 10px 0;
+    font-family:-apple-system,"SF Pro Display","SF Pro","Helvetica Neue",sans-serif;
+    font-size:24pt; font-weight:800;
+    letter-spacing:-0.6px; color:var(--ink); line-height:0.95;
+  }
+  .doc-meta {
+    display:grid; grid-template-columns:auto auto;
+    gap:4px 16px; font-size:9.2pt; text-align:right; justify-content:end;
+  }
+  .doc-meta dt {
+    color:var(--muted); text-transform:uppercase; letter-spacing:0.8px;
+    font-size:7.7pt; font-weight:700; text-align:right;
+  }
+  .doc-meta dd {
+    margin:0; color:var(--ink); font-weight:600;
+    font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap;
+  }
+  .pill-paid {
+    display:inline-block; background:var(--good-bg); color:var(--good);
+    font-size:7.7pt; font-weight:800; letter-spacing:1.4px;
+    text-transform:uppercase; padding:2.5px 8px; border-radius:3.5px;
+    border:1px solid rgba(14,122,61,0.30);
+  }
+
+  /* INFO STRIP --------------------------------------------------------- */
+  .info-grid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:11px; margin-bottom:14px;
+  }
+  .info-card {
+    background:var(--bg-card); border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    border-radius:7px; padding:10px 13px;
+  }
+  .info-label {
+    font-size:7.5pt; letter-spacing:1.6px; text-transform:uppercase;
+    color:var(--muted); font-weight:700; margin-bottom:5px;
+  }
+  .info-name {
+    font-family:-apple-system,"SF Pro Display","SF Pro","Helvetica Neue",sans-serif;
+    font-size:11.2pt; font-weight:700; color:var(--ink);
+    margin-bottom:3px; letter-spacing:-0.15px;
+  }
+  .info-line { font-size:8.8pt; color:var(--ink-soft); line-height:1.55; }
+  .info-line .kv { color:var(--muted); font-weight:600; margin-right:5px; }
+
+  /* TABLES ------------------------------------------------------------- */
+  .section-title {
+    font-size:8.2pt; letter-spacing:2px; text-transform:uppercase;
+    color:var(--muted); font-weight:700; margin:0 0 7px 2px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .section-title .gold-dot {
+    width:5px; height:5px; background:var(--gold);
+    border-radius:50%; display:inline-block;
+  }
+  table.lines {
+    width:100%; border-collapse:collapse; table-layout:fixed;
+    margin-bottom:13px; font-size:9.7pt;
+  }
+  table.lines col.col-route   { width:55%; }
+  table.lines col.col-loads   { width: 9%; }
+  table.lines col.col-rate    { width:18%; }
+  table.lines col.col-amount  { width:18%; }
+  table.lines col.col-desc    { width:75%; }
+  table.lines col.col-amt     { width:25%; }
+
+  table.lines thead th {
+    text-align:left; font-size:7.7pt; text-transform:uppercase;
+    letter-spacing:1.1px; font-weight:700; color:var(--muted);
+    padding:8px 10px 8px 0; border-bottom:1.7px solid var(--ink);
+  }
+  table.lines thead th.num { text-align:right; padding-right:0; }
+  table.lines tbody td {
+    padding:5.5px 10px 5.5px 0; border-bottom:1px solid var(--line-soft);
+    color:var(--ink); vertical-align:middle;
+  }
+  table.lines tbody td:last-child { padding-right:0; }
+  table.lines tbody tr:last-child td { border-bottom:none; }
+  td.num {
+    text-align:right; font-variant-numeric:tabular-nums; font-weight:600;
+  }
+
+  /* Route pills */
+  .route { display:inline-flex; align-items:center; gap:7px; font-weight:700; color:var(--ink); }
+  .route .from, .route .to {
+    background:#e6eaf0; padding:2.5px 8px; border-radius:3.5px;
+    font-size:8.9pt; font-weight:800; color:var(--ink-2); letter-spacing:0.5px;
+  }
+  .route .arrow {
+    display:inline-block; width:0; height:0;
+    border-top:4.5px solid transparent; border-bottom:4.5px solid transparent;
+    border-left:7px solid var(--gold-deep); margin:0 1px;
+  }
+  .route .date {
+    margin-left:9px; font-size:8.3pt; color:var(--muted); font-weight:500;
+  }
+
+  .ded-label { font-weight:700; color:var(--ink); }
+  .ded-sub { font-size:8.3pt; color:var(--muted); margin-left:7px; font-weight:500; }
+
+  .subtotal td {
+    border-top:1.7px solid var(--ink) !important;
+    border-bottom:none !important; padding-top:9px !important;
+    font-size:9.9pt; font-weight:700;
+  }
+  .subtotal td.label {
+    text-align:right; text-transform:uppercase; letter-spacing:1.3px;
+    font-size:8.3pt; color:var(--ink-soft);
+  }
+  .subtotal td.amount {
+    text-align:right; font-size:11.4pt;
+    font-variant-numeric:tabular-nums; color:var(--ink); font-weight:800;
+  }
+  .subtotal td.amount.minus { color:var(--ink-2); }
+
+  /* NET PAY HERO ------------------------------------------------------- */
+  .netpay {
+    margin:6px 0 4px 0; background:var(--ink); color:#fff;
+    border-radius:9px; padding:18px 22px;
+    display:flex; justify-content:space-between; align-items:center;
+    page-break-inside:avoid; border:1px solid var(--ink);
+    position:relative; overflow:hidden;
+  }
+  .netpay::before {
+    content:""; position:absolute; left:0; top:0; bottom:0;
+    width:4px; background:var(--gold);
+  }
+  .netpay-left { display:flex; flex-direction:column; padding-left:8px; }
+  .netpay-label {
+    font-size:7.8pt; letter-spacing:2.6px; text-transform:uppercase;
+    color:var(--gold); font-weight:800; margin-bottom:5px;
+  }
+  .netpay-name {
+    font-family:-apple-system,"SF Pro Display","SF Pro","Helvetica Neue",sans-serif;
+    font-size:12pt; color:#fff; font-weight:700; margin-bottom:2px;
+    letter-spacing:-0.1px;
+  }
+  .netpay-period { font-size:8.7pt; color:rgba(255,255,255,0.62); font-weight:500; }
+  .netpay-amount {
+    font-family:-apple-system,"SF Pro Display","SF Pro","Helvetica Neue",sans-serif;
+    font-size:28pt; font-weight:800; letter-spacing:-1px;
+    font-variant-numeric:tabular-nums; color:#fff; line-height:1;
+  }
+  .netpay-amount .currency {
+    font-size:16pt; color:var(--gold); font-weight:700;
+    margin-right:3px; vertical-align:top; position:relative; top:6px;
+  }
+
+  /* VERIFY ------------------------------------------------------------- */
+  .verify-row {
+    display:grid; grid-template-columns:1fr 96px;
+    gap:18px; margin-top:14px; align-items:center;
+    page-break-inside:avoid;
+  }
+  .verify-text { font-size:8.3pt; color:var(--ink-soft); line-height:1.55; }
+  .verify-text .verify-title {
+    font-size:7.7pt; letter-spacing:1.7px; text-transform:uppercase;
+    color:var(--muted); font-weight:700; display:block; margin-bottom:5px;
+  }
+  .verify-text .verify-id {
+    font-family:"SF Mono","Menlo","Consolas",monospace;
+    font-size:8.3pt; color:var(--ink); background:var(--bg-soft);
+    padding:2.5px 7px; border-radius:3px; border:1px solid var(--line);
+    display:inline-block; margin-top:5px;
+  }
+  .verify-qr { text-align:right; }
+  .verify-qr img {
+    width:88px; height:88px; border:1px solid var(--line);
+    padding:4px; background:#fff; border-radius:5px;
+    image-rendering:pixelated;
+  }
+  .verify-qr-label {
+    margin-top:4px; font-size:7.1pt; letter-spacing:1.3px;
+    text-transform:uppercase; color:var(--muted); font-weight:700;
+  }
+
+  /* FOOTER ------------------------------------------------------------- */
+  .footer {
+    margin-top:14px; padding-top:8px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between;
+    font-size:7.4pt; color:var(--muted); letter-spacing:0.5px;
+  }
+  .footer .gold-mark {
+    display:inline-block; width:5px; height:5px; background:var(--gold);
+    border-radius:50%; margin-right:6px; vertical-align:middle;
+    position:relative; top:-1px;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .netpay { background:var(--ink) !important; color:#fff !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      {{LOGO_BLOCK}}
+      <div class="brand-text">
+        <div class="brand-name">{{carrier_name}}</div>
+        <div class="brand-sub">{{carrier_meta_html}}</div>
+      </div>
+    </div>
+    <div class="doc-title">
+      <span class="h1-tag">Driver Earnings</span>
+      <h1>Settlement</h1>
+      <dl class="doc-meta">
+        <dt>Payroll #</dt><dd>{{payroll_no}}</dd>
+        <dt>Pay Date</dt><dd>{{pay_date}}</dd>
+        <dt>Pay Period</dt><dd>{{pay_period}}</dd>
+        <dt>Status</dt><dd><span class="pill-paid">{{status}}</span></dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- INFO STRIP -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-label">Driver / Payee</div>
+      <div class="info-name">{{driver_name}}</div>
+      <div class="info-line">
+        {{driver_address}}<br>
+        {{driver_email}} &nbsp;•&nbsp; {{driver_phone}}
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">Payment Details</div>
+      <div class="info-name">{{payment_method}}</div>
+      <div class="info-line">
+        {{payment_account}}<br>
+        <span class="kv">Reference:</span>{{reference_id}}
+      </div>
+    </div>
+  </div>
+
+  <!-- EARNINGS -->
+  <div class="section-title"><span class="gold-dot"></span>Earnings — Loads Delivered</div>
+  <table class="lines">
+    <colgroup>
+      <col class="col-route"><col class="col-loads"><col class="col-rate"><col class="col-amount">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Route</th>
+        <th class="num">Loads</th>
+        <th class="num">Rate</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{LOADS_ROWS}}
+      <tr class="subtotal">
+        <td class="label" colspan="3">Gross Pay</td>
+        <td class="amount">{{gross_pay}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- DEDUCTIONS -->
+  <div class="section-title"><span class="gold-dot"></span>Deductions</div>
+  <table class="lines">
+    <colgroup>
+      <col class="col-desc"><col class="col-amt">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{DEDUCTION_ROWS}}
+      <tr class="subtotal">
+        <td class="label">Total Deductions</td>
+        <td class="amount minus">−{{total_deductions}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- NET PAY HERO -->
+  <div class="netpay">
+    <div class="netpay-left">
+      <div class="netpay-label">Net Pay</div>
+      <div class="netpay-name">{{driver_name}}</div>
+      <div class="netpay-period">Pay Period: {{pay_period}}</div>
+    </div>
+    <div class="netpay-amount"><span class="currency">$</span>{{net_pay_no_dollar}}</div>
+  </div>
+
+  <!-- VERIFY + QR -->
+  <div class="verify-row">
+    <div class="verify-text">
+      <span class="verify-title">Verification</span>
+      This statement was generated by Sacred Pathway Driver Hub and digitally referenced for lender, accountant, and audit verification. Scan the QR or visit
+      {{verify_url_short}}.<br>
+      <span class="verify-id">REF: {{reference_id}}</span>
+    </div>
+    <div class="verify-qr">
+      <img alt="Verification QR" src="data:image/png;base64,{{QR_B64}}">
+      <div class="verify-qr-label">Scan to Verify</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div><span class="gold-mark"></span>Generated by Sacred Pathway Driver Hub &nbsp;•&nbsp; sacredpathway.app</div>
+    <div>{{carrier_name}} &nbsp;•&nbsp; Page 1 of 1</div>
+  </div>
+
+</body>
+</html>

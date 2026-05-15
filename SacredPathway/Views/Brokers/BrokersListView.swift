@@ -120,7 +120,6 @@ struct BrokersListView: View {
                     }
                 }
                 .navigationTitle("Brokers")
-                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         HStack(spacing: 12) {
@@ -153,8 +152,15 @@ struct BrokersListView: View {
                 Text(broker.brokerName)
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Color.spTextPrimary)
                 HStack(spacing: 12) {
-                    Label("\(broker.totalLoads ?? 0) loads", systemImage: "truck.box.fill")
-                        .font(.caption).foregroundStyle(Color.spTextSecondary)
+                    Label {
+                        Text("\(broker.totalLoads ?? 0) loads")
+                    } icon: {
+                        Image("SacredPathwayLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 14, height: 14)
+                    }
+                    .font(.caption).foregroundStyle(Color.spTextSecondary)
                     if let mc = broker.mcNumber {
                         Text("MC# \(mc)").font(.caption).foregroundStyle(Color.spTextSecondary)
                     }
@@ -231,7 +237,6 @@ struct AddBrokerView: View {
             }
             .navigationTitle("Add Broker")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.spGold)

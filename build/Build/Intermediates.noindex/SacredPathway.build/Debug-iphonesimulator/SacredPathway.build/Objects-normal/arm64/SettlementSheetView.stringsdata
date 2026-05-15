@@ -1,0 +1,248 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Settlements/SettlementSheetView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Settlement Sheet",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "Carrier-Style Settlement Sheet",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "Generate a professional, multi-page settlement PDF — like the one you'd get from a major carrier.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 171
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settlement Date",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 207
+        }
+      },
+      {
+        "comment": "",
+        "key": "Start",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 213
+        }
+      },
+      {
+        "comment": "",
+        "key": "End",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 216
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap + to add a trip, or import saved loads from the Loads tab.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 247
+        }
+      },
+      {
+        "comment": "",
+        "key": "Dispatch Date",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 272
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pro# / Load",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 260
+        }
+      },
+      {
+        "comment": "",
+        "key": "Adjustment",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 321
+        }
+      },
+      {
+        "comment": "",
+        "key": "Repair",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 360
+        }
+      },
+      {
+        "comment": "",
+        "key": "Maintenance Reserve",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 404
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bond Balance",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 419
+        }
+      },
+      {
+        "comment": "",
+        "key": "Fuel Savings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 430
+        }
+      },
+      {
+        "comment": "",
+        "key": "Preview Settlement",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 449
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export PDF",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 466
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share PDF",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 477
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save to Files",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 488
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export PDF",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 503
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRO",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 505
+        }
+      },
+      {
+        "comment": "",
+        "key": "Import Loads",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 576
+        }
+      },
+      {
+        "comment": "",
+        "key": "No saved loads in this period.",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 535
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 549
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ → %@",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 553
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load #%@",
+        "location": {
+          "startingColumn": 76,
+          "startingLine": 549
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load",
+        "location": {
+          "startingColumn": 95,
+          "startingLine": 549
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 580
+        }
+      },
+      {
+        "comment": "",
+        "key": "Preview",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 974
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 982
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save to Files",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 987
+        }
+      }
+    ]
+  },
+  "version": 1
+}

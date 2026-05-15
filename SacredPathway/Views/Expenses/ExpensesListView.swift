@@ -63,14 +63,11 @@ struct ExpensesListView: View {
                             Image(systemName: "receipt")
                                 .font(.system(size: 48))
                                 .foregroundStyle(Color.spTextSecondary)
-                            Text("No expenses yet")
+                            Text("No expenses yet — tap + to add your first one.")
                                 .font(.headline)
                                 .foregroundStyle(Color.spTextSecondary)
-                            Text("Tap + to add a fuel receipt, toll, lumper fee, or other expense")
-                                .font(.subheadline)
-                                .foregroundStyle(Color.spTextSecondary)
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
+                                .padding(.horizontal, 32)
                         }
                         Spacer()
                     } else {
@@ -90,7 +87,6 @@ struct ExpensesListView: View {
                     }
                 }
                 .navigationTitle("Expenses")
-                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {

@@ -26,7 +26,6 @@ struct PaystubDraftsListView: View {
             }
         }
         .navigationTitle("Payroll Drafts")
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

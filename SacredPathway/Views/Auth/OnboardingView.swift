@@ -1,218 +1,131 @@
 import SwiftUI
 
+/// Minimum-friction first-run setup. Only asks for what we absolutely need
+/// to render a paystub (company name). Everything else — MC, DOT, phone,
+/// fee percentages — has sensible defaults and is editable in Settings.
 struct OnboardingView: View {
     @EnvironmentObject var supabase: SupabaseService
     @Binding var hasCompletedOnboarding: Bool
 
     @State private var companyName = ""
-    @State private var mcNumber = ""
-    @State private var dotNumber = ""
-    @State private var phone = ""
-    @State private var driverPayPct = "25"
-    @State private var dispatcherFeePct = "5"
-    @State private var factoringFeePct = "3"
-    @State private var authorityFee = "50"
-    @State private var maintenanceReserve = "100"
-    @State private var currentStep = 1
     @State private var isLoading = false
+    @State private var errorMessage: String?
+    @FocusState private var nameFocused: Bool
+
+    // Baseline fee defaults — user can tune them in Settings → Fee
+    // Percentages later. Chosen to be a reasonable starting point for
+    // small-fleet carriers. Nothing about these is locked in.
+    private let defaults: [String: AnyEncodable] = [
+        "driver_pay_percentage":      AnyEncodable(25.0),
+        "dispatcher_fee_percentage":  AnyEncodable(5.0),
+        "factoring_fee_percentage":   AnyEncodable(3.0),
+        "authority_fee":              AnyEncodable(50.0),
+        "maintenance_reserve":        AnyEncodable(100.0),
+    ]
 
     var body: some View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
 
-            NavigationStack {
-                VStack {
-                    HStack(spacing: 8) {
-                        ForEach(1...2, id: \.self) { step in
-                            Capsule()
-                                .fill(step <= currentStep ? Color.spGold : Color.spCardBgLight)
-                                .frame(height: 4)
-                        }
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.top, 16)
+            VStack(spacing: 28) {
+                Spacer()
 
-                    if currentStep == 1 {
-                        companyInfoStep
-                    } else {
-                        feeConfigStep
-                    }
-                }
-                .navigationTitle(currentStep == 1 ? "Company Info" : "Fee Settings")
-                .navigationBarTitleDisplayMode(.large)
-                .toolbarColorScheme(.dark, for: .navigationBar)
-                .toolbarBackground(Color.spBackground, for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
-                .scrollContentBackground(.hidden)
-                .background(Color.spBackground)
-            }
-        }
-    }
+                // Logo
+                Image("SacredPathwayLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 96, height: 96)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
 
-    private var companyInfoStep: some View {
-        VStack(spacing: 20) {
-            Text("Let's set up your company profile. This info appears on your paystubs.")
-                .font(.subheadline)
-                .foregroundStyle(Color.spTextSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-                .padding(.top, 8)
-
-            VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Company Name")
-                        .font(.caption)
-                        .foregroundStyle(Color.spGold)
-                    TextField("e.g. Sacred Pathway LLC", text: $companyName)
-                        .textFieldStyle(.roundedBorder)
+                // Headline + subhead
+                VStack(spacing: 10) {
+                    Text("You're in. One last thing.")
+                        .font(.title2.weight(.bold))
                         .foregroundStyle(Color.spTextPrimary)
-                        .padding(12)
-                        .background(Color.spCardBg)
-                        .cornerRadius(8)
+                        .multilineTextAlignment(.center)
+                    Text("What's your company name? It appears at the top of every paystub you send.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.spTextSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("MC Number (optional)")
-                        .font(.caption)
-                        .foregroundStyle(Color.spGold)
-                    TextField("e.g. MC-123456", text: $mcNumber)
-                        .textFieldStyle(.roundedBorder)
+
+                // Single field
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField("e.g. Sacred Pathway Trucking LLC", text: $companyName)
+                        .textContentType(.organizationName)
+                        .padding(14)
+                        .background(Color.spCardBg)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                         .foregroundStyle(Color.spTextPrimary)
-                        .padding(12)
-                        .background(Color.spCardBg)
-                        .cornerRadius(8)
+                        .tint(Color.spGold)
+                        .focused($nameFocused)
+                        .submitLabel(.done)
+                        .onSubmit(save)
+                    Text("You can add MC #, DOT #, phone, and fees later in Settings.")
+                        .font(.caption2)
+                        .foregroundStyle(Color.spTextSecondary)
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("DOT Number (optional)")
+                .padding(.horizontal, 24)
+
+                if let errorMessage {
+                    Text(errorMessage)
                         .font(.caption)
-                        .foregroundStyle(Color.spGold)
-                    TextField("e.g. 1234567", text: $dotNumber)
-                        .textFieldStyle(.roundedBorder)
-                        .foregroundStyle(Color.spTextPrimary)
-                        .padding(12)
-                        .background(Color.spCardBg)
-                        .cornerRadius(8)
+                        .foregroundStyle(Color.spDanger)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Phone (optional)")
-                        .font(.caption)
-                        .foregroundStyle(Color.spGold)
-                    TextField("e.g. 555-555-5555", text: $phone)
-                        .textFieldStyle(.roundedBorder)
-                        .foregroundStyle(Color.spTextPrimary)
-                        .padding(12)
-                        .background(Color.spCardBg)
-                        .cornerRadius(8)
-                        .keyboardType(.phonePad)
-                }
-            }
-            .padding(.horizontal, 32)
 
-            Spacer()
+                Spacer()
 
-            Button(action: { currentStep = 2 }) {
-                Text("Next")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .foregroundStyle(Color.spBlack)
-                    .background(Color.spGold)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 24)
-        }
-    }
-
-    private var feeConfigStep: some View {
-        VStack(spacing: 20) {
-            Text("Set your default fee structure. You can change these anytime in Settings.")
-                .font(.subheadline)
-                .foregroundStyle(Color.spTextSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-                .padding(.top, 8)
-
-            VStack(spacing: 16) {
-                feeRow(label: "Driver Pay", value: $driverPayPct, suffix: "%")
-                feeRow(label: "Dispatcher Fee", value: $dispatcherFeePct, suffix: "%")
-                feeRow(label: "Factoring Fee", value: $factoringFeePct, suffix: "%")
-                feeRow(label: "Authority Fee", value: $authorityFee, suffix: "$/mo")
-                feeRow(label: "Maintenance Reserve", value: $maintenanceReserve, suffix: "$/settlement")
-            }
-            .padding(.horizontal, 32)
-
-            Spacer()
-
-            VStack(spacing: 12) {
-                Button(action: saveOnboarding) {
+                // Primary CTA
+                Button(action: save) {
                     if isLoading {
-                        ProgressView()
-                            .tint(Color.spBlack)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
+                        ProgressView().tint(Color.spBlack)
+                            .frame(maxWidth: .infinity).frame(height: 52)
                     } else {
-                        Text("Finish Setup")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
+                        Text("Get Started")
+                            .font(.headline)
                             .foregroundStyle(Color.spBlack)
+                            .frame(maxWidth: .infinity).frame(height: 52)
                     }
                 }
                 .background(Color.spGold)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .disabled(isLoading)
-
-                Button("Back") { currentStep = 1 }
-                    .font(.subheadline)
-                    .foregroundStyle(Color.spGoldLight)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .disabled(companyName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
+                .opacity((companyName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading) ? 0.5 : 1.0)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 24)
+            .frame(maxWidth: 520)
+            .frame(maxWidth: .infinity)
         }
-    }
-
-    private func feeRow(label: String, value: Binding<String>, suffix: String) -> some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundStyle(Color.spTextPrimary)
-            Spacer()
-            HStack(spacing: 4) {
-                TextField("0", text: value)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 70)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .foregroundStyle(Color.spTextPrimary)
-                    .padding(8)
-                    .background(Color.spCardBg)
-                    .cornerRadius(6)
-                Text(suffix)
-                    .font(.caption)
-                    .foregroundStyle(Color.spTextSecondary)
-                    .frame(width: 80, alignment: .leading)
+        .onAppear {
+            // Autofocus so the keyboard pops up immediately — one tap less.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                nameFocused = true
             }
         }
     }
 
-    private func saveOnboarding() {
+    private func save() {
+        let trimmed = companyName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+
         isLoading = true
+        errorMessage = nil
+
         Task {
             do {
-                try await supabase.updateProfile([
-                    "company_name": AnyEncodable(companyName.isEmpty ? nil as String? : companyName),
-                    "mc_number": AnyEncodable(mcNumber.isEmpty ? nil as String? : mcNumber),
-                    "dot_number": AnyEncodable(dotNumber.isEmpty ? nil as String? : dotNumber),
-                    "phone": AnyEncodable(phone.isEmpty ? nil as String? : phone),
-                    "driver_pay_percentage": AnyEncodable(Double(driverPayPct) ?? 25.0),
-                    "dispatcher_fee_percentage": AnyEncodable(Double(dispatcherFeePct) ?? 5.0),
-                    "factoring_fee_percentage": AnyEncodable(Double(factoringFeePct) ?? 3.0),
-                    "authority_fee": AnyEncodable(Double(authorityFee) ?? 50.0),
-                    "maintenance_reserve": AnyEncodable(Double(maintenanceReserve) ?? 100.0),
-                ])
+                var updates = defaults
+                updates["company_name"] = AnyEncodable(trimmed)
+                try await supabase.updateProfile(updates)
                 hasCompletedOnboarding = true
             } catch {
-                print("Error saving onboarding: \(error)")
+                errorMessage = "Couldn't save that. Check your connection and try again."
+                #if DEBUG
+                print("[Onboarding] save error: \(error)")
+                #endif
             }
             isLoading = false
         }

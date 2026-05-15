@@ -2,6 +2,10 @@ import SwiftUI
 
 struct SmartInsightsView: View {
     @EnvironmentObject var supabase: SupabaseService
+    // Observed so SwiftUI re-renders when the user upgrades / restores —
+    // without this, `.shared.isEntitled(...)` was a non-reactive snapshot
+    // and the lock state never refreshed mid-session.
+    @ObservedObject private var subscriptions = SubscriptionService.shared
     @State private var loads: [Load] = []
     @State private var expenses: [Expense] = []
     @State private var isLoading = true
@@ -43,29 +47,46 @@ struct SmartInsightsView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
 
-            NavigationStack {
-                ScrollView {
-                    VStack(spacing: 16) {
-                        // AI Summary
-                        aiSummarySection
+            if !subscriptions.isEntitled(.smartInsights) {
+                FeatureLockedView(
+                    feature: "Smart Insights",
+                    description: "AI-powered summaries, rate intelligence, fuel analysis, and profit projections — all based on your real data.",
+                    requiredTier: .pro,
+                    icon: "sparkles"
+                )
+            } else {
+                NavigationStack {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // AI Summary
+                            aiSummarySection
 
-                        // Alerts
-                        alertsSection
+                            // Plain-text on-device insights (no network).
+                            // Always renders when there's enough history to
+                            // produce at least one bullet.
+                            localInsightsSection
 
-                        // Rate Intelligence
-                        rateSection
+                            // Alerts
+                            alertsSection
 
-                        // Fuel Analysis
-                        fuelSection
+                            // Lane Performance (Part 3+5).
+                            lanePerformanceSection
 
-                        // Projections
-                        projectionSection
+                            // Rate Intelligence
+                            rateSection
+
+                            // Fuel Analysis
+                            fuelSection
+
+                            // Projections
+                            projectionSection
+                        }
+                        .padding()
                     }
-                    .padding()
+                    .navigationTitle("Smart Insights")
+                    .refreshable { await loadData() }
+                    .task { await loadData() }
                 }
-                .navigationTitle("Smart Insights")
-                .toolbarColorScheme(.dark, for: .navigationBar)
-                .task { await loadData() }
             }
         }
     }
@@ -185,6 +206,97 @@ struct SmartInsightsView: View {
         .padding().background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    // MARK: - Lane Performance (Part 3 + 5)
+    //
+    // Renders the user's top 3 lanes by profitability score, with avg RPM,
+    // load count, and best broker. Empty-state when no qualifying lanes
+    // (need at least 2 loads on a state-pair). All computation is on-device.
+    private var topLanes: [LaneSuggestionService.LaneStat] {
+        LaneSuggestionService.topLanes(loads: loads, limit: 3, minLoads: 2)
+    }
+
+    @ViewBuilder
+    private var lanePerformanceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "map.fill").foregroundStyle(Color.spGold)
+                Text("Lane Performance").font(.headline).foregroundStyle(Color.spGold)
+            }
+            if topLanes.isEmpty {
+                Text("Run at least 2 loads on the same state-to-state lane to unlock this.")
+                    .font(.caption).foregroundStyle(Color.spTextSecondary)
+            } else {
+                ForEach(topLanes) { lane in
+                    laneRow(lane)
+                }
+                Text("Score combines RPM with how often you run the lane — built from your own load history.")
+                    .font(.caption2)
+                    .foregroundStyle(Color.spTextSecondary)
+            }
+        }
+        .padding().background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// One row inside the Lane Performance card. Extracted to keep the
+    /// ForEach closure simple so the SwiftUI type-checker resolves the
+    /// `[LaneStat]` overload instead of a Binding overload.
+    private func laneRow(_ lane: LaneSuggestionService.LaneStat) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(lane.displayName)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.spTextPrimary)
+                Spacer()
+                Text(String(format: "$%.2f/mi", lane.averageRPM))
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(lane.averageRPM >= 2.5 ? Color.spSuccess : Color.spWarning)
+            }
+            HStack(spacing: 8) {
+                Text("\(lane.loadCount) loads")
+                    .font(.caption2)
+                    .foregroundStyle(Color.spTextSecondary)
+                if let broker = lane.bestBroker {
+                    Text("· \(broker)")
+                        .font(.caption2)
+                        .foregroundStyle(Color.spTextSecondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Text(String(format: "$%.0f gross", lane.totalRevenue))
+                    .font(.caption2)
+                    .foregroundStyle(Color.spTextSecondary)
+            }
+        }
+        .padding(10)
+        .background(Color.spCardBgLight)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    // MARK: - Local insight bullets
+    //
+    // Uses `PerformanceAnalytics.plainTextInsights` — pure on-device,
+    // no LLM, no network. Surfaces the 3-4 most useful observations
+    // from the user's actual loads + expenses.
+    @ViewBuilder
+    private var localInsightsSection: some View {
+        let bullets = PerformanceAnalytics.plainTextInsights(loads: loads, expenses: expenses)
+        if !bullets.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "lightbulb.fill").foregroundStyle(Color.spGold)
+                    Text("Insights").font(.headline).foregroundStyle(Color.spGold)
+                }
+                ForEach(Array(bullets.enumerated()), id: \.offset) { _, line in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("•").foregroundStyle(Color.spGoldLight)
+                        Text(line).font(.caption).foregroundStyle(Color.spTextPrimary)
+                    }
+                }
+            }
+            .padding().background(Color.spCardBg).clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
     private func metricCard(_ title: String, _ value: String, color: Color) -> some View {
         VStack(spacing: 4) {
             Text(value).font(.title3.weight(.bold)).foregroundStyle(color)
@@ -220,10 +332,12 @@ struct SmartInsightsView: View {
         """
 
         do {
-            let summary = try await ClaudeAIService.generateText(prompt: prompt)
+            let summary = try await InsightsService.generate(prompt: prompt, supabase: supabase)
             await MainActor.run { aiSummary = summary }
         } catch {
-            await MainActor.run { aiSummary = "Unable to generate summary. Check your API key." }
+            await MainActor.run {
+                aiSummary = "Unable to generate summary. \(error.localizedDescription)"
+            }
         }
         isGeneratingAI = false
     }

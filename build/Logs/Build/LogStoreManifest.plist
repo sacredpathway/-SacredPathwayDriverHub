@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>12</integer>
+	<key>logs</key>
+	<dict>
+		<key>3842ACBD-7BE3-4B5E-A777-2B4078CA5A4D</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>3842ACBD-7BE3-4B5E-A777-2B4078CA5A4D.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>28</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>SacredPathway project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>SacredPathway</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project SacredPathway with scheme SacredPathway and configuration Debug</string>
+			<key>timeStartedRecording</key>
+			<real>800226251.48824799</real>
+			<key>timeStoppedRecording</key>
+			<real>800226273.49287498</real>
+			<key>title</key>
+			<string>Building project SacredPathway with scheme SacredPathway and configuration Debug</string>
+			<key>uniqueIdentifier</key>
+			<string>3842ACBD-7BE3-4B5E-A777-2B4078CA5A4D</string>
+		</dict>
+		<key>F21DD245-3760-4078-9EB7-1A2A2CD14B40</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>F21DD245-3760-4078-9EB7-1A2A2CD14B40.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>28</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>SacredPathway project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>SacredPathway</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project SacredPathway with scheme SacredPathway and configuration Debug</string>
+			<key>timeStartedRecording</key>
+			<real>800224316.55393696</real>
+			<key>timeStoppedRecording</key>
+			<real>800224343.52558303</real>
+			<key>title</key>
+			<string>Building project SacredPathway with scheme SacredPathway and configuration Debug</string>
+			<key>uniqueIdentifier</key>
+			<string>F21DD245-3760-4078-9EB7-1A2A2CD14B40</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

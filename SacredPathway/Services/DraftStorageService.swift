@@ -32,6 +32,12 @@ struct PaystubDraft: Codable, Identifiable {
     var factoringFeePct: String
     var authorityFee: String
     var maintenanceReserve: String
+    // Fee modes ($ vs %) — optional so old drafts still decode
+    var driverPayMode: FeeItem.FeeMode? = .percent
+    var dispatcherFeeMode: FeeItem.FeeMode? = .percent
+    var factoringFeeMode: FeeItem.FeeMode? = .percent
+    var authorityFeeMode: FeeItem.FeeMode? = .dollar
+    var maintenanceReserveMode: FeeItem.FeeMode? = .dollar
     var createdAt: Date
     var updatedAt: Date
 

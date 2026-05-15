@@ -39,10 +39,18 @@ class SettlementEngine {
         // Step 3: Gross profit
         let grossProfit = totalRevenue - totalExpenses
 
-        // Step 4: Driver pay
-        let driverPct = driver.payPercentage ?? profile.driverPayPercentage ?? 25.0
-        let driverPayBase = payOnRevenue ? totalRevenue : grossProfit
-        let driverPayAmount = driverPayBase * (driverPct / 100.0)
+        // Step 4: Driver pay — either a flat per-settlement amount or a percentage
+        let driverPct: Double
+        let driverPayAmount: Double
+        if driver.isFlatRate, let flat = driver.flatRate {
+            // Flat-rate drivers get the same amount every settlement, regardless of revenue
+            driverPct = 0
+            driverPayAmount = flat
+        } else {
+            driverPct = driver.payPercentage ?? profile.driverPayPercentage ?? 25.0
+            let driverPayBase = payOnRevenue ? totalRevenue : grossProfit
+            driverPayAmount = driverPayBase * (driverPct / 100.0)
+        }
 
         // Step 5: Dispatcher fee (always on revenue)
         let dispatcherPct = profile.dispatcherFeePercentage ?? 0.0

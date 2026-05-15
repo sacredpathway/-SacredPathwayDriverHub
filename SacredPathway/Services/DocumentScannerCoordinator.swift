@@ -110,9 +110,18 @@ struct PhotoPickerView: UIViewControllerRepresentable {
 
 // MARK: - File Document Picker
 
-/// Wraps UIDocumentPickerViewController for importing PDFs and images from Files
+/// A document the user imported from Files. Carries both the UIImage we
+/// show in the review screen AND the original file bytes, so PDFs land
+/// in Supabase Storage as actual PDFs (not flattened JPEGs).
+struct PickedDocument {
+    let image: UIImage
+    let originalData: Data?
+    let mimeType: String?
+}
+
+/// Wraps UIDocumentPickerViewController for importing PDFs and images from Files.
 struct FilePickerView: UIViewControllerRepresentable {
-    let onPick: (UIImage) -> Void
+    let onPick: (PickedDocument) -> Void
     let onCancel: () -> Void
 
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
@@ -131,10 +140,10 @@ struct FilePickerView: UIViewControllerRepresentable {
     }
 
     class Coordinator: NSObject, UIDocumentPickerDelegate {
-        let onPick: (UIImage) -> Void
+        let onPick: (PickedDocument) -> Void
         let onCancel: () -> Void
 
-        init(onPick: @escaping (UIImage) -> Void, onCancel: @escaping () -> Void) {
+        init(onPick: @escaping (PickedDocument) -> Void, onCancel: @escaping () -> Void) {
             self.onPick = onPick
             self.onCancel = onCancel
         }
@@ -145,22 +154,42 @@ struct FilePickerView: UIViewControllerRepresentable {
                 return
             }
 
-            // Start accessing the security-scoped resource
             guard url.startAccessingSecurityScopedResource() else {
                 onCancel()
                 return
             }
             defer { url.stopAccessingSecurityScopedResource() }
 
-            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-                onPick(image)
-            } else {
-                // For PDFs, render the first page as an image
-                if let pdfImage = renderPDFFirstPage(url: url) {
-                    onPick(pdfImage)
+            guard let data = try? Data(contentsOf: url) else {
+                onCancel()
+                return
+            }
+
+            let ext = url.pathExtension.lowercased()
+
+            // PDF → render first page for AI preview, keep original bytes.
+            if ext == "pdf" {
+                if let pdfImage = Self.renderPDFFirstPage(url: url) {
+                    onPick(PickedDocument(
+                        image: pdfImage,
+                        originalData: data,
+                        mimeType: "application/pdf"
+                    ))
                 } else {
                     onCancel()
                 }
+                return
+            }
+
+            // Image format
+            if let image = UIImage(data: data) {
+                onPick(PickedDocument(
+                    image: image,
+                    originalData: data,
+                    mimeType: Self.mime(for: ext)
+                ))
+            } else {
+                onCancel()
             }
         }
 
@@ -168,25 +197,32 @@ struct FilePickerView: UIViewControllerRepresentable {
             onCancel()
         }
 
-        /// Renders the first page of a PDF as a UIImage
-        private func renderPDFFirstPage(url: URL) -> UIImage? {
+        private static func renderPDFFirstPage(url: URL) -> UIImage? {
             guard let document = CGPDFDocument(url as CFURL),
                   let page = document.page(at: 1) else { return nil }
 
             let pageRect = page.getBoxRect(.mediaBox)
-            let scale: CGFloat = 2.0 // Retina quality
+            let scale: CGFloat = 2.0
             let size = CGSize(width: pageRect.width * scale, height: pageRect.height * scale)
 
             let renderer = UIGraphicsImageRenderer(size: size)
             let image = renderer.image { ctx in
                 UIColor.white.setFill()
                 ctx.fill(CGRect(origin: .zero, size: size))
-
                 ctx.cgContext.translateBy(x: 0, y: size.height)
                 ctx.cgContext.scaleBy(x: scale, y: -scale)
                 ctx.cgContext.drawPDFPage(page)
             }
             return image
+        }
+
+        private static func mime(for ext: String) -> String {
+            switch ext {
+            case "png": return "image/png"
+            case "heic", "heif": return "image/heic"
+            case "jpg", "jpeg": return "image/jpeg"
+            default: return "application/octet-stream"
+            }
         }
     }
 }

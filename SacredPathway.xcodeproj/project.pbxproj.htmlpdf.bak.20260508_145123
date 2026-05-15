@@ -1,0 +1,900 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		001A1A0A0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A0B0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift */; };
+		001A1A0C0E4A5B1C2D3E4F5B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A0D0E4A5B1C2D3E4F5B /* ContentView.swift */; };
+		001A1A0E0E4A5B1C2D3E4F5C /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A0F0E4A5B1C2D3E4F5C /* Config.swift */; };
+		001A1A100E4A5B1C2D3E4F5D /* Driver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A110E4A5B1C2D3E4F5D /* Driver.swift */; };
+		001A1A120E4A5B1C2D3E4F5E /* Expense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A130E4A5B1C2D3E4F5E /* Expense.swift */; };
+		001A1A140E4A5B1C2D3E4F5F /* Load.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A150E4A5B1C2D3E4F5F /* Load.swift */; };
+		001A1A160E4A5B1C2D3E4F60 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A170E4A5B1C2D3E4F60 /* Profile.swift */; };
+		001A1A180E4A5B1C2D3E4F61 /* Settlement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A190E4A5B1C2D3E4F61 /* Settlement.swift */; };
+		001A1A1A0E4A5B1C2D3E4F62 /* TruckDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A1B0E4A5B1C2D3E4F62 /* TruckDocument.swift */; };
+		001A1A1C0E4A5B1C2D3E4F63 /* SettlementEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A1D0E4A5B1C2D3E4F63 /* SettlementEngine.swift */; };
+		001A1A1E0E4A5B1C2D3E4F64 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A1F0E4A5B1C2D3E4F64 /* SupabaseService.swift */; };
+		001A1A200E4A5B1C2D3E4F65 /* CurrencyExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A210E4A5B1C2D3E4F65 /* CurrencyExtensions.swift */; };
+		001A1A220E4A5B1C2D3E4F66 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A230E4A5B1C2D3E4F66 /* LoginView.swift */; };
+		001A1A240E4A5B1C2D3E4F67 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A250E4A5B1C2D3E4F67 /* OnboardingView.swift */; };
+		001A1A260E4A5B1C2D3E4F68 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A270E4A5B1C2D3E4F68 /* DashboardView.swift */; };
+		001A1A280E4A5B1C2D3E4F69 /* LoadDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A290E4A5B1C2D3E4F69 /* LoadDetailView.swift */; };
+		001A1A2A0E4A5B1C2D3E4F6A /* LoadsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A2B0E4A5B1C2D3E4F6A /* LoadsListView.swift */; };
+		001A1A2C0E4A5B1C2D3E4F6B /* ScanUploadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A2D0E4A5B1C2D3E4F6B /* ScanUploadView.swift */; };
+		001A1A2E0E4A5B1C2D3E4F6C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A2F0E4A5B1C2D3E4F6C /* SettingsView.swift */; };
+		001A1A300E4A5B1C2D3E4F6D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 001A1A310E4A5B1C2D3E4F6D /* Assets.xcassets */; };
+		00BB1A340E4A5B1C2D3E4F6F /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 00BB1A350E4A5B1C2D3E4F70 /* Supabase */; };
+		00BB1A360E4A5B1C2D3E4F71 /* TPPDF in Frameworks */ = {isa = PBXBuildFile; productRef = 00BB1A370E4A5B1C2D3E4F72 /* TPPDF */; };
+		00DD1A400E4A5B1C2D3E4F90 /* BrandColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD1A410E4A5B1C2D3E4F91 /* BrandColors.swift */; };
+		110000000000000000000001 /* PinLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000002 /* PinLockService.swift */; };
+		110000000000000000000003 /* SubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000004 /* SubscriptionService.swift */; };
+		110000000000000000000005 /* PinLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000006 /* PinLockView.swift */; };
+		110000000000000000000007 /* PinSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000008 /* PinSettingsView.swift */; };
+		110000000000000000000009 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11000000000000000000000A /* PaywallView.swift */; };
+		11000000000000000000000B /* SubscriptionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11000000000000000000000C /* SubscriptionSettingsView.swift */; };
+		1100000000000000000000F1 /* FeatureLockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100000000000000000000F2 /* FeatureLockedView.swift */; };
+		2200000000000000000000F3 /* DeleteAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2200000000000000000000F4 /* DeleteAccountView.swift */; };
+		9900000000000000000000A1 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900000000000000000000A2 /* DemoMode.swift */; };
+		9900000000000000000000B1 /* MoreTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900000000000000000000B2 /* MoreTabView.swift */; };
+		9900000000000000000000D1 /* IFTAPDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900000000000000000000D2 /* IFTAPDFService.swift */; };
+		9900000000000000000000E1 /* DemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900000000000000000000E2 /* DemoDataSeeder.swift */; };
+		9900000000000000000000F1 /* ScreenshotMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900000000000000000000F2 /* ScreenshotMode.swift */; };
+		AA0000000000000000000001 /* AppearanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000002 /* AppearanceService.swift */; };
+		FC0000000000000000000001 /* RemoteAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000002 /* RemoteAppConfig.swift */; };
+		FC0000000000000000000003 /* ForceUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000004 /* ForceUpdateService.swift */; };
+		FC0000000000000000000005 /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000006 /* ForceUpdateView.swift */; };
+		FD0000000000000000000001 /* DistanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0000000000000000000002 /* DistanceService.swift */; };
+		FE0000000000000000000001 /* PaystubExpenseMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000000002 /* PaystubExpenseMatcher.swift */; };
+		FE0000000000000000000003 /* PaystubExpenseReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000000004 /* PaystubExpenseReviewView.swift */; };
+		AB0000000000000000000101 /* AccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* AccessGate.swift */; };
+		AA0000000000000000000003 /* DocumentScannerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* DocumentScannerCoordinator.swift */; };
+		AA0000000000000000000005 /* DocumentReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000006 /* DocumentReviewView.swift */; };
+		AA0000000000000000000007 /* ManualLoadEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* ManualLoadEntryView.swift */; };
+		AB0000000000000000000001 /* DocumentExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000002 /* DocumentExtractionService.swift */; };
+		AB0000000000000000000003 /* InsightsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000004 /* InsightsService.swift */; };
+		BB0000000000000000000001 /* BrandingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000002 /* BrandingService.swift */; };
+		BB0000000000000000000003 /* BrandingSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* BrandingSettingsView.swift */; };
+		CC0000000000000000000001 /* ExpensesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000002 /* ExpensesListView.swift */; };
+		CC0000000000000000000003 /* AddEditExpenseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* AddEditExpenseView.swift */; };
+		CC0000000000000000000005 /* FeeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000006 /* FeeSettingsView.swift */; };
+		DA00000000000000000000A1 /* DailyInspection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000A2 /* DailyInspection.swift */; };
+		DA00000000000000000000B1 /* ComplianceDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000B2 /* ComplianceDocument.swift */; };
+		DA00000000000000000000C1 /* IFTAEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000C2 /* IFTAEntry.swift */; };
+		DA00000000000000000000D1 /* IFTAJurisdiction.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000D2 /* IFTAJurisdiction.swift */; };
+		DA00000000000000000000E1 /* IFTACalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000E2 /* IFTACalculator.swift */; };
+		DB0000000000000000000001 /* ComplianceHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000002 /* ComplianceHubView.swift */; };
+		DB0000000000000000000003 /* ComplianceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000004 /* ComplianceListView.swift */; };
+		DB0000000000000000000005 /* AddComplianceDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000006 /* AddComplianceDocumentView.swift */; };
+		DB0000000000000000000007 /* ComplianceDocumentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000008 /* ComplianceDocumentDetailView.swift */; };
+		DB0000000000000000000009 /* RoadsideQuickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB000000000000000000000A /* RoadsideQuickView.swift */; };
+		DB000000000000000000000B /* MissingDocumentsChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB000000000000000000000C /* MissingDocumentsChecklistView.swift */; };
+		DB000000000000000000000D /* DailyInspectionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB000000000000000000000E /* DailyInspectionListView.swift */; };
+		DB000000000000000000000F /* AddDailyInspectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000010 /* AddDailyInspectionView.swift */; };
+		DB0000000000000000000011 /* DailyInspectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000012 /* DailyInspectionDetailView.swift */; };
+		DC0000000000000000000001 /* IFTAHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0000000000000000000002 /* IFTAHubView.swift */; };
+		DC0000000000000000000003 /* AddIFTAEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0000000000000000000004 /* AddIFTAEntryView.swift */; };
+		DC0000000000000000000005 /* IFTAReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0000000000000000000006 /* IFTAReportView.swift */; };
+		DD0000000000000000000001 /* PaystubPDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000002 /* PaystubPDFService.swift */; };
+		DD0000000000000000000003 /* SettlementGeneratorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000004 /* SettlementGeneratorView.swift */; };
+		DD0000000000000000000005 /* DriversListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000006 /* DriversListView.swift */; };
+		DD0000000000000000000007 /* DocumentVaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000008 /* DocumentVaultView.swift */; };
+		DD0000000000000000000009 /* SmartInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000000A /* SmartInsightsView.swift */; };
+		EE0000000000000000000001 /* Broker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* Broker.swift */; };
+		EE0000000000000000000003 /* BrokerContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000004 /* BrokerContact.swift */; };
+		EE0000000000000000000005 /* BrokerIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000006 /* BrokerIntelligenceService.swift */; };
+		EE0000000000000000000007 /* BrokersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000008 /* BrokersListView.swift */; };
+		EE0000000000000000000009 /* BrokerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000A /* BrokerDetailView.swift */; };
+		EE000000000000000000000B /* ContactDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000000000000000000000C /* ContactDetailView.swift */; };
+		FF0000000000000000000001 /* ManualPaystubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000002 /* ManualPaystubView.swift */; };
+		FF0000000000000000000003 /* DraftStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000004 /* DraftStorageService.swift */; };
+		FF0000000000000000000005 /* PaystubDraftsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000006 /* PaystubDraftsListView.swift */; };
+		FF0000000000000000000007 /* CustomFeeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000008 /* CustomFeeService.swift */; };
+		FF0000000000000000000009 /* EditCompanyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000000000000000000000A /* EditCompanyView.swift */; };
+		5A0000000000000000000001 /* LocalDocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000002 /* LocalDocumentParser.swift */; };
+		5A0000000000000000000003 /* LocalBrokerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000004 /* LocalBrokerStore.swift */; };
+		5A0000000000000000000005 /* SmartScanReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000006 /* SmartScanReviewView.swift */; };
+		7B0000000000000000000001 /* SettlementSheetPDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0000000000000000000002 /* SettlementSheetPDFService.swift */; };
+		7B0000000000000000000003 /* SettlementSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0000000000000000000004 /* SettlementSheetView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		001A1A0B0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredPathwayApp.swift; sourceTree = "<group>"; };
+		001A1A0D0E4A5B1C2D3E4F5B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		001A1A0F0E4A5B1C2D3E4F5C /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		001A1A110E4A5B1C2D3E4F5D /* Driver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Driver.swift; sourceTree = "<group>"; };
+		001A1A130E4A5B1C2D3E4F5E /* Expense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expense.swift; sourceTree = "<group>"; };
+		001A1A150E4A5B1C2D3E4F5F /* Load.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Load.swift; sourceTree = "<group>"; };
+		001A1A170E4A5B1C2D3E4F60 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
+		001A1A190E4A5B1C2D3E4F61 /* Settlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settlement.swift; sourceTree = "<group>"; };
+		001A1A1B0E4A5B1C2D3E4F62 /* TruckDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TruckDocument.swift; sourceTree = "<group>"; };
+		001A1A1D0E4A5B1C2D3E4F63 /* SettlementEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementEngine.swift; sourceTree = "<group>"; };
+		001A1A1F0E4A5B1C2D3E4F64 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		001A1A210E4A5B1C2D3E4F65 /* CurrencyExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyExtensions.swift; sourceTree = "<group>"; };
+		001A1A230E4A5B1C2D3E4F66 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		001A1A250E4A5B1C2D3E4F67 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		001A1A270E4A5B1C2D3E4F68 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		001A1A290E4A5B1C2D3E4F69 /* LoadDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadDetailView.swift; sourceTree = "<group>"; };
+		001A1A2B0E4A5B1C2D3E4F6A /* LoadsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadsListView.swift; sourceTree = "<group>"; };
+		001A1A2D0E4A5B1C2D3E4F6B /* ScanUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanUploadView.swift; sourceTree = "<group>"; };
+		001A1A2F0E4A5B1C2D3E4F6C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		001A1A310E4A5B1C2D3E4F6D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		001A1A330E4A5B1C2D3E4F6E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		001A1A350E4A5B1C2D3E4F6F /* SacredPathway.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SacredPathway.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		00DD1A410E4A5B1C2D3E4F91 /* BrandColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandColors.swift; sourceTree = "<group>"; };
+		110000000000000000000002 /* PinLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinLockService.swift; sourceTree = "<group>"; };
+		110000000000000000000004 /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
+		110000000000000000000006 /* PinLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinLockView.swift; sourceTree = "<group>"; };
+		110000000000000000000008 /* PinSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinSettingsView.swift; sourceTree = "<group>"; };
+		11000000000000000000000A /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		11000000000000000000000C /* SubscriptionSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionSettingsView.swift; sourceTree = "<group>"; };
+		1100000000000000000000F2 /* FeatureLockedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureLockedView.swift; sourceTree = "<group>"; };
+		2200000000000000000000F4 /* DeleteAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountView.swift; sourceTree = "<group>"; };
+		9900000000000000000000A2 /* DemoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMode.swift; sourceTree = "<group>"; };
+		9900000000000000000000B2 /* MoreTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTabView.swift; sourceTree = "<group>"; };
+		9900000000000000000000D2 /* IFTAPDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAPDFService.swift; sourceTree = "<group>"; };
+		9900000000000000000000E2 /* DemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDataSeeder.swift; sourceTree = "<group>"; };
+		9900000000000000000000F2 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
+		AA0000000000000000000002 /* AppearanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceService.swift; sourceTree = "<group>"; };
+		FC0000000000000000000002 /* RemoteAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAppConfig.swift; sourceTree = "<group>"; };
+		FC0000000000000000000004 /* ForceUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateService.swift; sourceTree = "<group>"; };
+		FC0000000000000000000006 /* ForceUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateView.swift; sourceTree = "<group>"; };
+		FD0000000000000000000002 /* DistanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceService.swift; sourceTree = "<group>"; };
+		FE0000000000000000000002 /* PaystubExpenseMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaystubExpenseMatcher.swift; sourceTree = "<group>"; };
+		FE0000000000000000000004 /* PaystubExpenseReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaystubExpenseReviewView.swift; sourceTree = "<group>"; };
+		AB0000000000000000000102 /* AccessGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessGate.swift; sourceTree = "<group>"; };
+		AA0000000000000000000004 /* DocumentScannerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerCoordinator.swift; sourceTree = "<group>"; };
+		AA0000000000000000000006 /* DocumentReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentReviewView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000008 /* ManualLoadEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualLoadEntryView.swift; sourceTree = "<group>"; };
+		AB0000000000000000000002 /* DocumentExtractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExtractionService.swift; sourceTree = "<group>"; };
+		AB0000000000000000000004 /* InsightsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000002 /* BrandingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandingService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000004 /* BrandingSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandingSettingsView.swift; sourceTree = "<group>"; };
+		CC0000000000000000000002 /* ExpensesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpensesListView.swift; sourceTree = "<group>"; };
+		CC0000000000000000000004 /* AddEditExpenseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditExpenseView.swift; sourceTree = "<group>"; };
+		CC0000000000000000000006 /* FeeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeeSettingsView.swift; sourceTree = "<group>"; };
+		DA00000000000000000000A2 /* DailyInspection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyInspection.swift; sourceTree = "<group>"; };
+		DA00000000000000000000B2 /* ComplianceDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplianceDocument.swift; sourceTree = "<group>"; };
+		DA00000000000000000000C2 /* IFTAEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAEntry.swift; sourceTree = "<group>"; };
+		DA00000000000000000000D2 /* IFTAJurisdiction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAJurisdiction.swift; sourceTree = "<group>"; };
+		DA00000000000000000000E2 /* IFTACalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTACalculator.swift; sourceTree = "<group>"; };
+		DB0000000000000000000002 /* ComplianceHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplianceHubView.swift; sourceTree = "<group>"; };
+		DB0000000000000000000004 /* ComplianceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplianceListView.swift; sourceTree = "<group>"; };
+		DB0000000000000000000006 /* AddComplianceDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddComplianceDocumentView.swift; sourceTree = "<group>"; };
+		DB0000000000000000000008 /* ComplianceDocumentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplianceDocumentDetailView.swift; sourceTree = "<group>"; };
+		DB000000000000000000000A /* RoadsideQuickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadsideQuickView.swift; sourceTree = "<group>"; };
+		DB000000000000000000000C /* MissingDocumentsChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissingDocumentsChecklistView.swift; sourceTree = "<group>"; };
+		DB000000000000000000000E /* DailyInspectionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyInspectionListView.swift; sourceTree = "<group>"; };
+		DB0000000000000000000010 /* AddDailyInspectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDailyInspectionView.swift; sourceTree = "<group>"; };
+		DB0000000000000000000012 /* DailyInspectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyInspectionDetailView.swift; sourceTree = "<group>"; };
+		DC0000000000000000000002 /* IFTAHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAHubView.swift; sourceTree = "<group>"; };
+		DC0000000000000000000004 /* AddIFTAEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddIFTAEntryView.swift; sourceTree = "<group>"; };
+		DC0000000000000000000006 /* IFTAReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAReportView.swift; sourceTree = "<group>"; };
+		DD0000000000000000000002 /* PaystubPDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaystubPDFService.swift; sourceTree = "<group>"; };
+		DD0000000000000000000004 /* SettlementGeneratorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementGeneratorView.swift; sourceTree = "<group>"; };
+		DD0000000000000000000006 /* DriversListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriversListView.swift; sourceTree = "<group>"; };
+		DD0000000000000000000008 /* DocumentVaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentVaultView.swift; sourceTree = "<group>"; };
+		DD000000000000000000000A /* SmartInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartInsightsView.swift; sourceTree = "<group>"; };
+		EE0000000000000000000002 /* Broker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Broker.swift; sourceTree = "<group>"; };
+		EE0000000000000000000004 /* BrokerContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerContact.swift; sourceTree = "<group>"; };
+		EE0000000000000000000006 /* BrokerIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerIntelligenceService.swift; sourceTree = "<group>"; };
+		EE0000000000000000000008 /* BrokersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokersListView.swift; sourceTree = "<group>"; };
+		EE000000000000000000000A /* BrokerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerDetailView.swift; sourceTree = "<group>"; };
+		EE000000000000000000000C /* ContactDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactDetailView.swift; sourceTree = "<group>"; };
+		5A0000000000000000000002 /* LocalDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDocumentParser.swift; sourceTree = "<group>"; };
+		5A0000000000000000000004 /* LocalBrokerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerStore.swift; sourceTree = "<group>"; };
+		5A0000000000000000000006 /* SmartScanReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartScanReviewView.swift; sourceTree = "<group>"; };
+		7B0000000000000000000002 /* SettlementSheetPDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementSheetPDFService.swift; sourceTree = "<group>"; };
+		7B0000000000000000000004 /* SettlementSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementSheetView.swift; sourceTree = "<group>"; };
+		FD8323532FAAF5A100774FCB /* SacredPathwayProducts.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = SacredPathwayProducts.storekit; path = SacredPathway/SacredPathwayProducts.storekit; sourceTree = "<group>"; };
+		FDA8F8E32F95942200A87244 /* SacredPathway.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SacredPathway.entitlements; sourceTree = "<group>"; };
+		FF0000000000000000000002 /* ManualPaystubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualPaystubView.swift; sourceTree = "<group>"; };
+		FF0000000000000000000004 /* DraftStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftStorageService.swift; sourceTree = "<group>"; };
+		FF0000000000000000000006 /* PaystubDraftsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaystubDraftsListView.swift; sourceTree = "<group>"; };
+		FF0000000000000000000008 /* CustomFeeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFeeService.swift; sourceTree = "<group>"; };
+		FF000000000000000000000A /* EditCompanyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCompanyView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		001A1A360E4A5B1C2D3E4F70 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00BB1A340E4A5B1C2D3E4F6F /* Supabase in Frameworks */,
+				00BB1A360E4A5B1C2D3E4F71 /* TPPDF in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		001A1A0A0E4A5B1C2D3E4F40 /* SacredPathway */ = {
+			isa = PBXGroup;
+			children = (
+				FDA8F8E32F95942200A87244 /* SacredPathway.entitlements */,
+				001A1A0B0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift */,
+				001A1A0D0E4A5B1C2D3E4F5B /* ContentView.swift */,
+				001A1A0F0E4A5B1C2D3E4F5C /* Config.swift */,
+				001A1A380E4A5B1C2D3E4F71 /* Models */,
+				001A1A410E4A5B1C2D3E4F72 /* Services */,
+				001A1A460E4A5B1C2D3E4F73 /* Utilities */,
+				001A1A480E4A5B1C2D3E4F74 /* Views */,
+				001A1A310E4A5B1C2D3E4F6D /* Assets.xcassets */,
+				001A1A330E4A5B1C2D3E4F6E /* Info.plist */,
+			);
+			path = SacredPathway;
+			sourceTree = "<group>";
+		};
+		001A1A0D0E4A5B1C2D3E4F41 = {
+			isa = PBXGroup;
+			children = (
+				FD8323532FAAF5A100774FCB /* SacredPathwayProducts.storekit */,
+				001A1A0A0E4A5B1C2D3E4F40 /* SacredPathway */,
+				001A1A5A0E4A5B1C2D3E4F7A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		001A1A380E4A5B1C2D3E4F71 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				EE0000000000000000000002 /* Broker.swift */,
+				EE0000000000000000000004 /* BrokerContact.swift */,
+				001A1A110E4A5B1C2D3E4F5D /* Driver.swift */,
+				001A1A130E4A5B1C2D3E4F5E /* Expense.swift */,
+				001A1A150E4A5B1C2D3E4F5F /* Load.swift */,
+				001A1A170E4A5B1C2D3E4F60 /* Profile.swift */,
+				001A1A190E4A5B1C2D3E4F61 /* Settlement.swift */,
+				001A1A1B0E4A5B1C2D3E4F62 /* TruckDocument.swift */,
+				DA00000000000000000000A2 /* DailyInspection.swift */,
+				DA00000000000000000000B2 /* ComplianceDocument.swift */,
+				DA00000000000000000000C2 /* IFTAEntry.swift */,
+				DA00000000000000000000D2 /* IFTAJurisdiction.swift */,
+				FC0000000000000000000002 /* RemoteAppConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		001A1A410E4A5B1C2D3E4F72 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A1D0E4A5B1C2D3E4F63 /* SettlementEngine.swift */,
+				001A1A1F0E4A5B1C2D3E4F64 /* SupabaseService.swift */,
+				AB0000000000000000000002 /* DocumentExtractionService.swift */,
+				AB0000000000000000000004 /* InsightsService.swift */,
+				AA0000000000000000000004 /* DocumentScannerCoordinator.swift */,
+				BB0000000000000000000002 /* BrandingService.swift */,
+				DD0000000000000000000002 /* PaystubPDFService.swift */,
+				EE0000000000000000000006 /* BrokerIntelligenceService.swift */,
+				FF0000000000000000000004 /* DraftStorageService.swift */,
+				FF0000000000000000000008 /* CustomFeeService.swift */,
+				110000000000000000000002 /* PinLockService.swift */,
+				110000000000000000000004 /* SubscriptionService.swift */,
+				AA0000000000000000000002 /* AppearanceService.swift */,
+				DA00000000000000000000E2 /* IFTACalculator.swift */,
+				9900000000000000000000A2 /* DemoMode.swift */,
+				9900000000000000000000D2 /* IFTAPDFService.swift */,
+				9900000000000000000000E2 /* DemoDataSeeder.swift */,
+				9900000000000000000000F2 /* ScreenshotMode.swift */,
+				5A0000000000000000000002 /* LocalDocumentParser.swift */,
+				5A0000000000000000000004 /* LocalBrokerStore.swift */,
+				FC0000000000000000000004 /* ForceUpdateService.swift */,
+				FD0000000000000000000002 /* DistanceService.swift */,
+				FE0000000000000000000002 /* PaystubExpenseMatcher.swift */,
+				AB0000000000000000000102 /* AccessGate.swift */,
+				7B0000000000000000000002 /* SettlementSheetPDFService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		001A1A460E4A5B1C2D3E4F73 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A210E4A5B1C2D3E4F65 /* CurrencyExtensions.swift */,
+				00DD1A410E4A5B1C2D3E4F91 /* BrandColors.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		001A1A480E4A5B1C2D3E4F74 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A500E4A5B1C2D3E4F75 /* Auth */,
+				EE0000000000000000000020 /* Brokers */,
+				001A1A520E4A5B1C2D3E4F76 /* Dashboard */,
+				DD0000000000000000000040 /* Documents */,
+				DD0000000000000000000030 /* Drivers */,
+				CC0000000000000000000010 /* Expenses */,
+				DD0000000000000000000050 /* Insights */,
+				001A1A540E4A5B1C2D3E4F77 /* Loads */,
+				9900000000000000000000C1 /* More */,
+				001A1A560E4A5B1C2D3E4F78 /* Scanner */,
+				001A1A580E4A5B1C2D3E4F79 /* Settings */,
+				DD0000000000000000000020 /* Settlements */,
+				11000000000000000000000D /* Subscription */,
+				DB0000000000000000001000 /* Compliance */,
+				DC0000000000000000001000 /* IFTA */,
+				FC0000000000000000000006 /* ForceUpdateView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		001A1A500E4A5B1C2D3E4F75 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A230E4A5B1C2D3E4F66 /* LoginView.swift */,
+				001A1A250E4A5B1C2D3E4F67 /* OnboardingView.swift */,
+				110000000000000000000006 /* PinLockView.swift */,
+				2200000000000000000000F4 /* DeleteAccountView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		001A1A520E4A5B1C2D3E4F76 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A270E4A5B1C2D3E4F68 /* DashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		001A1A540E4A5B1C2D3E4F77 /* Loads */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A290E4A5B1C2D3E4F69 /* LoadDetailView.swift */,
+				001A1A2B0E4A5B1C2D3E4F6A /* LoadsListView.swift */,
+			);
+			path = Loads;
+			sourceTree = "<group>";
+		};
+		001A1A560E4A5B1C2D3E4F78 /* Scanner */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A2D0E4A5B1C2D3E4F6B /* ScanUploadView.swift */,
+				AA0000000000000000000006 /* DocumentReviewView.swift */,
+				AA0000000000000000000008 /* ManualLoadEntryView.swift */,
+				5A0000000000000000000006 /* SmartScanReviewView.swift */,
+			);
+			path = Scanner;
+			sourceTree = "<group>";
+		};
+		001A1A580E4A5B1C2D3E4F79 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A2F0E4A5B1C2D3E4F6C /* SettingsView.swift */,
+				BB0000000000000000000004 /* BrandingSettingsView.swift */,
+				CC0000000000000000000006 /* FeeSettingsView.swift */,
+				FF000000000000000000000A /* EditCompanyView.swift */,
+				110000000000000000000008 /* PinSettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		001A1A5A0E4A5B1C2D3E4F7A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				001A1A350E4A5B1C2D3E4F6F /* SacredPathway.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		11000000000000000000000D /* Subscription */ = {
+			isa = PBXGroup;
+			children = (
+				11000000000000000000000A /* PaywallView.swift */,
+				11000000000000000000000C /* SubscriptionSettingsView.swift */,
+				1100000000000000000000F2 /* FeatureLockedView.swift */,
+			);
+			path = Subscription;
+			sourceTree = "<group>";
+		};
+		9900000000000000000000C1 /* More */ = {
+			isa = PBXGroup;
+			children = (
+				9900000000000000000000B2 /* MoreTabView.swift */,
+			);
+			path = More;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000010 /* Expenses */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000000000000000000002 /* ExpensesListView.swift */,
+				CC0000000000000000000004 /* AddEditExpenseView.swift */,
+			);
+			path = Expenses;
+			sourceTree = "<group>";
+		};
+		DB0000000000000000001000 /* Compliance */ = {
+			isa = PBXGroup;
+			children = (
+				DB0000000000000000000002 /* ComplianceHubView.swift */,
+				DB0000000000000000000004 /* ComplianceListView.swift */,
+				DB0000000000000000000006 /* AddComplianceDocumentView.swift */,
+				DB0000000000000000000008 /* ComplianceDocumentDetailView.swift */,
+				DB000000000000000000000A /* RoadsideQuickView.swift */,
+				DB000000000000000000000C /* MissingDocumentsChecklistView.swift */,
+				DB000000000000000000000E /* DailyInspectionListView.swift */,
+				DB0000000000000000000010 /* AddDailyInspectionView.swift */,
+				DB0000000000000000000012 /* DailyInspectionDetailView.swift */,
+			);
+			path = Compliance;
+			sourceTree = "<group>";
+		};
+		DC0000000000000000001000 /* IFTA */ = {
+			isa = PBXGroup;
+			children = (
+				DC0000000000000000000002 /* IFTAHubView.swift */,
+				DC0000000000000000000004 /* AddIFTAEntryView.swift */,
+				DC0000000000000000000006 /* IFTAReportView.swift */,
+			);
+			path = IFTA;
+			sourceTree = "<group>";
+		};
+		DD0000000000000000000020 /* Settlements */ = {
+			isa = PBXGroup;
+			children = (
+				DD0000000000000000000004 /* SettlementGeneratorView.swift */,
+				FF0000000000000000000002 /* ManualPaystubView.swift */,
+				FF0000000000000000000006 /* PaystubDraftsListView.swift */,
+				FE0000000000000000000004 /* PaystubExpenseReviewView.swift */,
+				7B0000000000000000000004 /* SettlementSheetView.swift */,
+			);
+			path = Settlements;
+			sourceTree = "<group>";
+		};
+		DD0000000000000000000030 /* Drivers */ = {
+			isa = PBXGroup;
+			children = (
+				DD0000000000000000000006 /* DriversListView.swift */,
+			);
+			path = Drivers;
+			sourceTree = "<group>";
+		};
+		DD0000000000000000000040 /* Documents */ = {
+			isa = PBXGroup;
+			children = (
+				DD0000000000000000000008 /* DocumentVaultView.swift */,
+			);
+			path = Documents;
+			sourceTree = "<group>";
+		};
+		DD0000000000000000000050 /* Insights */ = {
+			isa = PBXGroup;
+			children = (
+				DD000000000000000000000A /* SmartInsightsView.swift */,
+			);
+			path = Insights;
+			sourceTree = "<group>";
+		};
+		EE0000000000000000000020 /* Brokers */ = {
+			isa = PBXGroup;
+			children = (
+				EE0000000000000000000008 /* BrokersListView.swift */,
+				EE000000000000000000000A /* BrokerDetailView.swift */,
+				EE000000000000000000000C /* ContactDetailView.swift */,
+			);
+			path = Brokers;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		001A1A3C0E4A5B1C2D3E4F71 /* SacredPathway */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 001A1A5B0E4A5B1C2D3E4F7B /* Build configuration list for PBXNativeTarget "SacredPathway" */;
+			buildPhases = (
+				001A1A3D0E4A5B1C2D3E4F72 /* Sources */,
+				001A1A360E4A5B1C2D3E4F70 /* Frameworks */,
+				001A1A400E4A5B1C2D3E4F73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SacredPathway;
+			packageProductDependencies = (
+				00BB1A350E4A5B1C2D3E4F70 /* Supabase */,
+				00BB1A370E4A5B1C2D3E4F72 /* TPPDF */,
+			);
+			productName = SacredPathway;
+			productReference = 001A1A350E4A5B1C2D3E4F6F /* SacredPathway.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		001A1A0E0E4A5B1C2D3E4F42 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					001A1A3C0E4A5B1C2D3E4F71 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 001A1A110E4A5B1C2D3E4F45 /* Build configuration list for PBXProject "SacredPathway" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 001A1A0D0E4A5B1C2D3E4F41;
+			packageReferences = (
+				00CC1A340E4A5B1C2D3E4F80 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				00CC1A360E4A5B1C2D3E4F81 /* XCRemoteSwiftPackageReference "TPPDF" */,
+			);
+			productRefGroup = 001A1A5A0E4A5B1C2D3E4F7A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				001A1A3C0E4A5B1C2D3E4F71 /* SacredPathway */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		001A1A400E4A5B1C2D3E4F73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				001A1A300E4A5B1C2D3E4F6D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		001A1A3D0E4A5B1C2D3E4F72 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				001A1A0A0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift in Sources */,
+				001A1A0C0E4A5B1C2D3E4F5B /* ContentView.swift in Sources */,
+				001A1A0E0E4A5B1C2D3E4F5C /* Config.swift in Sources */,
+				001A1A100E4A5B1C2D3E4F5D /* Driver.swift in Sources */,
+				001A1A120E4A5B1C2D3E4F5E /* Expense.swift in Sources */,
+				001A1A140E4A5B1C2D3E4F5F /* Load.swift in Sources */,
+				001A1A160E4A5B1C2D3E4F60 /* Profile.swift in Sources */,
+				001A1A180E4A5B1C2D3E4F61 /* Settlement.swift in Sources */,
+				001A1A1A0E4A5B1C2D3E4F62 /* TruckDocument.swift in Sources */,
+				001A1A1C0E4A5B1C2D3E4F63 /* SettlementEngine.swift in Sources */,
+				001A1A1E0E4A5B1C2D3E4F64 /* SupabaseService.swift in Sources */,
+				001A1A200E4A5B1C2D3E4F65 /* CurrencyExtensions.swift in Sources */,
+				00DD1A400E4A5B1C2D3E4F90 /* BrandColors.swift in Sources */,
+				001A1A220E4A5B1C2D3E4F66 /* LoginView.swift in Sources */,
+				001A1A240E4A5B1C2D3E4F67 /* OnboardingView.swift in Sources */,
+				001A1A260E4A5B1C2D3E4F68 /* DashboardView.swift in Sources */,
+				001A1A280E4A5B1C2D3E4F69 /* LoadDetailView.swift in Sources */,
+				001A1A2A0E4A5B1C2D3E4F6A /* LoadsListView.swift in Sources */,
+				001A1A2C0E4A5B1C2D3E4F6B /* ScanUploadView.swift in Sources */,
+				001A1A2E0E4A5B1C2D3E4F6C /* SettingsView.swift in Sources */,
+				AB0000000000000000000001 /* DocumentExtractionService.swift in Sources */,
+				AB0000000000000000000003 /* InsightsService.swift in Sources */,
+				AA0000000000000000000003 /* DocumentScannerCoordinator.swift in Sources */,
+				AA0000000000000000000005 /* DocumentReviewView.swift in Sources */,
+				BB0000000000000000000001 /* BrandingService.swift in Sources */,
+				BB0000000000000000000003 /* BrandingSettingsView.swift in Sources */,
+				CC0000000000000000000001 /* ExpensesListView.swift in Sources */,
+				CC0000000000000000000003 /* AddEditExpenseView.swift in Sources */,
+				CC0000000000000000000005 /* FeeSettingsView.swift in Sources */,
+				AA0000000000000000000007 /* ManualLoadEntryView.swift in Sources */,
+				DD0000000000000000000001 /* PaystubPDFService.swift in Sources */,
+				DD0000000000000000000003 /* SettlementGeneratorView.swift in Sources */,
+				DD0000000000000000000005 /* DriversListView.swift in Sources */,
+				DD0000000000000000000007 /* DocumentVaultView.swift in Sources */,
+				DD0000000000000000000009 /* SmartInsightsView.swift in Sources */,
+				EE0000000000000000000001 /* Broker.swift in Sources */,
+				EE0000000000000000000003 /* BrokerContact.swift in Sources */,
+				EE0000000000000000000005 /* BrokerIntelligenceService.swift in Sources */,
+				EE0000000000000000000007 /* BrokersListView.swift in Sources */,
+				EE0000000000000000000009 /* BrokerDetailView.swift in Sources */,
+				EE000000000000000000000B /* ContactDetailView.swift in Sources */,
+				FF0000000000000000000001 /* ManualPaystubView.swift in Sources */,
+				FF0000000000000000000003 /* DraftStorageService.swift in Sources */,
+				FF0000000000000000000005 /* PaystubDraftsListView.swift in Sources */,
+				FF0000000000000000000007 /* CustomFeeService.swift in Sources */,
+				FF0000000000000000000009 /* EditCompanyView.swift in Sources */,
+				110000000000000000000001 /* PinLockService.swift in Sources */,
+				110000000000000000000003 /* SubscriptionService.swift in Sources */,
+				AA0000000000000000000001 /* AppearanceService.swift in Sources */,
+				FC0000000000000000000001 /* RemoteAppConfig.swift in Sources */,
+				FC0000000000000000000003 /* ForceUpdateService.swift in Sources */,
+				FC0000000000000000000005 /* ForceUpdateView.swift in Sources */,
+				FD0000000000000000000001 /* DistanceService.swift in Sources */,
+				FE0000000000000000000001 /* PaystubExpenseMatcher.swift in Sources */,
+				FE0000000000000000000003 /* PaystubExpenseReviewView.swift in Sources */,
+				AB0000000000000000000101 /* AccessGate.swift in Sources */,
+				110000000000000000000005 /* PinLockView.swift in Sources */,
+				110000000000000000000007 /* PinSettingsView.swift in Sources */,
+				110000000000000000000009 /* PaywallView.swift in Sources */,
+				11000000000000000000000B /* SubscriptionSettingsView.swift in Sources */,
+				1100000000000000000000F1 /* FeatureLockedView.swift in Sources */,
+				2200000000000000000000F3 /* DeleteAccountView.swift in Sources */,
+				DA00000000000000000000A1 /* DailyInspection.swift in Sources */,
+				DA00000000000000000000B1 /* ComplianceDocument.swift in Sources */,
+				DA00000000000000000000C1 /* IFTAEntry.swift in Sources */,
+				DA00000000000000000000D1 /* IFTAJurisdiction.swift in Sources */,
+				DA00000000000000000000E1 /* IFTACalculator.swift in Sources */,
+				DB0000000000000000000001 /* ComplianceHubView.swift in Sources */,
+				DB0000000000000000000003 /* ComplianceListView.swift in Sources */,
+				DB0000000000000000000005 /* AddComplianceDocumentView.swift in Sources */,
+				DB0000000000000000000007 /* ComplianceDocumentDetailView.swift in Sources */,
+				DB0000000000000000000009 /* RoadsideQuickView.swift in Sources */,
+				DB000000000000000000000B /* MissingDocumentsChecklistView.swift in Sources */,
+				DB000000000000000000000D /* DailyInspectionListView.swift in Sources */,
+				DB000000000000000000000F /* AddDailyInspectionView.swift in Sources */,
+				DB0000000000000000000011 /* DailyInspectionDetailView.swift in Sources */,
+				DC0000000000000000000001 /* IFTAHubView.swift in Sources */,
+				DC0000000000000000000003 /* AddIFTAEntryView.swift in Sources */,
+				DC0000000000000000000005 /* IFTAReportView.swift in Sources */,
+				9900000000000000000000A1 /* DemoMode.swift in Sources */,
+				9900000000000000000000B1 /* MoreTabView.swift in Sources */,
+				9900000000000000000000D1 /* IFTAPDFService.swift in Sources */,
+				9900000000000000000000E1 /* DemoDataSeeder.swift in Sources */,
+				9900000000000000000000F1 /* ScreenshotMode.swift in Sources */,
+				5A0000000000000000000001 /* LocalDocumentParser.swift in Sources */,
+				5A0000000000000000000003 /* LocalBrokerStore.swift in Sources */,
+				5A0000000000000000000005 /* SmartScanReviewView.swift in Sources */,
+				7B0000000000000000000001 /* SettlementSheetPDFService.swift in Sources */,
+				7B0000000000000000000003 /* SettlementSheetView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		001A1A120E4A5B1C2D3E4F46 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_DIALECT = "gnu++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_DIALECT = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		001A1A130E4A5B1C2D3E4F47 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_DIALECT = "gnu++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_DIALECT = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZE_FOR_SIZE = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		001A1A5C0E4A5B1C2D3E4F7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 24;
+				DEVELOPMENT_TEAM = DCCSGYD5A4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SacredPathway/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Sacred Pathway needs camera access so you can scan rate confirmations, receipts, bills of lading, and other trucking documents for your loads.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Sacred Pathway needs access to your photo library so you can upload rate cons, receipts, and document images for your loads.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway;
+				PRODUCT_NAME = SacredPathway;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		001A1A5D0E4A5B1C2D3E4F7D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 24;
+				DEVELOPMENT_TEAM = DCCSGYD5A4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SacredPathway/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Sacred Pathway needs camera access so you can scan rate confirmations, receipts, bills of lading, and other trucking documents for your loads.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Sacred Pathway needs access to your photo library so you can upload rate cons, receipts, and document images for your loads.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway;
+				PRODUCT_NAME = SacredPathway;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		001A1A110E4A5B1C2D3E4F45 /* Build configuration list for PBXProject "SacredPathway" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				001A1A120E4A5B1C2D3E4F46 /* Debug */,
+				001A1A130E4A5B1C2D3E4F47 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		001A1A5B0E4A5B1C2D3E4F7B /* Build configuration list for PBXNativeTarget "SacredPathway" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				001A1A5C0E4A5B1C2D3E4F7C /* Debug */,
+				001A1A5D0E4A5B1C2D3E4F7D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		00CC1A340E4A5B1C2D3E4F80 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		00CC1A360E4A5B1C2D3E4F81 /* XCRemoteSwiftPackageReference "TPPDF" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/techprimate/TPPDF.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		00BB1A350E4A5B1C2D3E4F70 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 00CC1A340E4A5B1C2D3E4F80 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		00BB1A370E4A5B1C2D3E4F72 /* TPPDF */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 00CC1A360E4A5B1C2D3E4F81 /* XCRemoteSwiftPackageReference "TPPDF" */;
+			productName = TPPDF;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 001A1A0E0E4A5B1C2D3E4F42 /* Project object */;
+}

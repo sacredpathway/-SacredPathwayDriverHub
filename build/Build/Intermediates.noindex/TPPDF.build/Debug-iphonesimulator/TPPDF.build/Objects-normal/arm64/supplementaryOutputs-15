@@ -1,0 +1,163 @@
+{
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Content/String+PDFTableContent.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/String+PDFTableContent.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/String+PDFTableContent.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/String+PDFTableContent.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/String+PDFTableContent.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/String+PDFTableContent.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Content/UIImage+PDFTableContent.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/UIImage+PDFTableContent.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/UIImage+PDFTableContent.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/UIImage+PDFTableContent.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/UIImage+PDFTableContent.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/UIImage+PDFTableContent.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/PDFTable.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/PDFTableCell.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCell.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCell.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCell.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCell.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCell.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/PDFTableCellAlignment.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellAlignment.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellAlignment.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellAlignment.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellAlignment.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellAlignment.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/PDFTableCellPosition.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTable+CellSubscripts.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+CellSubscripts.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+CellSubscripts.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+CellSubscripts.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+CellSubscripts.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+CellSubscripts.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTable+ColumnSubscripts.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+ColumnSubscripts.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+ColumnSubscripts.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+ColumnSubscripts.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+ColumnSubscripts.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+ColumnSubscripts.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTable+RowSubscripts.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+RowSubscripts.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+RowSubscripts.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+RowSubscripts.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+RowSubscripts.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+RowSubscripts.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTable+SectionSubscripts.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+SectionSubscripts.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+SectionSubscripts.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+SectionSubscripts.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+SectionSubscripts.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTable+SectionSubscripts.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTableColumn.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumn.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumn.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumn.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumn.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumn.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTableColumns.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumns.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumns.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumns.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumns.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableColumns.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTableMergeable.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableMergeable.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableMergeable.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableMergeable.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableMergeable.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableMergeable.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTableRow.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRow.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRow.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRow.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRow.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRow.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTableRows.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRows.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRows.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRows.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRows.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableRows.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Sections/PDFTableSection.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableSection.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableSection.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableSection.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableSection.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableSection.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Style/PDFTableCellBorders.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellBorders.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellBorders.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellBorders.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellBorders.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellBorders.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Style/PDFTableCellPosition+Equatable-Hashable.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition+Equatable-Hashable.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition+Equatable-Hashable.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition+Equatable-Hashable.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition+Equatable-Hashable.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellPosition+Equatable-Hashable.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Style/PDFTableCellStyle.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellStyle.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellStyle.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellStyle.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellStyle.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableCellStyle.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Style/PDFTableStyle+Defaults.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Defaults.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Defaults.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Defaults.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Defaults.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Defaults.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Style/PDFTableStyle+Equatable.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Equatable.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Equatable.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Equatable.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Equatable.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle+Equatable.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Table/Style/PDFTableStyle.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFTableStyle.swiftdeps"
+  },
+  "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/SourcePackages/checkouts/TPPDF/Source/API/Text/PDFAttributedText.swift" : {
+    "const-values" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFAttributedText.swiftconstvalues",
+    "dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFAttributedText.d",
+    "diagnostics" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFAttributedText.dia",
+    "object" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFAttributedText.o",
+    "swift-dependencies" : "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/build/Build/Intermediates.noindex/TPPDF.build/Debug-iphonesimulator/TPPDF.build/Objects-normal/arm64/PDFAttributedText.swiftdeps"
+  }
+}

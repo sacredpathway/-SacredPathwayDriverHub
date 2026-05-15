@@ -1,0 +1,40 @@
+{
+  "source": "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Views/Compliance/RoadsideQuickView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Critical Docs",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 31
+        }
+      },
+      {
+        "comment": "",
+        "key": "No truck, driver, or trailer documents",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Expires: %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 82
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap to view",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 104
+        }
+      }
+    ]
+  },
+  "version": 1
+}

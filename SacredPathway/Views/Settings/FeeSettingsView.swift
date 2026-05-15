@@ -59,7 +59,6 @@ struct FeeSettingsView: View {
             }
         }
         .navigationTitle("Fee Settings")
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .onAppear { loadAllFees() }
         .alert("Rename Fee", isPresented: $showingRenameAlert) {
             TextField("Fee name", text: $renameText)
@@ -255,7 +254,6 @@ struct FeeSettingsView: View {
                 .padding()
             }
             .navigationTitle("Add Fee")
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { showingAddSheet = false }
@@ -276,7 +274,7 @@ struct FeeSettingsView: View {
     private let iconOptions = [
         "dollarsign.circle.fill", "creditcard.fill", "banknote.fill",
         "building.columns.fill", "wrench.and.screwdriver.fill", "shield.fill",
-        "truck.box.fill", "fuelpump.fill", "antenna.radiowaves.left.and.right",
+        "shippingbox.fill", "fuelpump.fill", "antenna.radiowaves.left.and.right",
         "phone.fill", "doc.text.fill", "mappin.circle.fill",
         "heart.fill", "star.fill", "bolt.fill"
     ]
