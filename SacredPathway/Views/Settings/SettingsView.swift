@@ -153,6 +153,26 @@ struct SettingsView: View {
                                     }
                                 }
                             }
+
+                            // CPA Ready Tax Package — added 2026-05.
+                            // Generates accountant-grade PDF + CSV exports
+                            // for tax season, audits, and quarterly filings.
+                            NavigationLink {
+                                CPAReadyExportView()
+                                    .environmentObject(supabase)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "doc.badge.gearshape")
+                                        .foregroundStyle(Color.spGold)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("CPA Ready Tax Package")
+                                            .foregroundStyle(Color.spTextPrimary)
+                                        Text("Export tax write-offs and expense records")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.spTextSecondary)
+                                    }
+                                }
+                            }
                         }
                         .listRowBackground(Color.spCardBg)
                         .headerProminence(.increased)

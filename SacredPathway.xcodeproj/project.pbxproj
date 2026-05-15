@@ -102,6 +102,10 @@
 		FF0000000000000000000005 /* PaystubDraftsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000006 /* PaystubDraftsListView.swift */; };
 		FF0000000000000000000007 /* CustomFeeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000008 /* CustomFeeService.swift */; };
 		FF0000000000000000000009 /* EditCompanyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000000000000000000000A /* EditCompanyView.swift */; };
+		CA00000000000000000000A1 /* CPAExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A2 /* CPAExportModels.swift */; };
+		CA00000000000000000000A3 /* CPAExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A4 /* CPAExportService.swift */; };
+		CA00000000000000000000A5 /* CPAPDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A6 /* CPAPDFGenerator.swift */; };
+		CA00000000000000000000A7 /* CPAReadyExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A8 /* CPAReadyExportView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -202,6 +206,10 @@
 		FF0000000000000000000008 /* CustomFeeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFeeService.swift; sourceTree = "<group>"; };
 		FF000000000000000000000A /* EditCompanyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCompanyView.swift; sourceTree = "<group>"; };
 		FF7741851B22320511EEE2D3 /* SettlementHTMLPDFService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SettlementHTMLPDFService.swift; path = "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SettlementHTMLPDFService.swift"; sourceTree = "<absolute>"; };
+		CA00000000000000000000A2 /* CPAExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAExportModels.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A4 /* CPAExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAExportService.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A6 /* CPAPDFGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAPDFGenerator.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A8 /* CPAReadyExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAReadyExportView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -262,6 +270,7 @@
 				DA00000000000000000000C2 /* IFTAEntry.swift */,
 				DA00000000000000000000D2 /* IFTAJurisdiction.swift */,
 				FC0000000000000000000002 /* RemoteAppConfig.swift */,
+				CA00000000000000000000A2 /* CPAExportModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -294,6 +303,8 @@
 				FE0000000000000000000002 /* PaystubExpenseMatcher.swift */,
 				AB0000000000000000000102 /* AccessGate.swift */,
 				7B0000000000000000000002 /* SettlementSheetPDFService.swift */,
+				CA00000000000000000000A4 /* CPAExportService.swift */,
+				CA00000000000000000000A6 /* CPAPDFGenerator.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -377,6 +388,7 @@
 				CC0000000000000000000006 /* FeeSettingsView.swift */,
 				FF000000000000000000000A /* EditCompanyView.swift */,
 				110000000000000000000008 /* PinSettingsView.swift */,
+				CA00000000000000000000A8 /* CPAReadyExportView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -657,6 +669,10 @@
 				7B0000000000000000000003 /* SettlementSheetView.swift in Sources */,
 				1FFAAE85CA6146A878290E96 /* SettlementHTMLPDFService.swift in Sources */,
 				3CA8FED9B2BCBEE24E2E6EF3 /* PDFPreviewView.swift in Sources */,
+				CA00000000000000000000A1 /* CPAExportModels.swift in Sources */,
+				CA00000000000000000000A3 /* CPAExportService.swift in Sources */,
+				CA00000000000000000000A5 /* CPAPDFGenerator.swift in Sources */,
+				CA00000000000000000000A7 /* CPAReadyExportView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
