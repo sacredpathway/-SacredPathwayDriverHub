@@ -298,7 +298,7 @@ final class SubscriptionService: ObservableObject {
         if !FeatureFlags.subscriptionsEnabled { return true }
 
         switch feature {
-        case .aiScan, .pdfExport, .brokerIntelligence, .smartInsights:
+        case .aiScan, .pdfExport, .brokerIntelligence, .smartInsights, .cpaTaxPackage:
             return hasProAccess
         case .multiDriver, .whiteLabelBranding, .driverScorecard, .iftaAutoTracking:
             return hasCarrierAccess
@@ -310,7 +310,7 @@ final class SubscriptionService: ObservableObject {
     /// The minimum tier that unlocks a given feature.
     func requiredTier(for feature: Feature) -> SubscriptionTier {
         switch feature {
-        case .aiScan, .pdfExport, .brokerIntelligence, .smartInsights:
+        case .aiScan, .pdfExport, .brokerIntelligence, .smartInsights, .cpaTaxPackage:
             return .pro
         case .multiDriver, .whiteLabelBranding, .driverScorecard, .iftaAutoTracking:
             return .carrier
@@ -330,6 +330,10 @@ final class SubscriptionService: ObservableObject {
         case iftaAutoTracking
         case manualPaystub
         case basicDashboard
+        /// CPA Ready Tax Package — Pro-tier accountant-grade export feature.
+        /// Free-tier users see the row with a lock and a "Upgrade to Pro" CTA
+        /// that opens the paywall instead of the export screen.
+        case cpaTaxPackage
     }
 }
 

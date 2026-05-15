@@ -157,21 +157,26 @@ struct SettingsView: View {
                             // CPA Ready Tax Package — added 2026-05.
                             // Generates accountant-grade PDF + CSV exports
                             // for tax season, audits, and quarterly filings.
-                            NavigationLink {
-                                CPAReadyExportView()
-                                    .environmentObject(supabase)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "doc.badge.gearshape")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("CPA Ready Tax Package")
-                                            .foregroundStyle(Color.spTextPrimary)
-                                        Text("Export tax write-offs and expense records")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
-                                    }
+                            //
+                            // Pro-gated 2026-05 via SubscriptionService.Feature.cpaTaxPackage.
+                            // Entitled users get the normal NavigationLink → CPAReadyExportView.
+                            // Free-tier users see the same row decorated with a lock; tapping
+                            // opens the existing PaywallView sheet instead of the export
+                            // screen. No change to the CPA export feature itself.
+                            if subscriptions.isEntitled(.cpaTaxPackage) {
+                                NavigationLink {
+                                    CPAReadyExportView()
+                                        .environmentObject(supabase)
+                                } label: {
+                                    cpaTaxPackageRowLabel(locked: false)
                                 }
+                            } else {
+                                Button {
+                                    showPaywall = true
+                                } label: {
+                                    cpaTaxPackageRowLabel(locked: true)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                         .listRowBackground(Color.spCardBg)
@@ -518,6 +523,39 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView()
+        }
+    }
+
+    // MARK: - CPA Ready Tax Package row label
+    //
+    // Shared label content for both the entitled (NavigationLink) and the
+    // locked (Button → paywall) variants of the row. `locked` controls the
+    // trailing badge: a small lock + "PRO" capsule for free-tier users.
+    @ViewBuilder
+    private func cpaTaxPackageRowLabel(locked: Bool) -> some View {
+        HStack {
+            Image(systemName: "doc.badge.gearshape")
+                .foregroundStyle(Color.spGold)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("CPA Ready Tax Package")
+                    .foregroundStyle(Color.spTextPrimary)
+                Text("Export tax write-offs and expense records")
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+            }
+            if locked {
+                Spacer()
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                    Text("PRO")
+                        .font(.caption2.weight(.bold))
+                }
+                .foregroundStyle(Color.spGoldLight)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(Color.spGold.opacity(0.18))
+                .clipShape(Capsule())
+            }
         }
     }
 
