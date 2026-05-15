@@ -69,12 +69,25 @@ struct ParsedLoadFields {
     /// Examples: "Lowes", "Amazon", "Walmart", "C.H. Robinson".
     var sourceVendor: String?
 
+    /// Document type classification (rateCon, recon, bol, unknown).
+    /// Drives which extractor strategy runs. Recon docs need a fundamentally
+    /// different load-number / amount strategy than rate confirmations.
+    var documentType: DocumentType = .unknown
+
     /// Per-field confidence 0.0–1.0
     var confidence: [String: Double] = [:]
 
     /// Full OCR text — surfaced in the review screen so the user can
     /// double-check anything the parser missed.
     var rawText: String = ""
+}
+
+/// Coarse document-type classification used to route to a strategy.
+enum DocumentType: String {
+    case rateCon   // rate confirmation
+    case recon     // reconciliation / settlement / remittance
+    case bol       // bill of lading
+    case unknown
 }
 
 // MARK: - Service
@@ -147,14 +160,31 @@ enum LocalDocumentParser {
         out.rawText = lines.joined(separator: "\n")
         let joined = out.rawText
 
-        // ---- Pass 0: vendor detection (informs which specialized
-        // post-pass overrides generic regex with vendor-specific patterns). ----
+        // ---- Pass 0: vendor + document-type detection ----
+        // Document type informs which extractor strategy to favor. Recon /
+        // settlement statements have a completely different layout (per-load
+        // rows with sequence #s, settlement IDs, paid amounts) than rate
+        // confirmations, and need their own load# / amount logic.
         out.sourceVendor = detectVendor(in: joined)
+        out.documentType = detectDocumentType(in: joined)
 
         // ---- Load number ----
-        if let m = firstRegex(joined, pattern: #"(?i)\b(?:load|order|trip|pro|shipment|reference|ref)\s*(?:number|no\.?|num\.?|#)?\s*[:#-]?\s*([A-Z0-9][A-Z0-9-]{3,20})"#) {
-            out.loadNumber = m.cleanID
-            out.confidence["loadNumber"] = 0.85
+        // NOTE: "reference|ref" intentionally REMOVED from this regex. On
+        // reconciliation docs "Ref # 1234" is the small sequence/reference
+        // ID, NOT the load number. Reference numbers are captured separately
+        // below and routed into the Reference / Info field.
+        //
+        // Same-line restriction: [ \t]* (NOT \s*) so the label and value
+        // must be on the same line. Without this a column-header label
+        // would grab the next column header as the value (e.g.
+        // "Load Number     Reference" → "Reference").
+        if let m = firstRegex(joined, pattern: #"(?i)\b(?:load|order|trip|pro|shipment)[ \t]*(?:number|no\.?|num\.?|id|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{3,20})"#) {
+            let v = m.cleanID
+            // Reject column-header words — real IDs contain a digit.
+            if v.contains(where: { $0.isNumber }) {
+                out.loadNumber = v
+                out.confidence["loadNumber"] = 0.85
+            }
         }
 
         // ---- Broker MC number ----
@@ -354,9 +384,13 @@ enum LocalDocumentParser {
         }
 
         // ---- Reference number (separate from load # / PO #) ----
-        if let m = firstRegex(joined, pattern: #"(?i)\b(?:reference|ref)\s*(?:number|num|no\.?|#)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9-]{2,20})"#) {
-            out.referenceNumber = m.cleanID
-            out.confidence["referenceNumber"] = 0.8
+        // Same-line + digit-required for the same reasons as loadNumber.
+        if let m = firstRegex(joined, pattern: #"(?i)\b(?:reference|ref)[ \t]*(?:number|num|no\.?|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{2,20})"#) {
+            let v = m.cleanID
+            if v.contains(where: { $0.isNumber }) {
+                out.referenceNumber = v
+                out.confidence["referenceNumber"] = 0.8
+            }
         }
 
         // ---- Loaded / Deadhead miles printed on the document ----
@@ -422,6 +456,14 @@ enum LocalDocumentParser {
             out.confidence["bolNumber"] = 0.85
         }
 
+        // ---- Pass N-1: recon / reconciliation-specific override ----
+        // Recon docs have their own load# / amount / reference rules that
+        // OVERRIDE the generic regex sweep. This runs before vendor-specific
+        // post-pass so vendor patterns can still refine recon output.
+        if out.documentType == .recon {
+            Recon.fill(&out, joined: joined, lines: lines)
+        }
+
         // ---- Pass N: vendor-specific override pre-pass ----
         // Vendor-specific extractors have higher fidelity than the generic
         // regex sweep — they know each broker's exact label phrasing. They
@@ -432,6 +474,14 @@ enum LocalDocumentParser {
         default:
             break
         }
+
+        // ---- Final validation: load# vs reference# swap ----
+        // If loadNumber is suspiciously short (<= 5 digits, pure numeric)
+        // AND a longer freight-style identifier exists in the doc, the short
+        // value is almost certainly a sequence/reference number and the
+        // longer one is the true load. Promote the longer ID to loadNumber
+        // and demote the short one into referenceNumber (Info field).
+        validateLoadNumberAgainstAlternates(&out, joined: joined)
 
         return out
     }
@@ -464,6 +514,53 @@ enum LocalDocumentParser {
         return nil
     }
 
+    // MARK: - Document-type detection
+
+    /// Classify the document as a rate confirmation, recon/settlement, BOL,
+    /// or unknown. Signal-driven: a handful of strong tokens push recon over
+    /// rateCon; the absence of any rateCon-only language plus presence of
+    /// payment-detail tokens locks it in.
+    static func detectDocumentType(in text: String) -> DocumentType {
+        let t = text.lowercased()
+
+        // Strong recon / settlement / remittance signals.
+        let reconSignals = [
+            "reconciliation", "recon statement", "carrier reconciliation",
+            "settlement statement", "settlement detail", "settlement summary",
+            "remittance", "remittance advice", "payment detail",
+            "carrier payment", "carrier statement", "paid loads",
+            "load payment", "net pay", "net amount", "amount paid",
+            "paid amount", "check detail", "ach detail", "factoring statement",
+            "deductions", "advances", "chargebacks"
+        ]
+        let reconScore = reconSignals.reduce(0) { $0 + (t.contains($1) ? 1 : 0) }
+
+        // Strong rateCon signals (so we don't false-positive on a rate con
+        // that happens to mention "amount" once).
+        let rateConSignals = [
+            "rate confirmation", "rate con", "load confirmation",
+            "carrier rate confirmation", "agreed rate", "rate agreement",
+            "load tender", "carrier dispatch", "load offer"
+        ]
+        let rateConScore = rateConSignals.reduce(0) { $0 + (t.contains($1) ? 1 : 0) }
+
+        // BOL signals.
+        if t.contains("bill of lading") && !t.contains("bol number") {
+            // pure BOL doc (not just a rate con that prints the BOL #)
+            if reconScore == 0 && rateConScore == 0 {
+                return .bol
+            }
+        }
+
+        if reconScore >= 2 || (reconScore >= 1 && rateConScore == 0) {
+            return .recon
+        }
+        if rateConScore >= 1 {
+            return .rateCon
+        }
+        return .unknown
+    }
+
     /// Generic accessorial-amount extractor. Tries each keyword in turn and
     /// returns the first plausible dollar value within a short label window.
     private static func extractMoney(_ text: String, keywords: [String]) -> Double? {
@@ -478,6 +575,421 @@ enum LocalDocumentParser {
             }
         }
         return nil
+    }
+
+    // MARK: - Recon / reconciliation extractor
+
+    /// Reconciliation / settlement statement parser.
+    ///
+    /// Recon docs are fundamentally different from rate confirmations:
+    ///   * They list MULTIPLE identifiers per row (Seq #, Ref #, Invoice #,
+    ///     Settlement #, Load #, Trip #).
+    ///   * The Load # is the TRUE freight identifier (typically 6+ chars,
+    ///     often alphanumeric like "LD-2841", "1284756", "TXP-998112").
+    ///   * The Sequence/Ref/Invoice # is short (3–5 digits) and is just a
+    ///     row counter or factor reference — NOT the load.
+    ///   * The Amount field is exact and must be preserved with decimals.
+    ///
+    /// Strategy:
+    ///   1. Collect EVERY labeled ID with its kind (load / seq / ref /
+    ///      invoice / settlement / trip / order).
+    ///   2. Pick the highest-priority kind for `loadNumber` (load > trip >
+    ///      order > pro > shipment).
+    ///   3. Send everything else to the `referenceNumber` slot and append
+    ///      to `notes` so it shows in the Info / Special Notes section.
+    ///   4. Re-extract the Amount strictly with decimal preservation; prefer
+    ///      labels: Net Pay > Amount Paid > Paid Amount > Net > Total > Amount.
+    enum Recon {
+
+        /// Identifier-kind priority for choosing the true load number.
+        /// Lower index = higher priority.
+        static let loadKindPriority: [String] = [
+            "load", "load id", "load number", "trip", "trip number",
+            "order", "order number", "pro", "pro number",
+            "shipment", "shipment id", "freight id"
+        ]
+
+        /// Identifier-kind tokens that should NEVER be promoted to loadNumber.
+        /// These always go into Reference / Info.
+        static let nonLoadKinds: Set<String> = [
+            "seq", "sequence", "ref", "reference",
+            "invoice", "inv", "settlement", "stmt", "statement",
+            "check", "ach", "batch", "remit", "row"
+        ]
+
+        static func fill(_ out: inout ParsedLoadFields,
+                         joined: String,
+                         lines: [String]) {
+
+            // 1) Collect every labeled identifier with its kind.
+            // The regex below already handles the optional "number/no/num/id/#"
+            // suffix, so the label list only contains the BARE labels.
+            // Pattern: <label> [number|no|num|id|#]? [:#-]? <value>
+            // Examples that match: "Load # 1284756", "Seq No. 12",
+            // "Reference #: REF-7821", "Invoice 88123", "Settlement ID 99821".
+            let labels = [
+                "load id", "load",
+                "trip",
+                "order",
+                "pro",
+                "shipment",
+                "freight",
+                "sequence", "seq",
+                "reference", "ref",
+                "invoice", "inv",
+                "settlement", "stmt", "statement",
+                "check",
+                "ach",
+                "batch", "row"
+            ]
+
+            struct Hit {
+                let kind: String              // canonical lowercase label
+                let value: String             // cleaned identifier
+                let isNumeric: Bool
+                let length: Int
+            }
+            var hits: [Hit] = []
+
+            for label in labels {
+                // Escape spaces in multi-word labels — within a label we still
+                // allow tab-or-space, but NEVER a newline.
+                let escapedLabel = label.replacingOccurrences(of: " ", with: "[ \\t]+")
+                // CRITICAL: between the label and the value we use [ \t]*
+                // (NOT \s*) so the regex CANNOT span a newline. Without this,
+                // a column-header label like "Net Pay" on one line would
+                // grab "12" from the table row beneath it.
+                let pat = #"(?i)\b\#(escapedLabel)\b[ \t]*(?:number|no\.?|num\.?|id|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{2,24})"#
+                let matches = allMatches(joined, pattern: pat)
+                for raw in matches {
+                    let v = raw.cleanID
+                    // Reject obvious non-IDs (single letters, pure dashes).
+                    guard v.count >= 3 else { continue }
+                    // Reject column-header words like "Reference", "Pickup",
+                    // "Delivery", "Number" — a real ID must contain at least
+                    // one digit.
+                    guard v.contains(where: { $0.isNumber }) else { continue }
+                    let isNum = v.allSatisfy { $0.isNumber }
+                    hits.append(Hit(
+                        kind: canonicalKind(label),
+                        value: v,
+                        isNumeric: isNum,
+                        length: v.count
+                    ))
+                }
+            }
+
+            // 1b) Table-row sequence detection.
+            //     Recon docs typically lay out per-load rows as:
+            //         "12     LD-1284756   REF-7821   ..."
+            //     The leading short number IS the sequence/row counter and
+            //     is NOT the load number. Capture it here so it lands in
+            //     the Info block even though there's no inline "Seq #" label
+            //     on the same line.
+            for line in lines {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                if let seq = firstRegex(
+                    trimmed,
+                    pattern: #"^([0-9]{1,4})[ \t]{2,}(?=[A-Z]{1,4}-?[0-9]{4,}|[A-Z]{2,}[0-9]{4,}|[0-9]{6,})"#
+                ) {
+                    if seq.count <= 4, !seq.isEmpty {
+                        hits.append(Hit(
+                            kind: "sequence",
+                            value: seq,
+                            isNumeric: true,
+                            length: seq.count
+                        ))
+                    }
+                }
+            }
+
+            // 2) Pick the best loadNumber candidate.
+            //    a) Prefer any hit whose canonical kind is in loadKindPriority.
+            //    b) Within those, prefer the longest identifier (true load IDs
+            //       are typically 6+ chars; row sequence IDs are 1–5 digits).
+            //    c) If no labeled load-kind hit exists, fall back to the
+            //       longest alphanumeric ID that is NOT a sequence/ref/invoice.
+            let loadKinds = Set(loadKindPriority)
+            let loadCandidates = hits.filter { loadKinds.contains($0.kind) }
+            let bestLoad = loadCandidates.max { a, b in
+                // Prefer non-numeric (alphanumeric freight IDs are usually
+                // the real load) then longer.
+                if a.isNumeric != b.isNumeric { return a.isNumeric && !b.isNumeric }
+                return a.length < b.length
+            }
+
+            if let pick = bestLoad, pick.length >= 4 {
+                // Demote any previous short load# to referenceNumber/Info
+                // before overwriting. Common case: generic regex matched
+                // "Load # 1234" first, then recon found "Trip TXP-998112"
+                // which is the real load — "1234" must NOT just vanish.
+                if let prev = out.loadNumber,
+                   prev != pick.value,
+                   out.referenceNumber == nil {
+                    out.referenceNumber = prev
+                    out.confidence["referenceNumber"] = 0.85
+                }
+                out.loadNumber = pick.value
+                out.confidence["loadNumber"] = 0.95
+            } else if out.loadNumber == nil
+                       || (out.loadNumber?.count ?? 0) <= 5
+                       || !(out.loadNumber?.contains(where: { $0.isNumber }) ?? false) {
+                // No labeled load hit (or the existing one is short/headerish).
+                // Fall back to a freight-ID heuristic: scan the doc for tokens
+                // that look like real load identifiers (e.g. LD-1284756,
+                // TXP-998112, or 6+ digit pure numerics) and pick the most
+                // freight-like (alphanumeric over pure numeric, longer wins).
+                //
+                // CRITICAL: exclude any token that was already labeled as a
+                // non-load kind (ACH, Check, Settlement, Invoice, Reference,
+                // Sequence). Without this filter, "ACH-882104" would beat
+                // "LD-1284756" simply for being encountered first.
+                let excluded: Set<String> = Set(hits
+                    .filter { !loadKinds.contains($0.kind) }
+                    .map { $0.value })
+                let freightIDs = allMatches(
+                    joined,
+                    pattern: #"\b([A-Z]{1,4}-?[0-9]{4,12}|[0-9]{6,12}|[A-Z]{2,}[0-9]{4,})\b"#
+                ).filter { !excluded.contains($0) }
+                let best = freightIDs.max { a, b in
+                    let aHasLetter = a.contains(where: { $0.isLetter })
+                    let bHasLetter = b.contains(where: { $0.isLetter })
+                    if aHasLetter != bHasLetter { return !aHasLetter }
+                    return a.count < b.count
+                }
+                if let pick = best, pick.count >= 6 {
+                    // Demote any previous (short) loadNumber to reference.
+                    if let prev = out.loadNumber,
+                       prev != pick, out.referenceNumber == nil {
+                        out.referenceNumber = prev
+                        out.confidence["referenceNumber"] = 0.85
+                    }
+                    out.loadNumber = pick
+                    out.confidence["loadNumber"] = 0.85
+                }
+            }
+
+            // 3) Pick a referenceNumber candidate (for the Reference field).
+            //    Prefer the first labeled "reference" hit; otherwise the
+            //    first sequence hit. canonicalKind already collapses
+            //    "ref"->"reference" and "seq"->"sequence" so we only check
+            //    the canonical form.
+            let refCandidates = hits.filter { $0.kind == "reference" }
+            if let pick = refCandidates.first, out.referenceNumber == nil {
+                out.referenceNumber = pick.value
+                out.confidence["referenceNumber"] = 0.9
+            } else if out.referenceNumber == nil {
+                let seqCandidates = hits.filter { $0.kind == "sequence" }
+                if let pick = seqCandidates.first {
+                    out.referenceNumber = "Seq " + pick.value
+                    out.confidence["referenceNumber"] = 0.85
+                }
+            }
+
+            // 4) Append every non-load identifier to notes so the user sees
+            //    them in the Info / Special Notes field. Deduplicate.
+            var infoLines: [String] = []
+            var seen: Set<String> = []
+            // Avoid duplicating values already assigned to load / reference.
+            if let v = out.loadNumber { seen.insert(v) }
+            if let v = out.referenceNumber { seen.insert(v) }
+
+            for h in hits {
+                // Skip kinds that are load-priority — they already went into
+                // loadNumber (or lost to a longer competitor).
+                if loadKinds.contains(h.kind) { continue }
+                if seen.contains(h.value) { continue }
+                if h.value.count < 2 { continue }
+                let pretty = prettyKindLabel(h.kind) + ": " + h.value
+                infoLines.append(pretty)
+                seen.insert(h.value)
+            }
+            if !infoLines.isEmpty {
+                let infoBlock = "Info (from recon):\n" + infoLines.joined(separator: "\n")
+                if let existing = out.notes, !existing.isEmpty {
+                    out.notes = existing + "\n\n" + infoBlock
+                } else {
+                    out.notes = infoBlock
+                    out.confidence["notes"] = 0.85
+                }
+            }
+
+            // 5) Re-extract Amount with strict label priority + decimal
+            //    preservation. Recon amounts must NEVER be rounded and must
+            //    NEVER come from a nearby unrelated number.
+            if let pick = extractReconAmount(joined: joined) {
+                out.rate = pick.value
+                out.confidence["rate"] = pick.confidence
+            }
+        }
+
+        /// Canonicalize a label string ("Load Number", "load #", "load id")
+        /// to a stable token used in priority/dedupe lookups.
+        private static func canonicalKind(_ label: String) -> String {
+            let l = label.lowercased()
+            // Strip suffixes like "number", "no", "#", "id".
+            let cleaned = l.replacingOccurrences(
+                of: #"\s*(number|no\.?|num\.?|id|#)\s*$"#,
+                with: "",
+                options: .regularExpression
+            ).trimmingCharacters(in: .whitespaces)
+            // Map common short forms.
+            switch cleaned {
+            case "load": return "load"
+            case "trip": return "trip"
+            case "order": return "order"
+            case "pro": return "pro"
+            case "shipment": return "shipment"
+            case "freight": return "freight id"
+            case "seq", "sequence": return "sequence"
+            case "ref", "reference": return "reference"
+            case "inv", "invoice": return "invoice"
+            case "stmt", "statement", "settlement": return "settlement"
+            case "check": return "check"
+            case "ach": return "ach"
+            case "batch": return "batch"
+            case "row": return "row"
+            default: return cleaned
+            }
+        }
+
+        /// Title-cased pretty version of a kind for the Info block.
+        private static func prettyKindLabel(_ kind: String) -> String {
+            switch kind {
+            case "sequence": return "Sequence"
+            case "reference": return "Reference"
+            case "invoice": return "Invoice"
+            case "settlement": return "Settlement"
+            case "check": return "Check"
+            case "ach": return "ACH"
+            case "batch": return "Batch"
+            case "row": return "Row"
+            case "freight id": return "Freight ID"
+            case "pro": return "PRO"
+            default: return kind.prefix(1).uppercased() + kind.dropFirst()
+            }
+        }
+
+        /// One amount candidate with the label that anchored it and a
+        /// computed confidence score (higher when label is unambiguous).
+        struct AmountPick {
+            let value: Double
+            let raw: String
+            let confidence: Double
+        }
+
+        /// Strict money extractor for recon docs. Tries labels in priority
+        /// order and parses the literal printed value WITHOUT rounding.
+        /// Decimal places are preserved exactly as they appear in the doc.
+        static func extractReconAmount(joined: String) -> AmountPick? {
+            // Ordered by priority — most specific recon-payment labels first.
+            // Each entry: (label-regex, confidence).
+            let labeled: [(String, Double)] = [
+                (#"net\s*pay(?:ment)?"#,          0.98),
+                (#"amount\s*paid"#,                0.97),
+                (#"paid\s*amount"#,                0.97),
+                (#"net\s*amount"#,                 0.96),
+                (#"check\s*amount"#,               0.96),
+                (#"payment\s*amount"#,             0.95),
+                (#"total\s*payment"#,              0.94),
+                (#"total\s*paid"#,                 0.94),
+                (#"settlement\s*amount"#,          0.93),
+                (#"net\b"#,                        0.90),
+                (#"total\s*amount"#,               0.88),
+                (#"total\b"#,                      0.85),
+                (#"amount\b"#,                     0.82),
+            ]
+            // Capture: optional $, then a dollar value with optional commas
+            // and optional decimal. The decimal part is preserved exactly so
+            // values like 1234.5, 1234.50, 1234.567 all parse to the right
+            // Double without forced rounding.
+            let amountCapture = #"\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)"#
+
+            // Two passes per label:
+            //   Pass A — same-line: "Net Pay: $4,325.75" on one line.
+            //   Pass B — newline-tolerant: "Net Pay:\n $4,325.75" (very common
+            //            on real recon footers where the amount is right-aligned
+            //            on the next line). This pass requires BOTH (a) the
+            //            label to be followed by a `:`/`=`, AND (b) the captured
+            //            amount to start with `$`. That two-anchor check makes
+            //            it safe to cross a single newline without accidentally
+            //            binding a column-header label to a table-row value.
+            for (label, conf) in labeled {
+                let sameLine = #"(?i)\b"# + label + #"[ \t]*[:=\-]?[ \t]*"# + amountCapture
+                if let raw = firstRegex(joined, pattern: sameLine) {
+                    let normalized = raw.replacingOccurrences(of: ",", with: "")
+                    if let v = Double(normalized), v > 0, v < 1_000_000 {
+                        return AmountPick(value: v, raw: raw, confidence: conf)
+                    }
+                }
+                // Newline-tolerant fallback (label must have :/= and value must
+                // start with $). The `[ \t]*\r?\n[ \t]*` allows EXACTLY one
+                // line break between label and value.
+                let crossLine = #"(?i)\b"# + label + #"[ \t]*[:=][ \t]*\r?\n[ \t]*\$[ \t]*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)"#
+                if let raw = firstRegex(joined, pattern: crossLine) {
+                    let normalized = raw.replacingOccurrences(of: ",", with: "")
+                    if let v = Double(normalized), v > 0, v < 1_000_000 {
+                        return AmountPick(value: v, raw: raw, confidence: max(0.85, conf - 0.05))
+                    }
+                }
+            }
+            return nil
+        }
+    }
+
+    // MARK: - Load-number cross-validation
+
+    /// Final-pass safety net.
+    ///
+    /// If the chosen `loadNumber` is suspiciously short (3–5 digits, pure
+    /// numeric) AND a longer freight-style identifier exists elsewhere in
+    /// the document, swap them: the longer one becomes the load number and
+    /// the short numeric goes into `referenceNumber` (Info field). This
+    /// catches the common recon failure mode where a tiny sequence number
+    /// was picked up before the real load ID.
+    static func validateLoadNumberAgainstAlternates(_ out: inout ParsedLoadFields,
+                                                    joined: String) {
+        guard let current = out.loadNumber else { return }
+        // Only "fix" the case where current looks like a row-sequence ID.
+        let isShortNumeric = current.count <= 5 && current.allSatisfy { $0.isNumber }
+        guard isShortNumeric else { return }
+
+        // Find longer alphanumeric IDs that look like freight identifiers.
+        // Hyphenated forms ("LD-2841", "TXP-998112") and 6+ digit numerics
+        // are both common.
+        let candidates = allMatches(joined, pattern: #"\b([A-Z]{1,4}-?[0-9]{4,10}|[0-9]{6,12}|[A-Z]{2,}[0-9]{4,})\b"#)
+            .filter { $0 != current }
+            .filter { $0.count >= 6 }
+
+        // Prefer alphanumerics over pure numerics (alphanumeric IDs are
+        // almost always intentional freight identifiers).
+        let best = candidates.max { a, b in
+            let aHasLetter = a.contains(where: { $0.isLetter })
+            let bHasLetter = b.contains(where: { $0.isLetter })
+            if aHasLetter != bHasLetter { return !aHasLetter }
+            return a.count < b.count
+        }
+
+        if let promoted = best {
+            // Demote the short numeric to referenceNumber unless it's already
+            // assigned.
+            if out.referenceNumber == nil || out.referenceNumber == current {
+                out.referenceNumber = current
+                out.confidence["referenceNumber"] = 0.85
+            } else {
+                // Already have a ref — append the short to notes/Info.
+                let line = "Sequence: \(current)"
+                if let n = out.notes, !n.isEmpty {
+                    if !n.contains(line) {
+                        out.notes = n + "\n" + line
+                    }
+                } else {
+                    out.notes = "Info:\n" + line
+                }
+            }
+            out.loadNumber = promoted
+            out.confidence["loadNumber"] = max(out.confidence["loadNumber"] ?? 0, 0.9)
+        }
     }
 
     // MARK: - Vendor: Lowe's
