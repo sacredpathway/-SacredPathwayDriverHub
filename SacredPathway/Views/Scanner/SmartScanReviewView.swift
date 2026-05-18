@@ -820,6 +820,9 @@ struct SmartScanReviewView: View {
         brokerPhoneExtension = parsed.brokerPhoneExtension ?? ""
         brokerEmail          = parsed.brokerEmail          ?? ""
         brokerMcNumber       = parsed.brokerMcNumber       ?? ""
+        #if DEBUG
+        print("[SP_DEBUG_RATECON] prefill brokerName='\(brokerName)' MC from OCR='\(brokerMcNumber)'")
+        #endif
 
         pickupCityState   = parsed.pickupCityState  ?? ""
         pickupAddress     = parsed.pickupAddress    ?? ""
@@ -900,8 +903,29 @@ struct SmartScanReviewView: View {
         let target = Broker.normalize(brokerName)
         matchedBroker = savedBrokers.first { ($0.normalizedName ?? Broker.normalize($0.brokerName)) == target }
         // If matched, auto-fill MC# only when the user hasn't typed one.
+        // This is the second of two MC sources: OCR first (handled in
+        // prefillFromParsed via parsed.brokerMcNumber), saved-broker
+        // lookup here. Zero tokens, fully on-device — uses the broker
+        // record the carrier already has in Supabase.
         if let m = matchedBroker {
-            if brokerMcNumber.isEmpty, let mc = m.mcNumber { brokerMcNumber = mc }
+            if brokerMcNumber.isEmpty, let mc = m.mcNumber {
+                brokerMcNumber = mc
+                #if DEBUG
+                print("[SP_DEBUG_RATECON] MC from saved broker: brokerName='\(brokerName)' (normalized='\(target)') → MC=\(mc)")
+                #endif
+            } else {
+                #if DEBUG
+                if brokerMcNumber.isEmpty {
+                    print("[SP_DEBUG_RATECON] saved broker matched but has no MC on file (brokerName='\(brokerName)')")
+                }
+                #endif
+            }
+        } else {
+            #if DEBUG
+            if brokerMcNumber.isEmpty {
+                print("[SP_DEBUG_RATECON] no saved broker match for '\(brokerName)' (normalized='\(target)') — MC will stay blank")
+            }
+            #endif
         }
     }
 
@@ -1038,6 +1062,23 @@ struct SmartScanReviewView: View {
                 totalRevenue: 0
             )
             resolvedBroker = try? await supabase.createBroker(newBroker)
+            #if DEBUG
+            if let mc = newBroker.mcNumber {
+                print("[SP_DEBUG_RATECON] persisted MC on NEW broker '\(trimmedCompany)' → \(mc)")
+            }
+            #endif
+        } else if var existing = resolvedBroker,
+                  (existing.mcNumber ?? "").isEmpty,
+                  !brokerMcNumber.isEmpty {
+            // Backfill: matched broker had no MC saved, user supplied one
+            // (manually typed OR scanned from this rate con) — persist it
+            // so the NEXT scan of the same broker auto-fills the MC.
+            existing.mcNumber = brokerMcNumber
+            try? await supabase.updateBroker(existing)
+            resolvedBroker = existing
+            #if DEBUG
+            print("[SP_DEBUG_RATECON] backfilled MC on existing broker '\(existing.brokerName)' → \(brokerMcNumber)")
+            #endif
         }
         guard let brokerId = resolvedBroker?.id else { return (nil, nil) }
 

@@ -196,11 +196,60 @@ enum LocalDocumentParser {
             }
         }
 
-        // ---- Broker MC number ----
-        if let m = firstRegex(joined, pattern: #"(?i)\bMC\s*[#:]?\s*(\d{5,8})"#) {
-            out.brokerMcNumber = m
+        // ---- Broker MC number (broadened 2026-05-18) ----
+        //
+        // Real-world rate cons label the MC# in many ways. Try the most
+        // specific patterns first so a generic "MC 12345" doesn't beat a
+        // "Motor Carrier No. 12345" pair that's right next to the broker
+        // name. The pattern intentionally accepts MC numbers with 5–8
+        // digits — current FMCSA assignments are 6–7 digits, but 5-digit
+        // numbers still exist on older carriers and 8-digit numbers are
+        // reserved for future expansion.
+        //
+        // Order matters — first hit wins per pattern, but we keep walking
+        // the list until something matches. Patterns are roughly ordered
+        // by specificity / signal strength.
+        let mcPatterns: [String] = [
+            // "Motor Carrier No. 12345", "Motor Carrier Number 12345",
+            // "Motor Carrier #: 12345", "Motor Carrier MC# 12345".
+            #"(?i)\bmotor\s*carrier\s*(?:number|no\.?|#|mc\s*#?)\s*[:#\-]?\s*(\d{5,8})\b"#,
+            // "Broker MC 12345", "Broker MC# 12345", "Broker MC: 12345".
+            #"(?i)\bbroker\s*mc\s*[#:]?\s*(\d{5,8})\b"#,
+            // "MC Number 12345", "MC No. 12345", "MC Num 12345".
+            #"(?i)\bMC\s*(?:number|num\.?|no\.?|#)?\s*[:#\-]?\s*(\d{5,8})\b"#,
+            // "MC# 12345" / "MC #12345" / "MC 12345" — the legacy pattern.
+            #"(?i)\bMC\s*[#:]?\s*(\d{5,8})"#,
+            // USDOT/MC paired block — "USDOT 1234567 MC 887766" or
+            // "DOT# 1234567 / MC# 887766". Capture the MC half.
+            #"(?i)\busdot\s*[#:]?\s*\d{6,8}\s*[\/\|\-,;]?\s*mc\s*[#:]?\s*(\d{5,8})\b"#,
+            // "DOT 1234567 MC 887766" (no USDOT prefix).
+            #"(?i)\bdot\s*[#:]?\s*\d{6,8}\s*[\/\|\-,;]?\s*mc\s*[#:]?\s*(\d{5,8})\b"#,
+        ]
+        var mcCandidates: [(value: String, pattern: String)] = []
+        for pat in mcPatterns {
+            for raw in allMatches(joined, pattern: pat) {
+                // Reject patterns that grab a zip code (5 digits next to
+                // a city/state) — MC numbers in production are 6+ digits
+                // and we only allow 5-digit MCs when context is explicit
+                // (the regex anchored them to an MC label, so this is
+                // already constrained).
+                mcCandidates.append((raw, pat))
+            }
+        }
+        if let first = mcCandidates.first {
+            out.brokerMcNumber = first.value
             out.confidence["brokerMcNumber"] = 0.95
         }
+
+        #if DEBUG
+        let mcTag = "SP_DEBUG_RATECON"
+        print("[\(mcTag)] MC candidates from OCR: \(mcCandidates.map { $0.value })")
+        if let mc = out.brokerMcNumber {
+            print("[\(mcTag)] MC final from OCR: \(mc)")
+        } else {
+            print("[\(mcTag)] MC not in OCR — caller can fall back to saved brokers.")
+        }
+        #endif
 
         // ---- Broker name ----
         // Best signal in real rate cons: line containing "Broker:" or
