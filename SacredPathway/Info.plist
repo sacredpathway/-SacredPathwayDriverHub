@@ -4,6 +4,8 @@
 <dict>
 	<key>NSPhotoLibraryAddOnlyUsageDescription</key>
 	<string>Sacred Pathway needs permission to save generated paystubs and processed documents to your photo library.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Sacred Pathway can import broker reps from your iPhone Contacts and save scanned rate-con contacts back to your address book.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

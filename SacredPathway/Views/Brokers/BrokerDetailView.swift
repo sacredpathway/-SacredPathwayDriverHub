@@ -121,19 +121,74 @@ struct BrokerDetailView: View {
                 Circle().fill(Color.spGold.opacity(0.15)).frame(width: 64, height: 64)
                 Image(systemName: "building.2.fill").foregroundStyle(Color.spGold).font(.title)
             }
-            Text(broker.brokerName).font(.title3.weight(.bold)).foregroundStyle(Color.spTextPrimary)
+            // Broker name — long-press to copy
+            Text(broker.brokerName)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color.spTextPrimary)
+                .contextMenu {
+                    Button {
+                        UIPasteboard.general.string = broker.brokerName
+                    } label: { Label("Copy Broker Name", systemImage: "doc.on.doc") }
+                }
             if let mc = broker.mcNumber {
-                Text("MC# \(mc)").font(.caption).foregroundStyle(Color.spTextSecondary)
+                // MC# — long-press to copy
+                Text("MC# \(mc)")
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+                    .contextMenu {
+                        Button {
+                            UIPasteboard.general.string = mc
+                        } label: { Label("Copy MC #", systemImage: "doc.on.doc") }
+                    }
             }
             if let date = broker.createdAt {
                 Text("First interaction: \(date, style: .date)")
                     .font(.caption2).foregroundStyle(Color.spTextSecondary)
             }
+
+            // Copy-all button — bundles every field on the broker + its
+            // primary contact into a single clipboard payload.
+            Button {
+                copyAllBrokerInfo()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "doc.on.doc.fill").font(.caption)
+                    Text("Copy All Contact Info").font(.caption.weight(.semibold))
+                }
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Color.spGold.opacity(0.18))
+                .foregroundStyle(Color.spGoldLight)
+                .clipShape(Capsule())
+            }
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color.spCardBg)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// Builds a plain-text payload of every visible field on the broker +
+    /// its most recent contact and writes it to the clipboard.
+    private func copyAllBrokerInfo() {
+        var lines: [String] = []
+        lines.append(broker.brokerName)
+        if let mc = broker.mcNumber, !mc.isEmpty { lines.append("MC# \(mc)") }
+        if let primary = contacts.first {
+            lines.append("")
+            lines.append("Contact: \(primary.contactName)")
+            if let phone = primary.phone, !phone.isEmpty {
+                if let ext = primary.phoneExtension, !ext.isEmpty {
+                    lines.append("Phone: \(phone) ext \(ext)")
+                } else {
+                    lines.append("Phone: \(phone)")
+                }
+            }
+            if let email = primary.email, !email.isEmpty {
+                lines.append("Email: \(email)")
+            }
+        }
+        UIPasteboard.general.string = lines.joined(separator: "\n")
     }
 
     private var statsSection: some View {
@@ -167,13 +222,34 @@ struct BrokerDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    @State private var contactsToast: String?
+
     private var contactsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: "person.crop.circle.fill").foregroundStyle(Color.spGold)
                 Text("Contacts").font(.headline).foregroundStyle(Color.spGold)
                 Spacer()
+                if !contacts.isEmpty {
+                    Button {
+                        Task { await saveAllContactsToiPhone() }
+                    } label: {
+                        Label("Save All", systemImage: "person.crop.circle.badge.plus")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 10).padding(.vertical, 4)
+                            .background(Color.spGold)
+                            .foregroundStyle(Color.spBlack)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
                 Text("\(contacts.count)").font(.caption).foregroundStyle(Color.spTextSecondary)
+            }
+            if let toast = contactsToast {
+                Text(toast)
+                    .font(.caption2)
+                    .foregroundStyle(Color.spGoldLight)
+                    .padding(.vertical, 2)
             }
 
             if contacts.isEmpty {
@@ -203,13 +279,19 @@ struct BrokerDetailView: View {
                 Image(systemName: "person.fill").foregroundStyle(Color.spGreenAccent).font(.subheadline)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(contact.contactName).font(.subheadline.weight(.semibold)).foregroundStyle(Color.spTextPrimary)
+                Text(contact.contactName)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.spTextPrimary)
                 HStack(spacing: 8) {
-                    if let email = contact.email {
-                        Text(email).font(.caption2).foregroundStyle(Color.spTextSecondary).lineLimit(1)
+                    if let phone = contact.phone, !phone.isEmpty {
+                        if let ext = contact.phoneExtension, !ext.isEmpty {
+                            Text("\(phone) · ext \(ext)").font(.caption2).foregroundStyle(Color.spTextSecondary)
+                        } else {
+                            Text(phone).font(.caption2).foregroundStyle(Color.spTextSecondary)
+                        }
                     }
-                    if let phone = contact.phone {
-                        Text(phone).font(.caption2).foregroundStyle(Color.spTextSecondary)
+                    if let email = contact.email, !email.isEmpty {
+                        Text(email).font(.caption2).foregroundStyle(Color.spTextSecondary).lineLimit(1)
                     }
                 }
             }
@@ -218,6 +300,108 @@ struct BrokerDetailView: View {
                 Text(date, style: .date).font(.caption2).foregroundStyle(Color.spTextSecondary)
             }
         }
+        // Long-press anywhere on the row → menu with per-field copies + Copy All.
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                UIPasteboard.general.string = contact.contactName
+            } label: { Label("Copy Name", systemImage: "doc.on.doc") }
+            if let phone = contact.phone, !phone.isEmpty {
+                Button {
+                    UIPasteboard.general.string = phone
+                } label: { Label("Copy Phone", systemImage: "phone") }
+                if let ext = contact.phoneExtension, !ext.isEmpty {
+                    Button {
+                        UIPasteboard.general.string = ext
+                    } label: { Label("Copy Extension", systemImage: "number") }
+                    Button {
+                        UIPasteboard.general.string = "\(phone) ext \(ext)"
+                    } label: { Label("Copy Phone + Ext", systemImage: "phone.fill") }
+                }
+            }
+            if let email = contact.email, !email.isEmpty {
+                Button {
+                    UIPasteboard.general.string = email
+                } label: { Label("Copy Email", systemImage: "envelope") }
+            }
+            Divider()
+            Button {
+                copyContactAll(contact)
+            } label: { Label("Copy All Contact Info", systemImage: "doc.on.doc.fill") }
+            Button {
+                Task { await saveOneContactToiPhone(contact) }
+            } label: { Label("Save to iPhone Contacts", systemImage: "person.crop.circle.badge.plus") }
+        }
+    }
+
+    // MARK: - iPhone Contacts bridge
+
+    /// Save a single broker contact card into the user's iPhone Contacts via
+    /// `ContactsBridge`. Surfaces a transient toast inside the contacts
+    /// section ("Saved · Maria Lopez" / "Permission denied"). Silent no-op
+    /// if the user has declined Contacts permission previously — the bridge
+    /// throws `.notAuthorized` and we render that as a friendly toast.
+    @MainActor
+    private func saveOneContactToiPhone(_ contact: BrokerContact) async {
+        do {
+            _ = try await ContactsBridge.save(contact: contact, company: broker.brokerName)
+            contactsToast = "Saved · \(contact.contactName) to iPhone Contacts"
+        } catch ContactsBridge.BridgeError.notAuthorized {
+            contactsToast = "Allow Contacts in Settings → Privacy to save reps."
+        } catch {
+            contactsToast = "Couldn't save · \(error.localizedDescription)"
+        }
+        // Auto-dismiss toast after 4s so it doesn't linger.
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            contactsToast = nil
+        }
+    }
+
+    /// Save every contact attached to this broker into iPhone Contacts.
+    /// Useful right after a Smart Scan creates two reps for the same TQL
+    /// company — one tap and both end up in the user's address book.
+    @MainActor
+    private func saveAllContactsToiPhone() async {
+        guard !contacts.isEmpty else { return }
+        if await ContactsBridge.requestAccess() == false {
+            contactsToast = "Allow Contacts in Settings → Privacy to save reps."
+            return
+        }
+        var saved = 0
+        for c in contacts {
+            do {
+                _ = try await ContactsBridge.save(contact: c, company: broker.brokerName)
+                saved += 1
+            } catch {
+                // continue — partial-success is better than aborting on one bad row.
+            }
+        }
+        contactsToast = "Saved \(saved) of \(contacts.count) to iPhone Contacts"
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            contactsToast = nil
+        }
+    }
+
+    /// Plain-text payload for a single contact card (rep + phone + ext +
+    /// email + parent broker company + MC#).
+    private func copyContactAll(_ contact: BrokerContact) {
+        var lines: [String] = []
+        lines.append(contact.contactName)
+        lines.append(broker.brokerName)
+        if let mc = broker.mcNumber, !mc.isEmpty { lines.append("MC# \(mc)") }
+        if let phone = contact.phone, !phone.isEmpty {
+            if let ext = contact.phoneExtension, !ext.isEmpty {
+                lines.append("Phone: \(phone) ext \(ext)")
+            } else {
+                lines.append("Phone: \(phone)")
+            }
+        }
+        if let email = contact.email, !email.isEmpty {
+            lines.append("Email: \(email)")
+        }
+        UIPasteboard.general.string = lines.joined(separator: "\n")
     }
 
     private var loadsSection: some View {

@@ -90,6 +90,24 @@ enum Config {
         static let requestTimeout: TimeInterval = 4.0
     }
 
+    // MARK: - Web Portal
+    //
+    // The browser portal under `/web/` in this repo (deployed to a static
+    // host) lets users sign in with the same Supabase account they use on
+    // iOS and view the same loads, documents, broker contacts, and weekly
+    // totals from any computer. Update this URL once the portal is live
+    // on the production domain — the iOS Settings row reads it directly.
+    enum Web {
+        static let dashboardURL = URL(string: "https://app.sacredpathway.org/")!
+
+        /// Gate for the Settings → Web Access row. Flip to `true` only
+        /// after `dashboardURL` is actually deployed and returns 200.
+        /// While false the row is hidden — keeps users (and App Review)
+        /// from hitting a dead link on `app.sacredpathway.org`, which
+        /// currently has no DNS record.
+        static let portalLive = false
+    }
+
     // MARK: - Legal URLs
     //
     // These must point to LIVE, REACHABLE pages before submission. Apple

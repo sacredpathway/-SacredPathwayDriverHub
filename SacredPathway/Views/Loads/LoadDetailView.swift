@@ -12,6 +12,12 @@ struct LoadDetailView: View {
     @State private var deleteError: String?
     @State private var isDeleting = false
 
+    // Broker contact info loaded lazily so "Share Load Summary" can include
+    // phone, extension, email, and last-known MC# without slowing the
+    // initial detail render.
+    @State private var brokerContact: BrokerContact?
+    @State private var weeklyRevenueTotal: Double?
+
     var totalExpenses: Double { expenses.reduce(0) { $0 + $1.amount } }
     var profit: Double { (load.totalRevenue ?? 0) - totalExpenses }
 
@@ -156,12 +162,25 @@ struct LoadDetailView: View {
             .navigationTitle("Load #\(load.loadNumber ?? "—")")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Native iOS share sheet — plain-text load summary. Cleanest
+                // placement: dedicated toolbar slot so it works without
+                // opening the "..." menu. Long-press still lets the user copy.
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: loadSummaryText()) {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(Color.spGold)
+                    }
+                    .accessibilityLabel("Share Load Summary")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {
                             showingEditSheet = true
                         } label: {
                             Label("Edit Load", systemImage: "pencil")
+                        }
+                        ShareLink(item: loadSummaryText()) {
+                            Label("Share Load Summary", systemImage: "square.and.arrow.up")
                         }
                         Button(role: .destructive) {
                             showingDeleteConfirm = true
@@ -205,8 +224,136 @@ struct LoadDetailView: View {
                     do { expenses = try await supabase.fetchExpenses(forLoad: loadId) }
                     catch { print("Error loading expenses: \(error)") }
                 }
+                await loadBrokerContactIfAvailable()
+                await loadWeeklyRevenueTotal()
             }
         }
+    }
+
+    // MARK: - Share Load Summary
+
+    /// Look up the broker's latest contact (phone / email / extension) so
+    /// the share text has the info the user actually wants to forward.
+    /// Best-effort — failures are silent, summary just omits those lines.
+    private func loadBrokerContactIfAvailable() async {
+        guard let brokerName = load.brokerName,
+              !brokerName.isEmpty else { return }
+        do {
+            let brokers = try await supabase.fetchBrokers()
+            let target = Broker.normalize(brokerName)
+            guard let broker = brokers.first(where: {
+                ($0.normalizedName ?? Broker.normalize($0.brokerName)) == target
+            }), let brokerId = broker.id else { return }
+            let contacts = try await supabase.fetchContacts(forBroker: brokerId)
+            brokerContact = contacts.first
+        } catch {
+            // Non-fatal — the summary will fall back to whatever lives on
+            // the Load row.
+        }
+    }
+
+    /// Compute this pay-week's total revenue (across ALL loads, not just
+    /// this load). Surfaced at the bottom of the share text as a quick
+    /// "for context" footer per the user spec.
+    private func loadWeeklyRevenueTotal() async {
+        do {
+            let all = try await supabase.fetchLoads()
+            let week = PayWeekService.shared.weekInterval()
+            let total = all.reduce(0.0) { acc, l in
+                let d = l.pickupDate ?? l.createdAt ?? .distantPast
+                guard d >= week.start && d < week.end else { return acc }
+                return acc + (l.totalRevenue ?? 0)
+            }
+            weeklyRevenueTotal = total
+        } catch {
+            // Non-fatal.
+        }
+    }
+
+    /// Build the plain-text load summary the share sheet sends. Kept simple
+    /// per the user's spec — copy/paste-friendly into Messages, Mail, Slack,
+    /// etc. Every section is skipped if its data is missing so the body
+    /// stays clean.
+    private func loadSummaryText() -> String {
+        var lines: [String] = []
+
+        let header = "Load Summary"
+        lines.append(header)
+        lines.append(String(repeating: "─", count: header.count))
+
+        if let n = load.loadNumber, !n.isEmpty {
+            lines.append("Load #: \(n)")
+        }
+        if let s = load.status, !s.isEmpty {
+            lines.append("Status: \(load.loadStatus.displayName)")
+        }
+        if let broker = load.brokerName, !broker.isEmpty {
+            lines.append("Broker: \(broker)")
+        }
+        if let mc = load.brokerMcNumber, !mc.isEmpty {
+            lines.append("Broker MC#: \(mc)")
+        }
+        if let phone = brokerContact?.phone, !phone.isEmpty {
+            // Phone may already contain " x4421" extension suffix written by
+            // SmartScanReviewView. Render verbatim so the extension is
+            // preserved without us splitting + re-joining.
+            lines.append("Broker phone: \(phone)")
+        }
+        if let email = brokerContact?.email, !email.isEmpty {
+            lines.append("Broker email: \(email)")
+        }
+
+        lines.append("")  // blank line before route block
+
+        if let o = load.origin, !o.isEmpty {
+            lines.append("Pickup: \(o)" +
+                         (load.pickupDate.map { " · \(formattedDate($0))" } ?? ""))
+        }
+        if let d = load.destination, !d.isEmpty {
+            lines.append("Delivery: \(d)" +
+                         (load.deliveryDate.map { " · \(formattedDate($0))" } ?? ""))
+        }
+        if let miles = load.totalMiles, miles > 0 {
+            lines.append("Total miles: \(Int(miles))")
+        }
+
+        lines.append("")
+
+        if let rate = load.totalRevenue, rate > 0 {
+            lines.append("Rate / Load amount: \(rate.asCurrency)")
+        } else if let line = load.lineHaulRate, line > 0 {
+            lines.append("Line haul: \(line.asCurrency)")
+        }
+        if let fsc = load.fuelSurcharge, fsc > 0 {
+            lines.append("FSC: \(fsc.asCurrency)")
+        }
+        if let acc = load.accessorialCharges, acc > 0 {
+            lines.append("Accessorials: \(acc.asCurrency)")
+        }
+
+        if !expenses.isEmpty {
+            lines.append("")
+            lines.append("Expenses: \(totalExpenses.asCurrency)")
+            lines.append("Profit: \(profit.asCurrency)")
+        }
+
+        if let weekly = weeklyRevenueTotal, weekly > 0 {
+            lines.append("")
+            let weekStart = PayWeekService.shared.weekInterval().start
+            lines.append("Pay-week revenue (week of \(formattedDate(weekStart))): \(weekly.asCurrency)")
+        }
+
+        lines.append("")
+        lines.append("— Sent from Sacred Pathway Driver Hub")
+
+        return lines.joined(separator: "\n")
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let df = DateFormatter()
+        df.dateStyle = .medium
+        df.timeStyle = .none
+        return df.string(from: date)
     }
 
     private func performDelete() {

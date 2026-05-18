@@ -2,14 +2,17 @@ import SwiftUI
 
 struct LoadsListView: View {
     @EnvironmentObject var supabase: SupabaseService
+    // Observed so changing Pay Week Start Day in Settings instantly
+    // re-buckets the "This Week" list.
+    @ObservedObject private var payWeek = PayWeekService.shared
     @State private var loads: [Load] = []
     @State private var isLoading = true
     @State private var showingManualEntry = false
 
     // Weekly-reset toggle. Default is "This Week" so the list naturally
-    // clears every Monday — drivers asked for a fresh slate each work week.
-    // Use ISO week (Mon 00:00 → next Mon 00:00) regardless of locale's
-    // firstWeekday so the reset is predictable across devices.
+    // clears every pay-week boundary — drivers asked for a fresh slate each
+    // work week. Pay-week start day is user-configurable in Settings → Pay
+    // Week (defaults to Monday).
     @State private var showAllLoads = false
 
     // Swipe-action state
@@ -18,14 +21,12 @@ struct LoadsListView: View {
     @State private var loadToDuplicate: Load?
     @State private var deleteError: String?
 
-    /// Loads filtered to the current ISO week unless "All Loads" is selected.
+    /// Loads filtered to the current pay-week unless "All Loads" is selected.
     /// Filter key: pickupDate when present, otherwise createdAt. This handles
     /// loads created before pickup is known and back-dated entries.
     private var visibleLoads: [Load] {
         if showAllLoads { return loads }
-        var cal = Calendar(identifier: .iso8601)
-        cal.firstWeekday = 2 // Monday
-        guard let week = cal.dateInterval(of: .weekOfYear, for: Date()) else { return loads }
+        let week = payWeek.weekInterval()
         return loads.filter { load in
             let d = load.pickupDate ?? load.createdAt ?? .distantPast
             return d >= week.start && d < week.end

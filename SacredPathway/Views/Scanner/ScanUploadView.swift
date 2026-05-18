@@ -260,7 +260,7 @@ struct ScanUploadView: View {
         // Smart Scan review — local OCR results, fully editable.
         .sheet(isPresented: $showSmartScanReview) {
             if let parsed = smartScanParsed {
-                SmartScanReviewView(parsed: parsed)
+                SmartScanReviewView(parsed: parsed, sourceImage: scannedImage)
                     .environmentObject(supabase)
             }
         }
@@ -268,8 +268,9 @@ struct ScanUploadView: View {
 
     // MARK: - Smart Scan handler
     //
-    // Runs Vision OCR on-device, parses fields with regex, then opens the
-    // editable review screen. No data leaves the device.
+    // BISECT C 2026-05-17 — parser is confirmed clean. Now turn the review
+    // sheet back on, but SmartScanReviewView's body has been swapped with a
+    // minimal stub to find which part of the body crashes.
     private func handleSmartScanImage(_ image: UIImage,
                                       originalData: Data?,
                                       mime: String?) {

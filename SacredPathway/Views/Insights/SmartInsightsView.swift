@@ -34,10 +34,17 @@ struct SmartInsightsView: View {
     }
 
     var weeklyProfit: Double {
-        let calendar = Calendar.current
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date())!
-        let weekLoads = loads.filter { ($0.createdAt ?? .distantPast) >= weekAgo }
-        let weekExpenses = expenses.filter { ($0.createdAt ?? .distantPast) >= weekAgo }
+        // Use the user-configured pay-week (Settings → Pay Week) so
+        // "This Week" profit matches the rest of the app's weekly totals.
+        let week = PayWeekService.shared.weekInterval()
+        let weekLoads = loads.filter { load in
+            let d = load.createdAt ?? .distantPast
+            return d >= week.start && d < week.end
+        }
+        let weekExpenses = expenses.filter { exp in
+            let d = exp.createdAt ?? .distantPast
+            return d >= week.start && d < week.end
+        }
         return weekLoads.reduce(0) { $0 + ($1.totalRevenue ?? 0) } - weekExpenses.reduce(0) { $0 + $1.amount }
     }
 

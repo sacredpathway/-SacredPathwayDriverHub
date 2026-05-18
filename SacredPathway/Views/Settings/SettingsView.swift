@@ -10,6 +10,7 @@ struct SettingsView: View {
     // Pro/upgrade paywall — presented as a sheet from the top "Pro" section.
     // PaywallView itself is unchanged; this is just an additional entry point.
     @State private var showPaywall = false
+    @State private var showShareSummary = false
 
     // Demo seeder feedback (DEBUG-only flow; harmless inert state in Release)
     @State private var isSeeding = false
@@ -182,6 +183,26 @@ struct SettingsView: View {
                         .listRowBackground(Color.spCardBg)
                         .headerProminence(.increased)
 
+                        Section("Pay Week") {
+                            NavigationLink {
+                                PayWeekSettingsView()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "calendar.badge.clock")
+                                        .foregroundStyle(Color.spGold)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Pay Week Start Day")
+                                            .foregroundStyle(Color.spTextPrimary)
+                                        Text("Starts \(PayWeekService.shared.displayName) — used for every weekly total")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.spTextSecondary)
+                                    }
+                                }
+                            }
+                        }
+                        .listRowBackground(Color.spCardBg)
+                        .headerProminence(.increased)
+
                         Section("Fees & Deductions") {
                             NavigationLink {
                                 FeeSettingsView()
@@ -225,6 +246,43 @@ struct SettingsView: View {
                         .headerProminence(.increased)
 
                         Section("Operations") {
+                            NavigationLink {
+                                BrokerContactsListView()
+                                    .environmentObject(supabase)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "person.crop.rectangle.stack.fill")
+                                        .foregroundStyle(Color.spGold)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Broker Contacts")
+                                            .foregroundStyle(Color.spTextPrimary)
+                                        Text("Auto-added from Smart Scan — phone, email, MC#")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.spTextSecondary)
+                                    }
+                                }
+                            }
+
+                            Button {
+                                showShareSummary = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "square.and.arrow.up.on.square")
+                                        .foregroundStyle(Color.spGold)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Share Summary")
+                                            .foregroundStyle(Color.spTextPrimary)
+                                        Text("PDF + text — Today / Week / Month / Custom")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.spTextSecondary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.spTextSecondary)
+                                }
+                            }
+
                             NavigationLink {
                                 DriversListView()
                                     .environmentObject(supabase)
@@ -408,6 +466,34 @@ struct SettingsView: View {
                         .listRowBackground(Color.spCardBg)
                         .headerProminence(.increased)
 
+                        // Hidden until the portal at Config.Web.dashboardURL is
+                        // actually deployed. Flip Config.Web.portalLive → true
+                        // once `curl -sI https://app.sacredpathway.org/`
+                        // returns 200.
+                        if Config.Web.portalLive {
+                            Section("Web Access") {
+                                Link(destination: Config.Web.dashboardURL) {
+                                    HStack {
+                                        Image(systemName: "globe")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Open Web Dashboard")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Same account — view loads, documents, contacts from any browser")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.up.right.square")
+                                            .foregroundStyle(Color.spTextSecondary)
+                                            .font(.caption)
+                                    }
+                                }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
+                        }
+
                         Section("Legal") {
                             Link(destination: Config.Legal.privacyPolicyURL) {
                                 HStack {
@@ -523,6 +609,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView()
+        }
+        .sheet(isPresented: $showShareSummary) {
+            ShareSummaryView()
+                .environmentObject(supabase)
         }
     }
 

@@ -45,6 +45,17 @@ struct Load: Codable, Identifiable {
     var createdAt: Date?          // Postgres TIMESTAMPTZ
     var updatedAt: Date?          // Postgres TIMESTAMPTZ
 
+    // --- Per-load broker rep attribution (added v2.0.2 / 2026-05-17) ---
+    // Same TQL company can have multiple reps (Aaron Dini, Mary Smith). Each
+    // load snapshots the exact rep/phone/email used on THAT load so future
+    // edits to the broker_contacts row don't rewrite history.
+    var brokerId: UUID?
+    var brokerContactId: UUID?
+    var brokerContactName: String?
+    var brokerContactPhone: String?
+    var brokerPhoneExtension: String?
+    var brokerContactEmail: String?
+
     enum CodingKeys: String, CodingKey {
         case id
         case profileId = "profile_id"
@@ -63,6 +74,12 @@ struct Load: Codable, Identifiable {
         case status
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case brokerId = "broker_id"
+        case brokerContactId = "broker_contact_id"
+        case brokerContactName = "broker_contact_name"
+        case brokerContactPhone = "broker_contact_phone"
+        case brokerPhoneExtension = "broker_phone_extension"
+        case brokerContactEmail = "broker_contact_email"
     }
 
     // Computed properties for quick math
@@ -106,7 +123,13 @@ struct Load: Codable, Identifiable {
         totalRevenue: Double? = nil,
         status: String? = nil,
         createdAt: Date? = nil,
-        updatedAt: Date? = nil
+        updatedAt: Date? = nil,
+        brokerId: UUID? = nil,
+        brokerContactId: UUID? = nil,
+        brokerContactName: String? = nil,
+        brokerContactPhone: String? = nil,
+        brokerPhoneExtension: String? = nil,
+        brokerContactEmail: String? = nil
     ) {
         self.id = id
         self.profileId = profileId
@@ -126,48 +149,66 @@ struct Load: Codable, Identifiable {
         self.status = status
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.brokerId = brokerId
+        self.brokerContactId = brokerContactId
+        self.brokerContactName = brokerContactName
+        self.brokerContactPhone = brokerContactPhone
+        self.brokerPhoneExtension = brokerPhoneExtension
+        self.brokerContactEmail = brokerContactEmail
     }
 
     // MARK: - Custom Codable (see SPDate for why)
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id                  = try c.decodeIfPresent(UUID.self,   forKey: .id)
-        profileId           = try c.decode(UUID.self,            forKey: .profileId)
-        driverId            = try c.decodeIfPresent(UUID.self,   forKey: .driverId)
-        loadNumber          = try c.decodeIfPresent(String.self, forKey: .loadNumber)
-        brokerName          = try c.decodeIfPresent(String.self, forKey: .brokerName)
-        brokerMcNumber      = try c.decodeIfPresent(String.self, forKey: .brokerMcNumber)
-        origin              = try c.decodeIfPresent(String.self, forKey: .origin)
-        destination         = try c.decodeIfPresent(String.self, forKey: .destination)
-        totalMiles          = try c.decodeIfPresent(Double.self, forKey: .totalMiles)
-        lineHaulRate        = try c.decodeIfPresent(Double.self, forKey: .lineHaulRate)
-        fuelSurcharge       = try c.decodeIfPresent(Double.self, forKey: .fuelSurcharge)
-        accessorialCharges  = try c.decodeIfPresent(Double.self, forKey: .accessorialCharges)
-        totalRevenue        = try c.decodeIfPresent(Double.self, forKey: .totalRevenue)
-        status              = try c.decodeIfPresent(String.self, forKey: .status)
-        pickupDate          = try SPDate.decode(c, forKey: .pickupDate)
-        deliveryDate        = try SPDate.decode(c, forKey: .deliveryDate)
-        createdAt           = try SPDate.decode(c, forKey: .createdAt)
-        updatedAt           = try SPDate.decode(c, forKey: .updatedAt)
+        id                    = try c.decodeIfPresent(UUID.self,   forKey: .id)
+        profileId             = try c.decode(UUID.self,            forKey: .profileId)
+        driverId              = try c.decodeIfPresent(UUID.self,   forKey: .driverId)
+        loadNumber            = try c.decodeIfPresent(String.self, forKey: .loadNumber)
+        brokerName            = try c.decodeIfPresent(String.self, forKey: .brokerName)
+        brokerMcNumber        = try c.decodeIfPresent(String.self, forKey: .brokerMcNumber)
+        origin                = try c.decodeIfPresent(String.self, forKey: .origin)
+        destination           = try c.decodeIfPresent(String.self, forKey: .destination)
+        totalMiles            = try c.decodeIfPresent(Double.self, forKey: .totalMiles)
+        lineHaulRate          = try c.decodeIfPresent(Double.self, forKey: .lineHaulRate)
+        fuelSurcharge         = try c.decodeIfPresent(Double.self, forKey: .fuelSurcharge)
+        accessorialCharges    = try c.decodeIfPresent(Double.self, forKey: .accessorialCharges)
+        totalRevenue          = try c.decodeIfPresent(Double.self, forKey: .totalRevenue)
+        status                = try c.decodeIfPresent(String.self, forKey: .status)
+        brokerId              = try c.decodeIfPresent(UUID.self,   forKey: .brokerId)
+        brokerContactId       = try c.decodeIfPresent(UUID.self,   forKey: .brokerContactId)
+        brokerContactName     = try c.decodeIfPresent(String.self, forKey: .brokerContactName)
+        brokerContactPhone    = try c.decodeIfPresent(String.self, forKey: .brokerContactPhone)
+        brokerPhoneExtension  = try c.decodeIfPresent(String.self, forKey: .brokerPhoneExtension)
+        brokerContactEmail    = try c.decodeIfPresent(String.self, forKey: .brokerContactEmail)
+        pickupDate            = try SPDate.decode(c, forKey: .pickupDate)
+        deliveryDate          = try SPDate.decode(c, forKey: .deliveryDate)
+        createdAt             = try SPDate.decode(c, forKey: .createdAt)
+        updatedAt             = try SPDate.decode(c, forKey: .updatedAt)
     }
 
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encodeIfPresent(id,                 forKey: .id)
-        try c.encode(profileId,                   forKey: .profileId)
-        try c.encodeIfPresent(driverId,           forKey: .driverId)
-        try c.encodeIfPresent(loadNumber,         forKey: .loadNumber)
-        try c.encodeIfPresent(brokerName,         forKey: .brokerName)
-        try c.encodeIfPresent(brokerMcNumber,     forKey: .brokerMcNumber)
-        try c.encodeIfPresent(origin,             forKey: .origin)
-        try c.encodeIfPresent(destination,        forKey: .destination)
-        try c.encodeIfPresent(totalMiles,         forKey: .totalMiles)
-        try c.encodeIfPresent(lineHaulRate,       forKey: .lineHaulRate)
-        try c.encodeIfPresent(fuelSurcharge,      forKey: .fuelSurcharge)
-        try c.encodeIfPresent(accessorialCharges, forKey: .accessorialCharges)
-        try c.encodeIfPresent(totalRevenue,       forKey: .totalRevenue)
-        try c.encodeIfPresent(status,             forKey: .status)
+        try c.encodeIfPresent(id,                   forKey: .id)
+        try c.encode(profileId,                     forKey: .profileId)
+        try c.encodeIfPresent(driverId,             forKey: .driverId)
+        try c.encodeIfPresent(loadNumber,           forKey: .loadNumber)
+        try c.encodeIfPresent(brokerName,           forKey: .brokerName)
+        try c.encodeIfPresent(brokerMcNumber,       forKey: .brokerMcNumber)
+        try c.encodeIfPresent(origin,               forKey: .origin)
+        try c.encodeIfPresent(destination,          forKey: .destination)
+        try c.encodeIfPresent(totalMiles,           forKey: .totalMiles)
+        try c.encodeIfPresent(lineHaulRate,         forKey: .lineHaulRate)
+        try c.encodeIfPresent(fuelSurcharge,        forKey: .fuelSurcharge)
+        try c.encodeIfPresent(accessorialCharges,   forKey: .accessorialCharges)
+        try c.encodeIfPresent(totalRevenue,         forKey: .totalRevenue)
+        try c.encodeIfPresent(status,               forKey: .status)
+        try c.encodeIfPresent(brokerId,             forKey: .brokerId)
+        try c.encodeIfPresent(brokerContactId,      forKey: .brokerContactId)
+        try c.encodeIfPresent(brokerContactName,    forKey: .brokerContactName)
+        try c.encodeIfPresent(brokerContactPhone,   forKey: .brokerContactPhone)
+        try c.encodeIfPresent(brokerPhoneExtension, forKey: .brokerPhoneExtension)
+        try c.encodeIfPresent(brokerContactEmail,   forKey: .brokerContactEmail)
         try SPDate.encodeDateOnly(pickupDate,   into: &c, forKey: .pickupDate)
         try SPDate.encodeDateOnly(deliveryDate, into: &c, forKey: .deliveryDate)
         try SPDate.encodeISO(createdAt,          into: &c, forKey: .createdAt)

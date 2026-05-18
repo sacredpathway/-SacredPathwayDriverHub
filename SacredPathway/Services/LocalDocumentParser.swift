@@ -15,7 +15,16 @@ import UIKit
 struct ParsedLoadFields {
     var loadNumber: String?
     var brokerName: String?
+    /// Specific human rep / dispatcher who booked this load, parsed from the
+    /// name printed near the broker email/phone block (e.g. "Aaron Dini" on a
+    /// TQL rate con). Distinct from `brokerName` (the company). Drives the
+    /// per-load broker_contact attribution introduced in v2.0.2.
+    var brokerContactName: String?
     var brokerPhone: String?
+    /// Phone extension printed near the broker phone, e.g. "ext 4421" / "x123".
+    /// Stored separately so the UI can render "Phone (555) 555-1212 · ext 4421"
+    /// or write it back as a trailing " x123" segment on the contact row.
+    var brokerPhoneExtension: String?
     var brokerEmail: String?
     var brokerMcNumber: String?
 
@@ -221,11 +230,44 @@ enum LocalDocumentParser {
             out.confidence["brokerPhone"] = 0.9
         }
 
+        // ---- Phone extension ----
+        // Recognises common phrasings printed next to a broker phone:
+        //   "ext 4421", "Ext. 4421", "Ext: 4421", "x123", "x. 123".
+        //
+        // CRITICAL: the lookbehind `(?<=\d)` makes the extension marker only
+        // fire when it immediately follows a digit (i.e. a phone number).
+        // Without that anchor "TX 75201" / "Box 12345" would match because
+        // a lone uppercase `X` looks like the "x123" extension form.
+        if let m = firstRegex(joined, pattern: #"(?i)(?<=\d)[\s)\-.]{0,4}(?:ext(?:ension)?\.?|x\.?)\s*[:#]?\s*([0-9]{2,6})\b"#) {
+            out.brokerPhoneExtension = m
+            out.confidence["brokerPhoneExtension"] = 0.85
+        }
+
         // ---- Email ----
         if let m = firstRegex(joined, pattern: #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"#) {
             out.brokerEmail = m.lowercased()
             out.confidence["brokerEmail"] = 0.95
         }
+
+        // Crash-bisect 2026-05-17: temporarily disabled the new broker-
+        // contact-name extraction. The user can still type the rep name by
+        // hand in the review screen; we just won't auto-detect it for now.
+        // If the device still crashes with this disabled, the regression is
+        // not in the parser additions.
+        //
+        // out.brokerContactName = Self.extractBrokerContactName(
+        //     lines: lines,
+        //     emailLowercased: out.brokerEmail,
+        //     phoneNormalized: out.brokerPhone
+        // )
+        // if out.brokerContactName != nil {
+        //     out.confidence["brokerContactName"] = 0.75
+        // }
+        // if out.brokerContactName == nil, let email = out.brokerEmail,
+        //    let inferred = Self.inferContactNameFromEmail(email) {
+        //     out.brokerContactName = inferred
+        //     out.confidence["brokerContactName"] = 0.4
+        // }
 
         // ---- Pickup / Delivery blocks ----
         //
@@ -334,9 +376,35 @@ enum LocalDocumentParser {
         }
 
         // ---- Rate (most reliable: $X,XXX.XX after "rate"/"total"/"amount") ----
+        //
+        // Two-pass strategy fixes the long-standing "rate stays blank" bug:
+        //   Pass A — same-line label → value. Fast path for cleanly-formatted
+        //            rate cons where "TOTAL RATE $1,850.00" lives on one line.
+        //   Pass B — cross-line label → value. Critical for table layouts
+        //            where the label is in one OCR cell and the dollar amount
+        //            in the next ("TOTAL RATE\n$1,850.00"). Pass A's
+        //            `[^\n]` window silently rejected those, leaving the rate
+        //            blank on real CHR / Coyote / Convoy rate cons.
+        // Strong tokens are unambiguous "this IS the total pay" labels and
+        // run first. Weak tokens (line haul, carrier rate) often appear as
+        // *line items* on a rate con and would otherwise win over the true
+        // total when the doc lists linehaul above the total row.
+        let strongTokens = #"(?:total\s*(?:rate|amount|pay)|all[-\s]?in(?:\s*rate)?|flat\s*rate|truck\s*pay|driver\s*pay|gross\s*pay|agreed\s*rate|rate\s*conf(?:irmation)?|\btotal\b)"#
+        let weakTokens   = #"(?:line\s*haul|linehaul|carrier\s*(?:rate|pay))"#
+        let amountCap = #"\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#
         let ratePatterns = [
-            #"(?i)(?:total\s*(?:rate|amount|pay)|line\s*haul|agreed\s*rate|rate\s*conf(?:irmation)?|carrier\s*rate|all[-\s]?in|flat\s*rate)[^\n$]{0,40}\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)"#,
-            #"(?i)\brate\s*[:=]\s*\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)"#,
+            // Pass A — strong-label same-line → amount within 40 chars.
+            #"(?i)"# + strongTokens + #"[^\n$]{0,40}"# + amountCap,
+            // Pass A1 — strong-label cross-line: label on one line, $amount
+            // on the next. Critical for table OCR where the TOTAL RATE cell
+            // and the dollar cell get split across lines.
+            #"(?i)"# + strongTokens + #"[ \t]*[:=\-]?[ \t]*\r?\n[ \t]*\$[ \t]*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)"#,
+            // Pass A2 — bare "Rate:" or "Rate =" on one line.
+            #"(?i)\brate\s*[:=]\s*"# + amountCap,
+            // Pass B — weak-label same-line. Only runs if no strong match.
+            #"(?i)"# + weakTokens + #"[^\n$]{0,40}"# + amountCap,
+            // Pass B1 — weak-label cross-line.
+            #"(?i)"# + weakTokens + #"[ \t]*[:=\-]?[ \t]*\r?\n[ \t]*\$[ \t]*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)"#,
         ]
         for pat in ratePatterns {
             if let m = firstRegex(joined, pattern: pat) {
@@ -347,7 +415,7 @@ enum LocalDocumentParser {
                 }
             }
         }
-        // Fallback: largest dollar amount on the page (only if it's >= $200).
+        // Fallback 1: largest dollar amount on the page (only if it's >= $200).
         if out.rate == nil {
             let amounts = allMatches(joined, pattern: #"\$\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#)
                 .compactMap { Double($0.replacingOccurrences(of: ",", with: "")) }
@@ -355,6 +423,23 @@ enum LocalDocumentParser {
             if let max = amounts.max() {
                 out.rate = max
                 out.confidence["rate"] = 0.45
+            }
+        }
+        // Fallback 2: largest UNPREFIXED amount in a freight-realistic range
+        // — rate cons sometimes OCR-strip the `$`. We only allow this when
+        // the doc is a rate confirmation (avoids grabbing weights / miles).
+        if out.rate == nil, out.documentType != .bol, out.documentType != .recon {
+            let bareAmounts = allMatches(
+                joined,
+                pattern: #"\b([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[1-9][0-9]{2,4}(?:\.[0-9]{1,2})?)\b"#
+            )
+            .compactMap { Double($0.replacingOccurrences(of: ",", with: "")) }
+            // Floor of $300 reduces collision with miles/weight; ceiling of
+            // $40K covers ~95% of single-leg dry-van runs.
+            .filter { $0 >= 300 && $0 <= 40_000 }
+            if let max = bareAmounts.max() {
+                out.rate = max
+                out.confidence["rate"] = 0.35
             }
         }
 
@@ -805,7 +890,7 @@ enum LocalDocumentParser {
                 seen.insert(h.value)
             }
             if !infoLines.isEmpty {
-                let infoBlock = "Info (from recon):\n" + infoLines.joined(separator: "\n")
+                let infoBlock = "Info (from settlement):\n" + infoLines.joined(separator: "\n")
                 if let existing = out.notes, !existing.isEmpty {
                     out.notes = existing + "\n\n" + infoBlock
                 } else {
@@ -1175,6 +1260,152 @@ enum LocalDocumentParser {
             companyName: companyName,
             allText: blob
         )
+    }
+
+    // MARK: - Broker contact-name extraction
+
+    /// Search the OCR lines for a `First Last` line that's likely the broker
+    /// rep — the human who booked this load. Strategy:
+    ///
+    ///   1. Find the line index of the broker email and the broker phone.
+    ///   2. Search a small window (±3 lines) above each anchor.
+    ///   3. Skip lines that are clearly NOT a person:
+    ///      - contain digits
+    ///      - contain "@" (the email itself)
+    ///      - contain company suffixes (LLC, Inc, Logistics, Brokerage, etc.)
+    ///      - contain known driver / carrier / equipment labels
+    ///      - are ALL UPPERCASE and longer than 25 chars (banner text)
+    ///   4. Accept the first 2-4 word line that looks like a proper name.
+    ///   5. Return nil if nothing matches — the caller will fall back to
+    ///      inferring from the email local-part.
+    fileprivate static func extractBrokerContactName(
+        lines: [String],
+        emailLowercased: String?,
+        phoneNormalized: String?
+    ) -> String? {
+        // 1. Locate anchor line indices
+        var anchorIndices: [Int] = []
+        if let email = emailLowercased {
+            for (i, l) in lines.enumerated() where l.lowercased().contains(email) {
+                anchorIndices.append(i)
+            }
+        }
+        if let phone = phoneNormalized {
+            // Strip phone to digits-only for fuzzy match
+            let digits = phone.filter(\.isNumber)
+            if digits.count >= 10 {
+                let tail = String(digits.suffix(10))
+                for (i, l) in lines.enumerated() {
+                    let lineDigits = l.filter(\.isNumber)
+                    if lineDigits.contains(tail) {
+                        anchorIndices.append(i)
+                    }
+                }
+            }
+        }
+        if anchorIndices.isEmpty { return nil }
+
+        let companyTokens: Set<String> = [
+            "llc", "inc", "inc.", "corp", "corp.", "co", "ltd", "logistics",
+            "brokerage", "freight", "transport", "transportation", "trucking",
+            "carriers", "carrier", "express", "lines", "shipping", "supply",
+            "industries", "company", "international", "global", "group",
+            "enterprises"
+        ]
+        let skipPrefixes: [String] = [
+            "driver", "carrier", "tractor", "trailer", "broker:",
+            "shipper", "consignee", "receiver", "load #", "load:",
+            "pickup", "delivery", "rate", "total", "mc#", "mc ",
+            "dot ", "po #", "po:", "ref ", "reference", "fax", "phone",
+            "email", "tel", "tel:", "address", "agent", "dispatch"
+        ]
+
+        func isPlausibleName(_ raw: String) -> Bool {
+            let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, trimmed.count <= 50 else { return false }
+            if trimmed.contains("@") { return false }
+            if trimmed.contains("/") || trimmed.contains("\\") { return false }
+            if trimmed.rangeOfCharacter(from: .decimalDigits) != nil { return false }
+            let lower = trimmed.lowercased()
+            for skip in skipPrefixes where lower.hasPrefix(skip) { return false }
+            for tok in companyTokens where lower.contains(" \(tok)") || lower.hasSuffix(" \(tok)") {
+                return false
+            }
+            // Reject ALL-CAPS banner lines longer than 25 chars (headers).
+            if trimmed == trimmed.uppercased() && trimmed.count > 25 { return false }
+            // Must be 2-4 alphabetic words.
+            let words = trimmed.split(whereSeparator: { !$0.isLetter && $0 != "'" && $0 != "-" && $0 != "." })
+            guard (2...4).contains(words.count) else { return false }
+            // Each word ≥ 2 letters and starts with a letter (allow titles like
+            // "Mr.", initials like "J.D.", hyphenated names like "Jean-Pierre").
+            for w in words where w.count < 2 { return false }
+            // First and last word should start with uppercase letter.
+            guard let firstChar = words.first?.first, firstChar.isUppercase else { return false }
+            guard let lastChar = words.last?.first, lastChar.isUppercase else { return false }
+            return true
+        }
+
+        // 2. Walk the anchor neighbourhoods and accept the first plausible
+        //    name. Closer to the anchor wins.
+        let windowAbove = 3
+        let windowBelow = 1
+        for anchor in anchorIndices.sorted() {
+            let lo = max(0, anchor - windowAbove)
+            let hi = min(lines.count - 1, anchor + windowBelow)
+            // Closer-to-anchor first: anchor-1, anchor-2, ..., then anchor+1, etc.
+            var ordered: [Int] = []
+            for offset in 1...windowAbove {
+                let idx = anchor - offset
+                if idx >= lo { ordered.append(idx) }
+            }
+            for offset in 1...windowBelow {
+                let idx = anchor + offset
+                if idx <= hi { ordered.append(idx) }
+            }
+            for idx in ordered {
+                let candidate = lines[idx].trimmingCharacters(in: .whitespacesAndNewlines)
+                if isPlausibleName(candidate) {
+                    // Normalize whitespace
+                    let collapsed = candidate
+                        .components(separatedBy: .whitespaces)
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+                    return collapsed
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Infer a contact name from an email local-part as a low-confidence
+    /// fallback. "adini@TQL.com" → "A Dini", "aaron.dini@TQL.com" → "Aaron
+    /// Dini", "aaron_dini@TQL.com" → "Aaron Dini".
+    fileprivate static func inferContactNameFromEmail(_ email: String) -> String? {
+        let local = email.split(separator: "@").first.map(String.init) ?? ""
+        guard !local.isEmpty else { return nil }
+        // Reject role inboxes — they're not a person.
+        let roleInboxes: Set<String> = [
+            "info", "support", "sales", "dispatch", "ops", "operations",
+            "billing", "ar", "ap", "accounts", "noreply", "no-reply",
+            "admin", "team", "hello", "help"
+        ]
+        if roleInboxes.contains(local.lowercased()) { return nil }
+        // dot / underscore / hyphen separators → "First Last"
+        let parts = local.split(whereSeparator: { $0 == "." || $0 == "_" || $0 == "-" })
+        if parts.count >= 2 {
+            return parts
+                .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+                .joined(separator: " ")
+        }
+        // Single token, e.g. "adini" → "A Dini" (best guess: first letter
+        // is initial, rest is surname).
+        if local.count >= 3, local.count <= 20 {
+            let first = String(local.prefix(1)).uppercased()
+            let rest  = String(local.dropFirst()).lowercased()
+            let restCap = rest.prefix(1).uppercased() + rest.dropFirst()
+            return "\(first) \(restCap)"
+        }
+        return nil
     }
 
     private static func firstRegex(_ text: String, pattern: String) -> String? {

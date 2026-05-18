@@ -2,6 +2,9 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var supabase: SupabaseService
+    // Observed so changing Pay Week Start Day in Settings re-shapes the
+    // "This Week" totals instantly without needing to re-launch the app.
+    @ObservedObject private var payWeek = PayWeekService.shared
     @State private var loads: [Load] = []
     @State private var allExpenses: [Expense] = []
     @State private var isLoading = true
@@ -325,10 +328,10 @@ struct DashboardView: View {
         let now = Date()
         switch selectedPeriod {
         case .week:
-            // ISO week (Mon → Sun) so totals reset every Monday at midnight.
-            var cal = Calendar(identifier: .iso8601)
-            cal.firstWeekday = 2
-            guard let week = cal.dateInterval(of: .weekOfYear, for: now) else { return items }
+            // Pay-week buckets are user-configurable in Settings → Pay Week.
+            // Default is Monday → Sunday (ISO). Centralized so changing the
+            // setting re-shapes every weekly total in the app immediately.
+            let week = PayWeekService.shared.weekInterval(for: now)
             return items.filter {
                 let d = $0[keyPath: keyPath] ?? .distantPast
                 return d >= week.start && d < week.end
