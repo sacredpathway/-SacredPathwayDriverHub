@@ -115,6 +115,11 @@
 		EA0000000000000000000001 /* AppMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000002 /* AppMode.swift */; };
 		EA0000000000000000000003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000004 /* WelcomeView.swift */; };
 		EA0000000000000000000005 /* LocalModeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000006 /* LocalModeBanner.swift */; };
+		EA0000000000000000000041 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000042 /* LocalStore.swift */; };
+		EA0000000000000000000043 /* LocalLoadsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000044 /* LocalLoadsRepository.swift */; };
+		EA0000000000000000000045 /* LocalBrokersRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000046 /* LocalBrokersRepository.swift */; };
+		EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */; };
+		EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004A /* LocalSmokeTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -228,6 +233,11 @@
 		EA0000000000000000000002 /* AppMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMode.swift; sourceTree = "<group>"; };
 		EA0000000000000000000004 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		EA0000000000000000000006 /* LocalModeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModeBanner.swift; sourceTree = "<group>"; };
+		EA0000000000000000000042 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
+		EA0000000000000000000044 /* LocalLoadsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLoadsRepository.swift; sourceTree = "<group>"; };
+		EA0000000000000000000046 /* LocalBrokersRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokersRepository.swift; sourceTree = "<group>"; };
+		EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerContactsRepository.swift; sourceTree = "<group>"; };
+		EA000000000000000000004A /* LocalSmokeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSmokeTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -539,6 +549,11 @@
 			isa = PBXGroup;
 			children = (
 				EA0000000000000000000002 /* AppMode.swift */,
+				EA0000000000000000000042 /* LocalStore.swift */,
+				EA0000000000000000000044 /* LocalLoadsRepository.swift */,
+				EA0000000000000000000046 /* LocalBrokersRepository.swift */,
+				EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */,
+				EA000000000000000000004A /* LocalSmokeTest.swift */,
 			);
 			path = Local;
 			sourceTree = "<group>";
@@ -741,6 +756,11 @@
 				EA0000000000000000000001 /* AppMode.swift in Sources */,
 				EA0000000000000000000003 /* WelcomeView.swift in Sources */,
 				EA0000000000000000000005 /* LocalModeBanner.swift in Sources */,
+				EA0000000000000000000041 /* LocalStore.swift in Sources */,
+				EA0000000000000000000043 /* LocalLoadsRepository.swift in Sources */,
+				EA0000000000000000000045 /* LocalBrokersRepository.swift in Sources */,
+				EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */,
+				EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

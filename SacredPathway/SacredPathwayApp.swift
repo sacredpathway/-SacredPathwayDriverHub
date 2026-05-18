@@ -56,6 +56,15 @@ struct SacredPathwayApp: App {
                 // user out due to network/CDN issues.
                 await forceUpdate.checkForUpdate()
             }
+            .task {
+                // Phase B smoke test — DEBUG only, gated by either
+                // `-RunLocalSmokeTest` launch arg or the
+                // `sp.debug.local.smoke_test` UserDefaults bool. No-op on
+                // Release builds; this whole task compiles out.
+                #if DEBUG
+                await LocalSmokeTest.runIfRequested()
+                #endif
+            }
             .onChange(of: supabase.isAuthenticated) { _, newValue in
                 // Re-check entitlements on every sign-in transition (false →
                 // true). Sign-out is handled by AccessGate's auth subscriber.
