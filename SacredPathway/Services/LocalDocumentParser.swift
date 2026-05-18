@@ -375,72 +375,20 @@ enum LocalDocumentParser {
             }
         }
 
-        // ---- Rate (most reliable: $X,XXX.XX after "rate"/"total"/"amount") ----
+        // ---- Rate (scored multi-candidate, 2026-05-18 rewrite) ----
         //
-        // Two-pass strategy fixes the long-standing "rate stays blank" bug:
-        //   Pass A — same-line label → value. Fast path for cleanly-formatted
-        //            rate cons where "TOTAL RATE $1,850.00" lives on one line.
-        //   Pass B — cross-line label → value. Critical for table layouts
-        //            where the label is in one OCR cell and the dollar amount
-        //            in the next ("TOTAL RATE\n$1,850.00"). Pass A's
-        //            `[^\n]` window silently rejected those, leaving the rate
-        //            blank on real CHR / Coyote / Convoy rate cons.
-        // Strong tokens are unambiguous "this IS the total pay" labels and
-        // run first. Weak tokens (line haul, carrier rate) often appear as
-        // *line items* on a rate con and would otherwise win over the true
-        // total when the doc lists linehaul above the total row.
-        let strongTokens = #"(?:total\s*(?:rate|amount|pay)|all[-\s]?in(?:\s*rate)?|flat\s*rate|truck\s*pay|driver\s*pay|gross\s*pay|agreed\s*rate|rate\s*conf(?:irmation)?|\btotal\b)"#
-        let weakTokens   = #"(?:line\s*haul|linehaul|carrier\s*(?:rate|pay))"#
-        let amountCap = #"\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#
-        let ratePatterns = [
-            // Pass A — strong-label same-line → amount within 40 chars.
-            #"(?i)"# + strongTokens + #"[^\n$]{0,40}"# + amountCap,
-            // Pass A1 — strong-label cross-line: label on one line, $amount
-            // on the next. Critical for table OCR where the TOTAL RATE cell
-            // and the dollar cell get split across lines.
-            #"(?i)"# + strongTokens + #"[ \t]*[:=\-]?[ \t]*\r?\n[ \t]*\$[ \t]*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)"#,
-            // Pass A2 — bare "Rate:" or "Rate =" on one line.
-            #"(?i)\brate\s*[:=]\s*"# + amountCap,
-            // Pass B — weak-label same-line. Only runs if no strong match.
-            #"(?i)"# + weakTokens + #"[^\n$]{0,40}"# + amountCap,
-            // Pass B1 — weak-label cross-line.
-            #"(?i)"# + weakTokens + #"[ \t]*[:=\-]?[ \t]*\r?\n[ \t]*\$[ \t]*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)"#,
-        ]
-        for pat in ratePatterns {
-            if let m = firstRegex(joined, pattern: pat) {
-                if let v = Double(m.replacingOccurrences(of: ",", with: "")) {
-                    out.rate = v
-                    out.confidence["rate"] = 0.85
-                    break
-                }
-            }
-        }
-        // Fallback 1: largest dollar amount on the page (only if it's >= $200).
-        if out.rate == nil {
-            let amounts = allMatches(joined, pattern: #"\$\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#)
-                .compactMap { Double($0.replacingOccurrences(of: ",", with: "")) }
-                .filter { $0 >= 200 && $0 <= 50_000 }
-            if let max = amounts.max() {
-                out.rate = max
-                out.confidence["rate"] = 0.45
-            }
-        }
-        // Fallback 2: largest UNPREFIXED amount in a freight-realistic range
-        // — rate cons sometimes OCR-strip the `$`. We only allow this when
-        // the doc is a rate confirmation (avoids grabbing weights / miles).
-        if out.rate == nil, out.documentType != .bol, out.documentType != .recon {
-            let bareAmounts = allMatches(
-                joined,
-                pattern: #"\b([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[1-9][0-9]{2,4}(?:\.[0-9]{1,2})?)\b"#
-            )
-            .compactMap { Double($0.replacingOccurrences(of: ",", with: "")) }
-            // Floor of $300 reduces collision with miles/weight; ceiling of
-            // $40K covers ~95% of single-leg dry-van runs.
-            .filter { $0 >= 300 && $0 <= 40_000 }
-            if let max = bareAmounts.max() {
-                out.rate = max
-                out.confidence["rate"] = 0.35
-            }
+        // Strategy: collect EVERY $X,XXX(.XX)? amount in the document with
+        // its surrounding label context, score each by a priority table
+        // (carrier pay > carrier rate > line haul > agreed/total > load
+        // pay > bare "rate" > unlabeled), REJECT candidates whose context
+        // contains accessorial/fuel/advance/lumper/insurance/detention/
+        // escrow/fee/tax/factoring/chargeback keywords, then pick the
+        // highest-scoring survivor. DEBUG builds emit `SP_DEBUG_RATECON`
+        // lines for every candidate so we can see why one won.
+        let picked = pickRate(joined: joined, lines: lines, docType: out.documentType)
+        if let p = picked {
+            out.rate = p.value
+            out.confidence["rate"] = p.confidence
         }
 
         // ---- Weight ----
@@ -731,6 +679,229 @@ enum LocalDocumentParser {
             return .rateCon
         }
         return .unknown
+    }
+
+    // MARK: - Scored rate-amount picker
+
+    /// One candidate for the rate field — an amount, where in the document
+    /// it appeared, and its label context.
+    struct RateCandidate {
+        let value: Double          // dollar amount
+        let labelContext: String   // ~80 chars of surrounding text (lowercased)
+        let lineIndex: Int         // OCR line index the amount appeared on
+        let hadDollarPrefix: Bool  // true if the raw match started with $
+        var priority: Int          // assigned by scoring
+        var rejectionReason: String?
+        var confidence: Double { Double(priority) / 100.0 }
+    }
+
+    /// Pick the most-likely "true carrier pay" amount from the OCR text.
+    ///
+    /// Scoring priority (lower = better; higher score wins):
+    ///   100  carrier pay, carrier rate, all-in rate, all-in
+    ///    95  agreed rate, agreed amount, rate confirmation
+    ///    90  total rate, total amount, total pay, gross pay, driver pay,
+    ///        truck pay, flat rate
+    ///    85  line haul, linehaul, freight charge
+    ///    80  load pay, load rate, load amount
+    ///    70  tender amount, booked rate, trip pay
+    ///    50  bare "rate:" / "rate =" / "amount:" / "pay:"
+    ///    30  unlabeled $X,XXX in top half of doc
+    ///
+    /// Rejected outright (context within ~40 chars contains any of):
+    ///   fuel surcharge, fsc, fuel, surcharge, accessorial, advance,
+    ///   detention, lumper, lumper fee, insurance, escrow, deduction,
+    ///   factor, factoring, chargeback, tax, service fee, fee, tolls,
+    ///   permit, scale, layover, parking, citation, wash, repair.
+    ///
+    /// Range guardrails: 200 ≤ value ≤ 50,000 USD.
+    static func pickRate(joined: String,
+                         lines: [String],
+                         docType: DocumentType) -> RateCandidate? {
+
+        // Recon docs already use their own Net Pay / Amount Paid logic in
+        // Recon.fill, so the rate picker stays out of their way.
+        if docType == .recon { return nil }
+
+        // --- 1) Collect every dollar / bare amount in the document. ---
+        // We scan line-by-line so we can record the line index for logging.
+        var candidates: [RateCandidate] = []
+
+        // Pattern for $-prefixed amounts: $1,250 / $1,250.00 / $1250.
+        let dollarPat = #"\$\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#
+        // Pattern for bare amounts (no $) — only used on rateCon docs.
+        let barePat = #"\b([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[1-9][0-9]{2,4}(?:\.[0-9]{1,2})?)\b"#
+
+        for (idx, rawLine) in lines.enumerated() {
+            // Same-line context: this line + the previous line (label often
+            // sits above the dollar cell in a table OCR).
+            let prev = idx > 0 ? lines[idx - 1] : ""
+            let ctx = (prev + " " + rawLine).lowercased()
+
+            // $-prefixed amounts on this line.
+            let dollarMatches = allMatches(rawLine, pattern: dollarPat)
+            for raw in dollarMatches {
+                if let v = parseMoney(raw), v >= 200, v <= 50_000 {
+                    candidates.append(RateCandidate(
+                        value: v,
+                        labelContext: ctx,
+                        lineIndex: idx,
+                        hadDollarPrefix: true,
+                        priority: 0
+                    ))
+                }
+            }
+
+            // Bare amounts — only on rateCon / unknown docs (BOLs print
+            // weights & quantities that look like rates).
+            if docType == .rateCon || docType == .unknown {
+                let bareMatches = allMatches(rawLine, pattern: barePat)
+                for raw in bareMatches {
+                    if let v = parseMoney(raw),
+                       v >= 300, v <= 40_000 {
+                        // Skip duplicates with $-prefixed forms on the same line.
+                        if candidates.contains(where: {
+                            $0.lineIndex == idx && abs($0.value - v) < 0.01
+                        }) { continue }
+                        candidates.append(RateCandidate(
+                            value: v,
+                            labelContext: ctx,
+                            lineIndex: idx,
+                            hadDollarPrefix: false,
+                            priority: 0
+                        ))
+                    }
+                }
+            }
+        }
+
+        if candidates.isEmpty { return nil }
+
+        // --- 2) Score every candidate. ---
+        let labelTiers: [(score: Int, regex: String)] = [
+            (100, #"\bcarrier\s*pay\b|\bcarrier\s*rate\b|\ball[\s\-]?in(?:\s*rate)?\b"#),
+            (95,  #"\bagreed\s*(?:rate|amount)\b|\brate\s*conf(?:irmation)?\b"#),
+            (90,  #"\btotal\s*(?:rate|amount|pay)\b|\bgross\s*pay\b|\bdriver\s*pay\b|\btruck\s*pay\b|\bflat\s*rate\b|\btotal\b"#),
+            (85,  #"\bline\s*haul\b|\blinehaul\b|\bfreight\s*charge\b"#),
+            (80,  #"\bload\s*(?:pay|rate|amount)\b"#),
+            (70,  #"\btender\s*(?:amount|rate|pay)?\b|\bbooked\s*rate\b|\btrip\s*pay\b"#),
+            (50,  #"\brate\s*[:=]|\bamount\s*[:=]|\bpay\s*[:=]"#),
+        ]
+
+        // Negative-context keywords. If any of these appear within ~40 chars
+        // BEFORE the dollar amount or anywhere on the same line, the
+        // candidate is REJECTED outright.
+        let rejectKeywords = [
+            "fuel surcharge", "fsc", "fuel sur", "fuel",
+            "surcharge",
+            "accessorial",
+            "advance", "advanced",
+            "detention",
+            "lumper",
+            "insurance",
+            "escrow",
+            "deduction",
+            "factor", "factoring",
+            "chargeback", "charge back",
+            "service fee", "broker fee", "admin fee", "processing fee",
+            "tax",
+            "tolls", "toll",
+            "permit",
+            "scale",
+            "layover",
+            "parking",
+            "citation",
+            "wash",
+            "repair",
+            "reimburse",
+        ]
+
+        for i in candidates.indices {
+            let ctx = candidates[i].labelContext
+
+            // Negative check first — reject keywords short-circuit.
+            for bad in rejectKeywords where ctx.contains(bad) {
+                candidates[i].rejectionReason = "context contains '\(bad)'"
+                break
+            }
+            if candidates[i].rejectionReason != nil { continue }
+
+            // Positive scoring — pick the highest tier that matches.
+            for (score, pat) in labelTiers {
+                if firstRegex(ctx, pattern: pat) != nil {
+                    candidates[i].priority = score
+                    break
+                }
+            }
+
+            // Unlabeled fallback: if no tier matched but the amount sits in
+            // the top half of the document and has a $ prefix, give it a
+            // very small score so it can still win if absolutely nothing
+            // else exists.
+            if candidates[i].priority == 0,
+               candidates[i].hadDollarPrefix,
+               candidates[i].lineIndex < max(1, lines.count / 2) {
+                candidates[i].priority = 30
+            }
+        }
+
+        // --- 3) Pick the winner. ---
+        let valid = candidates.filter { $0.priority > 0 && $0.rejectionReason == nil }
+
+        // Within the same priority tier, prefer the larger value — true
+        // totals sit above the line-item breakdown on most rate cons.
+        let winner = valid.max { a, b in
+            if a.priority != b.priority { return a.priority < b.priority }
+            return a.value < b.value
+        }
+
+        // --- 4) DEBUG: enumerate every candidate, mark winner. ---
+        #if DEBUG
+        let tag = "SP_DEBUG_RATECON"
+        print("[\(tag)] pickRate — \(candidates.count) raw candidate(s):")
+        // Sort for stable readable output.
+        for c in candidates.sorted(by: { $0.lineIndex < $1.lineIndex }) {
+            let isWinner = (winner.map { $0.lineIndex == c.lineIndex && $0.value == c.value } ?? false)
+            let marker   = isWinner ? "  WIN " : "      "
+            let dollar   = c.hadDollarPrefix ? "$" : " "
+            let priStr   = c.priority > 0 ? "p\(c.priority)" : "p- "
+            let reason   = c.rejectionReason ?? winReason(for: c)
+            print("[\(tag)]\(marker)line[\(c.lineIndex)] \(dollar)\(c.value)  \(priStr)  reason=\(reason)")
+            // Print the actual OCR line for context.
+            if c.lineIndex < lines.count {
+                print("[\(tag)]         OCR: \(lines[c.lineIndex])")
+            }
+        }
+        if let w = winner {
+            print("[\(tag)] pickRate WINNER → $\(w.value) (priority \(w.priority))")
+        } else {
+            print("[\(tag)] pickRate WINNER → <none — all candidates rejected or no matches>")
+        }
+        #endif
+
+        return winner
+    }
+
+    /// Short, human-readable reason a candidate scored its tier (DEBUG only).
+    private static func winReason(for c: RateCandidate) -> String {
+        switch c.priority {
+        case 100: return "carrier pay / carrier rate / all-in"
+        case 95:  return "agreed rate / rate confirmation"
+        case 90:  return "total rate / total pay / flat rate"
+        case 85:  return "line haul / linehaul / freight charge"
+        case 80:  return "load pay / load rate / load amount"
+        case 70:  return "tender / booked / trip pay"
+        case 50:  return "bare 'rate:' / 'amount:'"
+        case 30:  return "unlabeled $ in top half"
+        case 0:   return "no label match"
+        default:  return "p\(c.priority)"
+        }
+    }
+
+    /// Parse a money-formatted string ("1,250", "1,250.00", "1250.50") into
+    /// a Double. Strips commas; returns nil on malformed input.
+    private static func parseMoney(_ s: String) -> Double? {
+        Double(s.replacingOccurrences(of: ",", with: ""))
     }
 
     /// Generic accessorial-amount extractor. Tries each keyword in turn and
@@ -1385,45 +1556,13 @@ enum LocalDocumentParser {
                 }
             }
 
-            // ── Step 4: broader rate-amount patterns ──
-            // Only run if `rate` is still nil — the existing strong/weak
-            // token sweep (in extractFields) was authoritative when it hit.
-            if out.rate == nil {
-                let keywords = [
-                    "carrier\\s*rate", "carrier\\s*pay",
-                    "tender\\s*(?:amount|rate|pay)?",
-                    "load\\s*pay", "load\\s*amount", "load\\s*rate",
-                    "total\\s*pay", "pay\\s*amount", "pay\\s*total",
-                    "booked\\s*rate", "trip\\s*pay",
-                    "agreed\\s*amount", "agreed\\s*rate"
-                ]
-                if let v = extractMoney(joined, keywords: keywords) {
-                    out.rate = v
-                    out.confidence["rate"] = 0.85
-                }
-            }
-
-            // ── Step 5: bare "$X,XXX" inside the rate-confirmation block ──
-            // CHR/Convoy/TQL sometimes print only "$3,250.00" on its own
-            // line under a label like "Carrier Rate Confirmation" with no
-            // explicit "Rate:" token in front. If we still have nothing,
-            // pick the largest standalone dollar amount in the top 60% of
-            // the doc and treat it as the rate. Guarded so we never
-            // overwrite a value the strong-token sweep already chose.
-            if out.rate == nil, lines.count > 0 {
-                let cut = max(1, (lines.count * 6) / 10)
-                let topHalf = lines.prefix(cut).joined(separator: "\n")
-                let amounts = allMatches(
-                    topHalf,
-                    pattern: #"\$\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#
-                )
-                .compactMap { Double($0.replacingOccurrences(of: ",", with: "")) }
-                .filter { $0 >= 200 && $0 <= 50_000 }
-                if let max = amounts.max() {
-                    out.rate = max
-                    out.confidence["rate"] = 0.5
-                }
-            }
+            // Rate-amount detection now lives in the scored `pickRate(...)`
+            // helper, which runs once from extractFields(...). The previous
+            // Step 4 / Step 5 fallbacks here would otherwise *override*
+            // pickRate's decision with weaker `extractMoney` matches that
+            // didn't carry the reject-keyword guard for fuel / lumper /
+            // detention / etc. Keeping rate logic in a single place stops
+            // accessorial line items from beating the true carrier pay.
         }
     }
 

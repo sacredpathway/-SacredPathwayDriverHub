@@ -824,7 +824,19 @@ struct SmartScanReviewView: View {
         rate              = parsed.rate.map { String(format: "%.2f", $0) } ?? ""
         weight            = parsed.weight       ?? ""
         commodity         = parsed.commodity    ?? ""
-        poNumber          = parsed.poNumber     ?? ""
+        // PO Number mirrors Load Number on rate-con scans when the parser
+        // didn't find an explicit "PO #" label of its own. On most rate cons
+        // the broker prints a single identifier and carriers reference it
+        // interchangeably as the load # AND the PO # — auto-filling both
+        // saves a step. Either field is still independently editable
+        // afterward.
+        if let po = parsed.poNumber, !po.isEmpty {
+            poNumber = po
+        } else if let ln = parsed.loadNumber, !ln.isEmpty {
+            poNumber = ln
+        } else {
+            poNumber = ""
+        }
         pickupNumber      = parsed.pickupNumber ?? ""
         referenceNumber   = parsed.referenceNumber ?? ""
         notes             = parsed.notes        ?? ""
