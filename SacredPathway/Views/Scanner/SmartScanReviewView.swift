@@ -119,8 +119,14 @@ struct SmartScanReviewView: View {
                         confidenceBanner
 
                         sectionCard("Load Info") {
-                            field("Load #", text: $loadNumber, key: "loadNumber",
-                                  placeholder: "e.g. LD-2841")
+                            // Field-order swap 2026-05-18: PO # now sits in the
+                            // Load-Info slot (top of the form) and Load # moves
+                            // into Money & Cargo. Both fields keep their state,
+                            // their key, and the loadNumber→poNumber mirror in
+                            // prefillFromParsed — only their VISUAL placement
+                            // changed.
+                            field("PO #", text: $poNumber, key: "poNumber",
+                                  placeholder: "e.g. PO-9381")
                             brokerNameField
                             field("MC #", text: $brokerMcNumber, key: "brokerMcNumber",
                                   placeholder: "e.g. 128156", keyboard: .numberPad)
@@ -165,8 +171,10 @@ struct SmartScanReviewView: View {
                                   placeholder: "e.g. 42,000 lbs")
                             field("Commodity", text: $commodity, key: "commodity",
                                   placeholder: "e.g. Frozen Foods")
-                            field("PO #", text: $poNumber, key: "poNumber",
-                                  placeholder: "e.g. PO-9381")
+                            // Field-order swap 2026-05-18: Load # took PO #'s
+                            // old slot here.
+                            field("Load #", text: $loadNumber, key: "loadNumber",
+                                  placeholder: "e.g. LD-2841")
                             field("Pickup #", text: $pickupNumber, key: "pickupNumber",
                                   placeholder: "e.g. PU-3344")
                             field("Reference #", text: $referenceNumber, key: "referenceNumber",
@@ -222,8 +230,9 @@ struct SmartScanReviewView: View {
                         // to isolate the upload crash. All v2.0.2 UI additions
                         // are removed for this build.
                         sectionCard("Load Info") {
-                            field("Load #", text: $loadNumber, key: "loadNumber",
-                                  placeholder: "e.g. LD-2841")
+                            // Field-order swap 2026-05-18 (dead branch kept in sync).
+                            field("PO #", text: $poNumber, key: "poNumber",
+                                  placeholder: "e.g. PO-9381")
                             brokerNameField
                             field("MC #", text: $brokerMcNumber, key: "brokerMcNumber",
                                   placeholder: "e.g. 128156", keyboard: .numberPad)
@@ -270,8 +279,9 @@ struct SmartScanReviewView: View {
                                   placeholder: "e.g. 42,000 lbs")
                             field("Commodity", text: $commodity, key: "commodity",
                                   placeholder: "e.g. Frozen Foods")
-                            field("PO #", text: $poNumber, key: "poNumber",
-                                  placeholder: "e.g. PO-9381")
+                            // Field-order swap 2026-05-18 (dead branch kept in sync).
+                            field("Load #", text: $loadNumber, key: "loadNumber",
+                                  placeholder: "e.g. LD-2841")
                             field("Pickup #", text: $pickupNumber, key: "pickupNumber",
                                   placeholder: "e.g. PU-3344")
                             field("Reference #", text: $referenceNumber, key: "referenceNumber",

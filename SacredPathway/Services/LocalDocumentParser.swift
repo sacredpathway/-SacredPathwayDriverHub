@@ -243,10 +243,28 @@ enum LocalDocumentParser {
             out.confidence["brokerPhoneExtension"] = 0.85
         }
 
-        // ---- Email ----
-        if let m = firstRegex(joined, pattern: #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"#) {
-            out.brokerEmail = m.lowercased()
-            out.confidence["brokerEmail"] = 0.95
+        // ---- Email (scored 2026-05-18) ----
+        //
+        // Scoring vs. the old "first @ wins" heuristic:
+        //   (a) Anchor proximity — within ±3 lines of the broker name,
+        //       MC#, or phone block is the strongest signal.
+        //   (b) Top-of-doc position — first 40% of lines gets a bonus.
+        //   (c) HARD REJECT — drop any email whose line OR ±1 neighbour
+        //       lines mention factoring / accounting / billing / AR /
+        //       AP / remittance / disclaimer / terms / privacy /
+        //       copyright / powered by / "send invoices" / payments.
+        //   (d) Prefer emails whose local-part contains a letter (not a
+        //       pure numeric ID like 12345@some-system.com).
+        // The old "grab the first @" heuristic was pulling AR / factoring
+        // emails out of the bottom-of-page billing disclaimer.
+        if let picked = pickBrokerEmail(
+            lines: lines,
+            brokerName: out.brokerName,
+            brokerPhone: out.brokerPhone,
+            brokerMcNumber: out.brokerMcNumber
+        ) {
+            out.brokerEmail = picked.email
+            out.confidence["brokerEmail"] = picked.confidence
         }
 
         // Crash-bisect 2026-05-17: temporarily disabled the new broker-
@@ -902,6 +920,221 @@ enum LocalDocumentParser {
     /// a Double. Strips commas; returns nil on malformed input.
     private static func parseMoney(_ s: String) -> Double? {
         Double(s.replacingOccurrences(of: ",", with: ""))
+    }
+
+    // MARK: - Scored broker-email picker (2026-05-18)
+
+    /// Outcome of scoring all the emails on the page.
+    struct BrokerEmailPick {
+        let email: String       // lowercased
+        let lineIndex: Int
+        let confidence: Double
+        let reason: String      // why it won (DEBUG only)
+    }
+
+    /// Pick the broker contact email by proximity to the top-of-doc
+    /// broker block, rejecting footer / disclaimer / AR / factoring emails.
+    ///
+    /// Anchors are the OCR line indices that contain the already-extracted
+    /// broker name, phone, or MC#. Emails on the same line or within ±3
+    /// lines of any anchor get a large bonus. Emails in the top 40% of
+    /// the document also earn a smaller positional bonus.
+    ///
+    /// Hard-rejected when their line OR the immediate neighbours (±1)
+    /// contain finance/disclaimer keywords. This kills the long-standing
+    /// "scan grabbed accounting@…" bug on rate cons that print a
+    /// "Send invoices to:" block at the bottom of the page.
+    static func pickBrokerEmail(lines: [String],
+                                brokerName: String?,
+                                brokerPhone: String?,
+                                brokerMcNumber: String?) -> BrokerEmailPick? {
+
+        // ── 1) Collect every email candidate with its line index. ──
+        let emailRegex = #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"#
+        struct Cand {
+            let email: String          // lowercased
+            let lineIndex: Int
+            var score: Int = 0
+            var rejected: String? = nil
+            var reason: String = ""
+        }
+        var candidates: [Cand] = []
+        for (idx, line) in lines.enumerated() {
+            let hits = allMatches(line, pattern: emailRegex)
+            // For this regex `allMatches` returns the full match because
+            // it has no capture group — verify by re-running with the
+            // string-level helper. We use a regex object directly to
+            // capture every email on a line.
+            if hits.isEmpty {
+                // Fallback for lines where the regex's first-capture
+                // strategy didn't apply: pull addresses with our own scan.
+                for m in matchAllEmails(in: line) {
+                    candidates.append(Cand(email: m.lowercased(), lineIndex: idx))
+                }
+            } else {
+                for raw in hits {
+                    candidates.append(Cand(email: raw.lowercased(), lineIndex: idx))
+                }
+            }
+        }
+        // De-duplicate (line-index agnostic — keep the earliest occurrence).
+        var seen: Set<String> = []
+        candidates = candidates.filter { c in
+            if seen.contains(c.email) { return false }
+            seen.insert(c.email)
+            return true
+        }
+        if candidates.isEmpty { return nil }
+
+        // ── 2) Compute anchor line indices from already-known fields. ──
+        var anchors: Set<Int> = []
+        if let bn = brokerName, !bn.isEmpty {
+            for (i, line) in lines.enumerated() where line.localizedCaseInsensitiveContains(bn) {
+                anchors.insert(i)
+            }
+        }
+        if let bp = brokerPhone, !bp.isEmpty {
+            // Use the raw digits to be robust against OCR formatting.
+            let digits = bp.filter(\.isNumber)
+            if !digits.isEmpty {
+                for (i, line) in lines.enumerated() {
+                    let lineDigits = line.filter(\.isNumber)
+                    if lineDigits.contains(digits) { anchors.insert(i) }
+                }
+            }
+        }
+        if let mc = brokerMcNumber, !mc.isEmpty {
+            for (i, line) in lines.enumerated() where line.contains(mc) {
+                anchors.insert(i)
+            }
+        }
+
+        // ── 3) Score every candidate. ──
+        // Footer/disclaimer keywords — case-insensitive substring on the
+        // email line and ±1 neighbour lines.
+        let rejectKeywords = [
+            "factoring", "factor",
+            "accounting", "accounts payable", "accounts receivable",
+            "remittance",
+            "billing", "invoice", "send invoices",
+            "ar@", "ap@", "ar dept", "ap dept",
+            "disclaimer",
+            "terms", "privacy", "conditions",
+            "copyright", "©",
+            "powered by",
+            "confidential",
+            "do not reply", "noreply",
+            "payments",
+        ]
+        // Strong-positive keywords near the email — bumps the score even
+        // without an anchor match. These are tokens that real rate-con
+        // contact blocks routinely print.
+        let contactKeywords = [
+            "broker", "broker contact",
+            "dispatcher", "dispatch contact",
+            "sales rep", "account rep", "carrier rep",
+            "load contact", "contact:", "email:",
+            "phone:", "ph:",
+            "mc#", "mc no", "mc number",
+        ]
+        let topCutoff = max(1, (lines.count * 4) / 10)   // top 40%
+
+        for i in candidates.indices {
+            let idx = candidates[i].lineIndex
+            // Build the local context = ±1 lines as one lowercased string.
+            let lo = max(0, idx - 1)
+            let hi = min(lines.count - 1, idx + 1)
+            let ctx = lines[lo...hi].joined(separator: " ").lowercased()
+
+            // HARD REJECT first — short-circuit.
+            for bad in rejectKeywords where ctx.contains(bad) {
+                candidates[i].rejected = "context contains '\(bad)'"
+                break
+            }
+            if candidates[i].rejected != nil { continue }
+
+            var score = 0
+            var why: [String] = []
+
+            // (a) Anchor proximity — strongest signal.
+            let nearestAnchor = anchors.map { abs($0 - idx) }.min() ?? Int.max
+            switch nearestAnchor {
+            case 0:      score += 100; why.append("on anchor line")
+            case 1:      score += 80;  why.append("±1 of anchor")
+            case 2:      score += 60;  why.append("±2 of anchor")
+            case 3:      score += 40;  why.append("±3 of anchor")
+            case 4...6:  score += 20;  why.append("±\(nearestAnchor) of anchor")
+            default:     break
+            }
+
+            // (b) Top-of-doc bonus.
+            if idx < topCutoff {
+                score += 25
+                why.append("top \(topCutoff) lines")
+            }
+
+            // (c) Contact-keyword bonus.
+            for kw in contactKeywords where ctx.contains(kw) {
+                score += 15
+                why.append("near '\(kw)'")
+                break
+            }
+
+            // (d) Local-part shape — prefer a person-shaped local part.
+            let local = candidates[i].email.split(separator: "@").first ?? ""
+            if local.contains(where: { $0.isLetter }) {
+                score += 5
+                why.append("alpha local-part")
+            }
+
+            candidates[i].score = score
+            candidates[i].reason = why.joined(separator: ", ")
+        }
+
+        // ── 4) Pick the winner. ──
+        let valid = candidates.filter { $0.rejected == nil && $0.score > 0 }
+        let winner = valid.max { a, b in
+            if a.score != b.score { return a.score < b.score }
+            // Tie-break: prefer the earlier line.
+            return a.lineIndex > b.lineIndex
+        }
+
+        // ── 5) DEBUG enumerate. ──
+        #if DEBUG
+        let tag = "SP_DEBUG_RATECON"
+        print("[\(tag)] pickBrokerEmail — anchors=\(anchors.sorted()) candidates=\(candidates.count)")
+        for c in candidates.sorted(by: { $0.lineIndex < $1.lineIndex }) {
+            let isWinner = winner.map { $0.email == c.email } ?? false
+            let marker = isWinner ? "  WIN " : "      "
+            if let r = c.rejected {
+                print("[\(tag)]\(marker)line[\(c.lineIndex)] \(c.email) REJECT(\(r))")
+            } else {
+                print("[\(tag)]\(marker)line[\(c.lineIndex)] \(c.email) score=\(c.score) [\(c.reason)]")
+            }
+        }
+        #endif
+
+        guard let w = winner else { return nil }
+        // Confidence: scale 0–200 → 0.5–0.95.
+        let conf = min(0.95, 0.5 + Double(w.score) / 400.0)
+        return BrokerEmailPick(
+            email: w.email,
+            lineIndex: w.lineIndex,
+            confidence: conf,
+            reason: w.reason
+        )
+    }
+
+    /// Pull every email on a line (used as a fallback when allMatches
+    /// returns an empty result for whatever reason).
+    private static func matchAllEmails(in text: String) -> [String] {
+        let pat = #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"#
+        guard let rx = try? NSRegularExpression(pattern: pat) else { return [] }
+        let range = NSRange(text.startIndex..., in: text)
+        return rx.matches(in: text, range: range).compactMap { m -> String? in
+            guard let r = Range(m.range, in: text) else { return nil }
+            return String(text[r])
+        }
     }
 
     /// Generic accessorial-amount extractor. Tries each keyword in turn and
