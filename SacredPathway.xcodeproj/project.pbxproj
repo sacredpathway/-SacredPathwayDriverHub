@@ -120,6 +120,7 @@
 		EA0000000000000000000045 /* LocalBrokersRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000046 /* LocalBrokersRepository.swift */; };
 		EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */; };
 		EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004A /* LocalSmokeTest.swift */; };
+		EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004C /* LocalExpensesRepository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -238,6 +239,7 @@
 		EA0000000000000000000046 /* LocalBrokersRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokersRepository.swift; sourceTree = "<group>"; };
 		EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerContactsRepository.swift; sourceTree = "<group>"; };
 		EA000000000000000000004A /* LocalSmokeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSmokeTest.swift; sourceTree = "<group>"; };
+		EA000000000000000000004C /* LocalExpensesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalExpensesRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -554,6 +556,7 @@
 				EA0000000000000000000046 /* LocalBrokersRepository.swift */,
 				EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */,
 				EA000000000000000000004A /* LocalSmokeTest.swift */,
+				EA000000000000000000004C /* LocalExpensesRepository.swift */,
 			);
 			path = Local;
 			sourceTree = "<group>";
@@ -761,6 +764,7 @@
 				EA0000000000000000000045 /* LocalBrokersRepository.swift in Sources */,
 				EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */,
 				EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */,
+				EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

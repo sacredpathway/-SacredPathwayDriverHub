@@ -587,9 +587,19 @@ struct AddEditExpenseView: View {
             errorMessage = "Please enter a valid amount."
             return
         }
-        guard let profileId = supabase.currentProfile?.id else {
-            errorMessage = "You're not signed in. Please sign in and try again."
-            return
+
+        // Resolve the profileId. In Free Local Mode there's no signed-in
+        // user — use the per-install UUID as a stable placeholder so the
+        // Codable model still has the required non-optional field.
+        let profileId: UUID
+        if AppMode.shared.isLocal {
+            profileId = AppMode.shared.localInstallId
+        } else {
+            guard let cloudId = supabase.currentProfile?.id else {
+                errorMessage = "You're not signed in. Please sign in and try again."
+                return
+            }
+            profileId = cloudId
         }
 
         isSaving = true
@@ -626,6 +636,23 @@ struct AddEditExpenseView: View {
             receiptDate: receiptDate,
             createdAt: mode.expense?.createdAt
         )
+
+        // ── Free Local Mode ──
+        // No network round-trip; LocalExpensesRepository can't throw.
+        if AppMode.shared.isLocal {
+            let saved: Expense
+            if mode.isEditing {
+                LocalExpensesRepository.shared.update(expense)
+                saved = expense
+            } else {
+                saved = LocalExpensesRepository.shared.create(expense)
+            }
+            ExpenseDraftStore.clear()
+            onSave(saved)
+            isSaving = false
+            dismiss()
+            return
+        }
 
         do {
             let saved: Expense

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ExpensesListView: View {
     @EnvironmentObject var supabase: SupabaseService
+    @ObservedObject private var appMode = AppMode.shared
+    @ObservedObject private var localExpenses = LocalExpensesRepository.shared
     @State private var expenses: [Expense] = []
     @State private var isLoading = true
     @State private var showingAddExpense = false
@@ -10,11 +12,17 @@ struct ExpensesListView: View {
 
     private let categories = ["fuel", "lumper", "toll", "repair", "insurance", "maintenance", "other"]
 
+    /// Source of truth — local repo when in Free Local Mode, otherwise
+    /// the @State expenses array fed by Supabase.
+    private var sourceExpenses: [Expense] {
+        appMode.isLocal ? localExpenses.expenses : expenses
+    }
+
     var filteredExpenses: [Expense] {
         if let cat = filterCategory {
-            return expenses.filter { $0.category.lowercased() == cat }
+            return sourceExpenses.filter { $0.category.lowercased() == cat }
         }
-        return expenses
+        return sourceExpenses
     }
 
     var totalExpenses: Double {
@@ -27,6 +35,9 @@ struct ExpensesListView: View {
 
             NavigationStack {
                 VStack(spacing: 0) {
+                    if appMode.isLocal {
+                        LocalModeBanner()
+                    }
                     // Summary header
                     VStack(spacing: 8) {
                         Text("Total Expenses")
@@ -172,6 +183,11 @@ struct ExpensesListView: View {
     // MARK: - Actions
 
     private func loadExpenses() async {
+        if appMode.isLocal {
+            // LocalExpensesRepository is already in memory from disk.
+            isLoading = false
+            return
+        }
         do {
             expenses = try await supabase.fetchAllExpenses()
         } catch {
@@ -184,10 +200,12 @@ struct ExpensesListView: View {
         let toDelete = offsets.map { filteredExpenses[$0] }
         for expense in toDelete {
             guard let id = expense.id else { continue }
-            Task {
-                try? await supabase.deleteExpense(id)
+            if appMode.isLocal {
+                localExpenses.delete(id: id)
+            } else {
+                Task { try? await supabase.deleteExpense(id) }
+                expenses.removeAll { $0.id == id }
             }
-            expenses.removeAll { $0.id == id }
         }
     }
 

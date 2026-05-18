@@ -938,8 +938,16 @@ struct SmartScanReviewView: View {
     // MARK: - Save
 
     private func save() async {
-        guard let profileId = supabase.client.auth.currentUser?.id else {
-            errorMessage = "Not signed in"; return
+        // Resolve profileId.  Free Local Mode uses the per-install UUID
+        // so we don't depend on Supabase auth at all.
+        let profileId: UUID
+        if AppMode.shared.isLocal {
+            profileId = AppMode.shared.localInstallId
+        } else {
+            guard let cloudId = supabase.client.auth.currentUser?.id else {
+                errorMessage = "Not signed in"; return
+            }
+            profileId = cloudId
         }
         updateMatchedBroker()
         isSaving = true
@@ -991,6 +999,25 @@ struct SmartScanReviewView: View {
             status: nil
         )
         let savedLoad: Load
+        if AppMode.shared.isLocal {
+            // ── Free Local Mode ──
+            // Persist to LocalLoadsRepository. Broker + contact attribution
+            // also runs against the local repos. Document vault upload
+            // stays cloud-only (handled by persistScannedDocument's
+            // own guard below).
+            savedLoad = LocalLoadsRepository.shared.create(load)
+            let (resolvedBrokerId, resolvedContactId) =
+                await autoAddBrokerContactLocal(profileId: profileId)
+            await patchLoadWithBrokerAttributionLocal(
+                load: savedLoad,
+                brokerId: resolvedBrokerId,
+                contactId: resolvedContactId
+            )
+            isSaving = false
+            finishSave()
+            return
+        }
+
         do {
             savedLoad = try await supabase.createLoad(load)
         } catch {
@@ -1017,6 +1044,95 @@ struct SmartScanReviewView: View {
 
         isSaving = false
         finishSave()
+    }
+
+    // MARK: - Local-mode broker/contact auto-add
+
+    /// Local-mode counterpart of `autoAddBrokerContact(profileId:)`. Resolves
+    /// the broker + contact rows in the on-device JSON store using the same
+    /// normalize-then-create dedup logic. Pure local — never touches Supabase.
+    private func autoAddBrokerContactLocal(profileId: UUID) async -> (brokerId: UUID?, contactId: UUID?) {
+        let trimmedCompany = brokerName.trimmingCharacters(in: .whitespaces)
+        guard !trimmedCompany.isEmpty else { return (nil, nil) }
+        let trimmedRep: String = {
+            let r = brokerContactName.trimmingCharacters(in: .whitespaces)
+            return r.isEmpty ? trimmedCompany : r
+        }()
+
+        let normalized = Broker.normalize(trimmedCompany)
+        var resolved = LocalBrokersRepository.shared.findByNormalizedName(normalized)
+        if resolved == nil, !brokerMcNumber.isEmpty {
+            resolved = LocalBrokersRepository.shared.findByMcNumber(brokerMcNumber)
+        }
+        if resolved == nil {
+            let newBroker = Broker(
+                profileId: profileId,
+                brokerName: trimmedCompany,
+                normalizedName: normalized,
+                mcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                totalLoads: 0,
+                totalRevenue: 0
+            )
+            resolved = LocalBrokersRepository.shared.create(newBroker)
+        } else if var existing = resolved,
+                  (existing.mcNumber ?? "").isEmpty,
+                  !brokerMcNumber.isEmpty {
+            existing.mcNumber = brokerMcNumber
+            LocalBrokersRepository.shared.update(existing)
+            resolved = existing
+        }
+        guard let brokerId = resolved?.id else { return (nil, nil) }
+
+        let phoneToSave = combinedPhone()
+        let ext = brokerPhoneExtension.trimmingCharacters(in: .whitespaces)
+        let emailToSave = brokerEmail.trimmingCharacters(in: .whitespaces).lowercased()
+
+        var contactId: UUID?
+        if var existing = LocalBrokerContactsRepository.shared
+            .findContact(brokerId: brokerId, name: trimmedRep) {
+            // Patch missing fields only, then bump lastInteractionAt.
+            if (existing.email?.isEmpty ?? true), !emailToSave.isEmpty { existing.email = emailToSave }
+            if (existing.phone?.isEmpty ?? true), !phoneToSave.isEmpty { existing.phone = phoneToSave }
+            if (existing.phoneExtension?.isEmpty ?? true), !ext.isEmpty { existing.phoneExtension = ext }
+            existing.lastInteractionAt = Date()
+            LocalBrokerContactsRepository.shared.update(existing)
+            contactId = existing.id
+        } else {
+            let contact = BrokerContact(
+                brokerId: brokerId,
+                contactName: trimmedRep,
+                email: emailToSave.isEmpty ? nil : emailToSave,
+                phone: phoneToSave.isEmpty ? nil : phoneToSave,
+                phoneExtension: ext.isEmpty ? nil : ext,
+                lastInteractionAt: Date()
+            )
+            contactId = LocalBrokerContactsRepository.shared.create(contact).id
+        }
+        return (brokerId, contactId)
+    }
+
+    /// Local-mode counterpart of `patchLoadWithBrokerAttribution(...)`.
+    /// Writes the same broker_id / contact_id / snapshot fields back onto
+    /// the freshly-created Load row in LocalLoadsRepository.
+    private func patchLoadWithBrokerAttributionLocal(
+        load: Load,
+        brokerId: UUID?,
+        contactId: UUID?
+    ) async {
+        guard load.id != nil else { return }
+        var patched = load
+        patched.brokerId = brokerId
+        patched.brokerContactId = contactId
+        if !brokerContactName.isEmpty {
+            patched.brokerContactName = brokerContactName
+        }
+        let phone = combinedPhone()
+        if !phone.isEmpty { patched.brokerContactPhone = phone }
+        let ext = brokerPhoneExtension.trimmingCharacters(in: .whitespaces)
+        if !ext.isEmpty { patched.brokerPhoneExtension = ext }
+        let email = brokerEmail.trimmingCharacters(in: .whitespaces).lowercased()
+        if !email.isEmpty { patched.brokerContactEmail = email }
+        LocalLoadsRepository.shared.update(patched)
     }
 
     /// Silent broker + contact auto-add path. Resolves a (brokerId, contactId)

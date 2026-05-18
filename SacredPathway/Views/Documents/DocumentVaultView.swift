@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DocumentVaultView: View {
     @EnvironmentObject var supabase: SupabaseService
+    @ObservedObject private var appMode = AppMode.shared
     @State private var documents: [TruckDocument] = []
     @State private var isLoading = true
     @State private var searchText = ""
@@ -57,6 +58,9 @@ struct DocumentVaultView: View {
 
             NavigationStack {
                 VStack(spacing: 0) {
+                    if appMode.isLocal {
+                        localModeBanner
+                    }
                     // Search bar
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass").foregroundStyle(Color.spTextSecondary)
@@ -132,6 +136,36 @@ struct DocumentVaultView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Free Local Mode banner
+
+    /// Friendly notice rendered when AppMode == .local. Document Vault
+    /// uploads + signed-URL previews require Supabase Storage, which is
+    /// cloud-only. Phase D leaves vault disabled in local mode; an
+    /// optional on-device document store is on the post-Phase-D roadmap.
+    private var localModeBanner: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "icloud.slash")
+                    .foregroundStyle(Color.spGold)
+                Text("Document Vault requires Cloud Sync")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.spTextPrimary)
+            }
+            Text("Free Local Mode keeps your loads, brokers, and expenses on this iPhone. Document uploads and the searchable Vault need a Cloud Sync account.")
+                .font(.caption2)
+                .foregroundStyle(Color.spTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.spCardBg)
+        .overlay(
+            Rectangle().fill(Color.spGold.opacity(0.3)).frame(height: 1),
+            alignment: .bottom
+        )
     }
 
     // MARK: - Preview helpers
@@ -227,6 +261,14 @@ struct DocumentVaultView: View {
     }
 
     private func loadDocuments() async {
+        // Free Local Mode: no cloud documents. The empty-state list plus
+        // the localModeBanner already explain why; skip the Supabase
+        // fetch so we don't surface a network error on an offline device.
+        if appMode.isLocal {
+            documents = []
+            isLoading = false
+            return
+        }
         do { documents = try await supabase.fetchDocuments() } catch { print("Error: \(error)") }
         isLoading = false
     }

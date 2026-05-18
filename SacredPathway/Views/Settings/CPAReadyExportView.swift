@@ -42,6 +42,9 @@ struct CPAReadyExportView: View {
             Color.spBackground.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 18) {
+                    if AppMode.shared.isLocal {
+                        localModeNoticeCard
+                    }
                     heroCard
                     dateRangeCard
                     toggleCard
@@ -67,6 +70,36 @@ struct CPAReadyExportView: View {
             CPAShareSheet(items: item.items)
                 .ignoresSafeArea(edges: .bottom)
         }
+    }
+
+    // MARK: - Free Local Mode notice
+
+    /// Surfaced when CPA export runs against on-device data only. Loads,
+    /// brokers, and expenses (Phase D) ARE included; settlements stay
+    /// cloud-only until a future LocalSettlementsRepository ships.
+    private var localModeNoticeCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "iphone")
+                    .foregroundStyle(Color.spGold)
+                Text("Free Local Mode")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.spTextPrimary)
+            }
+            Text("Exports use the data saved on this device. Settlements and Document Vault attachments require Cloud Sync — those sections will be empty in your package while you're in Free Local Mode.")
+                .font(.caption)
+                .foregroundStyle(Color.spTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.spCardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.spGold.opacity(0.3), lineWidth: 1)
+        )
+        .padding(.horizontal)
     }
 
     // MARK: - Hero card

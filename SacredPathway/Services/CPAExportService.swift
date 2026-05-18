@@ -181,12 +181,22 @@ enum CPAExportService {
     // MARK: - Safe fetches (network errors become empty arrays)
 
     private static func safeFetchExpenses(supabase: SupabaseService) async -> [Expense] {
+        if await AppMode.shared.isLocal {
+            return await LocalExpensesRepository.shared.fetchAll()
+        }
         do { return try await supabase.fetchAllExpenses() } catch { return [] }
     }
     private static func safeFetchLoads(supabase: SupabaseService) async -> [Load] {
+        if await AppMode.shared.isLocal {
+            return await LocalLoadsRepository.shared.fetchAll()
+        }
         do { return try await supabase.fetchLoads() } catch { return [] }
     }
     private static func safeFetchSettlements(supabase: SupabaseService) async -> [Settlement] {
+        // Settlements remain cloud-only for now (no LocalSettlementsRepository
+        // yet). In Free Local Mode this returns an empty array; the CPA
+        // package handles missing categories gracefully.
+        if await AppMode.shared.isLocal { return [] }
         do { return try await supabase.fetchSettlements() } catch { return [] }
     }
 

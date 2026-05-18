@@ -7,6 +7,7 @@ struct DashboardView: View {
     @ObservedObject private var payWeek = PayWeekService.shared
     @ObservedObject private var appMode = AppMode.shared
     @ObservedObject private var localLoads = LocalLoadsRepository.shared
+    @ObservedObject private var localExpenses = LocalExpensesRepository.shared
     @State private var loads: [Load] = []
     @State private var allExpenses: [Expense] = []
     @State private var isLoading = true
@@ -17,6 +18,11 @@ struct DashboardView: View {
     /// fed by Supabase fetchLoads().
     private var sourceLoads: [Load] {
         appMode.isLocal ? localLoads.loads : loads
+    }
+
+    /// Source of truth for expense totals — local repo when offline.
+    private var sourceExpenses: [Expense] {
+        appMode.isLocal ? localExpenses.expenses : allExpenses
     }
 
     enum TimePeriod: String, CaseIterable {
@@ -30,7 +36,7 @@ struct DashboardView: View {
         filterByPeriod(sourceLoads, keyPath: \.createdAt)
     }
     var filteredExpenses: [Expense] {
-        filterByPeriod(allExpenses, keyPath: \.createdAt)
+        filterByPeriod(sourceExpenses, keyPath: \.createdAt)
     }
     var totalRevenue: Double { filteredLoads.reduce(0) { $0 + ($1.totalRevenue ?? 0) } }
     var totalExpenses: Double { filteredExpenses.reduce(0) { $0 + $1.amount } }
@@ -326,11 +332,11 @@ struct DashboardView: View {
     // MARK: - Data Loading
     private func loadData() async {
         isLoading = true
-        // Free Local Mode: LocalLoadsRepository is already populated.
-        // Expenses still live cloud-only for Phase C — they'll show as
-        // empty for local users until Phase D adds LocalExpensesRepository.
+        // Free Local Mode: LocalLoadsRepository and LocalExpensesRepository
+        // are already in memory from disk on app launch. The dashboard
+        // observes them via @ObservedObject, so the totals refresh
+        // automatically without any extra plumbing here.
         if appMode.isLocal {
-            allExpenses = []
             isLoading = false
             return
         }

@@ -221,8 +221,12 @@ struct LoadDetailView: View {
             }
             .task {
                 if let loadId = load.id {
-                    do { expenses = try await supabase.fetchExpenses(forLoad: loadId) }
-                    catch { print("Error loading expenses: \(error)") }
+                    if AppMode.shared.isLocal {
+                        expenses = await LocalExpensesRepository.shared.fetch(forLoad: loadId)
+                    } else {
+                        do { expenses = try await supabase.fetchExpenses(forLoad: loadId) }
+                        catch { print("Error loading expenses: \(error)") }
+                    }
                 }
                 await loadBrokerContactIfAvailable()
                 await loadWeeklyRevenueTotal()
