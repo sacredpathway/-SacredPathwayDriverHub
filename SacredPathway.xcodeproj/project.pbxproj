@@ -112,6 +112,9 @@
 		5B00000000000000000000C1 /* ContactsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C2 /* ContactsBridge.swift */; };
 		5B00000000000000000000C3 /* ShareSummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C4 /* ShareSummaryService.swift */; };
 		5B00000000000000000000C5 /* ShareSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C6 /* ShareSummaryView.swift */; };
+		EA0000000000000000000001 /* AppMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000002 /* AppMode.swift */; };
+		EA0000000000000000000003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000004 /* WelcomeView.swift */; };
+		EA0000000000000000000005 /* LocalModeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000006 /* LocalModeBanner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -222,6 +225,9 @@
 		5B00000000000000000000C2 /* ContactsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsBridge.swift; sourceTree = "<group>"; };
 		5B00000000000000000000C4 /* ShareSummaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummaryService.swift; sourceTree = "<group>"; };
 		5B00000000000000000000C6 /* ShareSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummaryView.swift; sourceTree = "<group>"; };
+		EA0000000000000000000002 /* AppMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMode.swift; sourceTree = "<group>"; };
+		EA0000000000000000000004 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		EA0000000000000000000006 /* LocalModeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModeBanner.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -320,6 +326,7 @@
 				5B0000000000000000000002 /* PayWeekService.swift */,
 				5B00000000000000000000C2 /* ContactsBridge.swift */,
 				5B00000000000000000000C4 /* ShareSummaryService.swift */,
+				EA0000000000000000000010 /* Local */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -353,6 +360,8 @@
 				DC0000000000000000001000 /* IFTA */,
 				FC0000000000000000000006 /* ForceUpdateView.swift */,
 				5B00000000000000000000D0 /* ShareSummary */,
+				EA0000000000000000000020 /* Welcome */,
+				EA0000000000000000000030 /* Components */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -524,6 +533,30 @@
 				5B00000000000000000000C6 /* ShareSummaryView.swift */,
 			);
 			path = ShareSummary;
+			sourceTree = "<group>";
+		};
+		EA0000000000000000000010 /* Local */ = {
+			isa = PBXGroup;
+			children = (
+				EA0000000000000000000002 /* AppMode.swift */,
+			);
+			path = Local;
+			sourceTree = "<group>";
+		};
+		EA0000000000000000000020 /* Welcome */ = {
+			isa = PBXGroup;
+			children = (
+				EA0000000000000000000004 /* WelcomeView.swift */,
+			);
+			path = Welcome;
+			sourceTree = "<group>";
+		};
+		EA0000000000000000000030 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				EA0000000000000000000006 /* LocalModeBanner.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -705,6 +738,9 @@
 				5B00000000000000000000C1 /* ContactsBridge.swift in Sources */,
 				5B00000000000000000000C3 /* ShareSummaryService.swift in Sources */,
 				5B00000000000000000000C5 /* ShareSummaryView.swift in Sources */,
+				EA0000000000000000000001 /* AppMode.swift in Sources */,
+				EA0000000000000000000003 /* WelcomeView.swift in Sources */,
+				EA0000000000000000000005 /* LocalModeBanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

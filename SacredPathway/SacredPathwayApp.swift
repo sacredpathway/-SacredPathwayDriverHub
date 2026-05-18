@@ -7,9 +7,16 @@ struct SacredPathwayApp: App {
     @StateObject private var appearance = AppearanceService.shared
     @StateObject private var forceUpdate = ForceUpdateService.shared
 
+    /// Free Local Mode vs Cloud Pro mode picker — UserDefaults backed.
+    /// `.notSet` on first launch routes the root view to WelcomeView; once
+    /// the user picks, `.local` skips AccessGate entirely and `.cloud`
+    /// flows through the existing LoginView → AccessGate → Paywall path.
+    @StateObject private var appMode = AppMode.shared
+
     /// Combines auth + entitlement state into a single 4-state machine so
     /// the root view body can route deterministically. Apple Sign In and
-    /// email/password both flow through the same gate.
+    /// email/password both flow through the same gate. Only consulted when
+    /// AppMode.mode == .cloud.
     @StateObject private var accessGate: AccessGate
 
     init() {
@@ -55,8 +62,18 @@ struct SacredPathwayApp: App {
                 if newValue {
                     Task { await accessGate.performInitialEntitlementCheck() }
                 }
+                // Bootstrap upgrade safety: existing v2.0.x users who land on
+                // this build already authed must NOT see WelcomeView. If
+                // AppMode is still .notSet when auth flips to true, lock in
+                // .cloud silently.
+                AppMode.shared.bootstrapForExistingCloudUser(isAuthenticated: newValue)
             }
             .onAppear {
+                // Bootstrap on cold launch — Supabase may already be signed
+                // in from a previous build before AppMode existed.
+                AppMode.shared.bootstrapForExistingCloudUser(
+                    isAuthenticated: supabase.isAuthenticated
+                )
                 // Safety timeout — if loading hangs for more than 4 seconds, force show login
                 Task {
                     try? await Task.sleep(nanoseconds: 4_000_000_000)
@@ -76,7 +93,10 @@ struct SacredPathwayApp: App {
     //      this build as out of date. ScreenshotMode is exempt so App Store
     //      screenshots can still be captured locally.
     //   2. Splash / loading state (Supabase auth restoring).
-    //   3. AccessGate state — drives login / loading / paywall / dashboard.
+    //   3. AppMode pick:
+    //        .notSet → WelcomeView (first-launch chooser)
+    //        .local  → ContentView (Free Local Mode, AccessGate bypassed)
+    //        .cloud  → AccessGate state machine (existing path)
     // ─────────────────────────────────────────────────────────────────────
     @ViewBuilder
     private var rootContent: some View {
@@ -91,7 +111,30 @@ struct SacredPathwayApp: App {
         } else if supabase.isLoading {
             loadingSplash(message: "Loading...")
         } else {
-            accessGateView
+            switch appMode.mode {
+            case .notSet:
+                // First-launch chooser. Writing AppMode flips this branch
+                // automatically via @StateObject observation.
+                WelcomeView()
+                    .environmentObject(supabase)
+                    .environmentObject(subscription)
+                    .environmentObject(appMode)
+
+            case .local:
+                // Free Local Mode — AccessGate intentionally bypassed.
+                // ContentView is reached without an account or paywall.
+                // Pro features inside the app remain gated by
+                // SubscriptionService.activeTier (unchanged).
+                ContentView()
+                    .environmentObject(supabase)
+                    .environmentObject(subscription)
+                    .environmentObject(appMode)
+
+            case .cloud:
+                // Existing Cloud Pro path — LoginView → loading → Paywall →
+                // ContentView. No behaviour change for current users.
+                accessGateView
+            }
         }
     }
 
