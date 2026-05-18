@@ -533,8 +533,10 @@ struct ImportContactsSheet: View {
         let normalized = Broker.normalize(brokerName)
 
         // Try to find an existing broker by normalized name; otherwise create one.
+        // Note: `try?` over a throwing function returning `Broker?` flattens to `Broker?`,
+        // so a single `if let` unwraps both layers.
         let broker: Broker
-        if let lookup = try? await supabase.findBrokerByNormalizedName(normalized), let existing = lookup {
+        if let existing = try? await supabase.findBrokerByNormalizedName(normalized) {
             broker = existing
         } else {
             let newBroker = Broker(
@@ -550,8 +552,7 @@ struct ImportContactsSheet: View {
         guard let brokerId = broker.id else { return }
 
         // Avoid duplicates by name within the same broker.
-        if let lookup = try? await supabase.findContact(brokerId: brokerId, name: c.displayName),
-           lookup != nil {
+        if let _ = try? await supabase.findContact(brokerId: brokerId, name: c.displayName) {
             return
         }
 
