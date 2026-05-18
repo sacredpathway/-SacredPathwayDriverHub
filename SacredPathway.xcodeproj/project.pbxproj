@@ -121,6 +121,8 @@
 		EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */; };
 		EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004A /* LocalSmokeTest.swift */; };
 		EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004C /* LocalExpensesRepository.swift */; };
+		EA000000000000000000004D /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004E /* BackupService.swift */; };
+		EA000000000000000000004F /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000050 /* BackupRestoreView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -240,6 +242,8 @@
 		EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerContactsRepository.swift; sourceTree = "<group>"; };
 		EA000000000000000000004A /* LocalSmokeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSmokeTest.swift; sourceTree = "<group>"; };
 		EA000000000000000000004C /* LocalExpensesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalExpensesRepository.swift; sourceTree = "<group>"; };
+		EA000000000000000000004E /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
+		EA0000000000000000000050 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -427,6 +431,7 @@
 				110000000000000000000008 /* PinSettingsView.swift */,
 				CA00000000000000000000A8 /* CPAReadyExportView.swift */,
 				5B0000000000000000000004 /* PayWeekSettingsView.swift */,
+				EA0000000000000000000050 /* BackupRestoreView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -557,6 +562,7 @@
 				EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */,
 				EA000000000000000000004A /* LocalSmokeTest.swift */,
 				EA000000000000000000004C /* LocalExpensesRepository.swift */,
+				EA000000000000000000004E /* BackupService.swift */,
 			);
 			path = Local;
 			sourceTree = "<group>";
@@ -765,6 +771,8 @@
 				EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */,
 				EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */,
 				EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */,
+				EA000000000000000000004D /* BackupService.swift in Sources */,
+				EA000000000000000000004F /* BackupRestoreView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

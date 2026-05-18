@@ -45,6 +45,33 @@ struct SettingsView: View {
                     .background(Color.spCardBg)
 
                     List {
+                        // ── Local Mode section ────────────────────────────
+                        // Visible only when the user picked Free Local Mode
+                        // on WelcomeView. Hosts the Backup & Restore flow.
+                        // Cloud Sync users never see this — they have iCloud
+                        // / Supabase backups by default.
+                        if appMode.isLocal {
+                            Section("Local Mode") {
+                                NavigationLink {
+                                    BackupRestoreView()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "externaldrive.badge.icloud")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Backup & Restore")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Export or import your local data")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                    }
+                                }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
+                        }
+
                         if FeatureFlags.subscriptionsEnabled {
                             Section("Pro") {
                                 Button {
