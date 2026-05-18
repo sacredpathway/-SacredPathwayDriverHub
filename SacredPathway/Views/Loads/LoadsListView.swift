@@ -5,6 +5,13 @@ struct LoadsListView: View {
     // Observed so changing Pay Week Start Day in Settings instantly
     // re-buckets the "This Week" list.
     @ObservedObject private var payWeek = PayWeekService.shared
+    // Observed so any AppMode switch (local ↔ cloud) triggers a re-read
+    // through the appropriate repository.
+    @ObservedObject private var appMode = AppMode.shared
+    // Local-mode repo. When AppMode.isLocal, the list is bound to this
+    // singleton's @Published `loads`; cloud mode keeps the existing
+    // `@State loads` fed by supabase.fetchLoads().
+    @ObservedObject private var localLoads = LocalLoadsRepository.shared
     @State private var loads: [Load] = []
     @State private var isLoading = true
     @State private var showingManualEntry = false
@@ -21,13 +28,20 @@ struct LoadsListView: View {
     @State private var loadToDuplicate: Load?
     @State private var deleteError: String?
 
+    /// Source of truth for the displayed list. In Free Local Mode this is
+    /// `LocalLoadsRepository.shared.loads`; in cloud mode it's the
+    /// `@State loads` array that `loadAsync()` populated from Supabase.
+    private var sourceLoads: [Load] {
+        appMode.isLocal ? localLoads.loads : loads
+    }
+
     /// Loads filtered to the current pay-week unless "All Loads" is selected.
     /// Filter key: pickupDate when present, otherwise createdAt. This handles
     /// loads created before pickup is known and back-dated entries.
     private var visibleLoads: [Load] {
-        if showAllLoads { return loads }
+        if showAllLoads { return sourceLoads }
         let week = payWeek.weekInterval()
-        return loads.filter { load in
+        return sourceLoads.filter { load in
             let d = load.pickupDate ?? load.createdAt ?? .distantPast
             return d >= week.start && d < week.end
         }
@@ -38,11 +52,15 @@ struct LoadsListView: View {
             Color.spBackground.ignoresSafeArea()
 
             NavigationStack {
+                VStack(spacing: 0) {
+                    if appMode.isLocal {
+                        LocalModeBanner()
+                    }
                 Group {
                     if isLoading {
                         ProgressView()
                             .tint(Color.spGold)
-                    } else if loads.isEmpty {
+                    } else if sourceLoads.isEmpty {
                         VStack(spacing: 16) {
                             Image(systemName: "truck.box")
                                 .font(.system(size: 50))
@@ -185,6 +203,7 @@ struct LoadsListView: View {
                     Text(deleteError ?? "")
                 }
                 .task { await loadAsync() }
+                }   // closes VStack added for LocalModeBanner
             }
         }
     }
@@ -192,6 +211,15 @@ struct LoadsListView: View {
     // MARK: - Data
 
     private func loadAsync() async {
+        // In Free Local Mode the LocalLoadsRepository singleton is the
+        // source of truth — already in memory from disk on init — so we
+        // just flip the loading flag off and let SwiftUI render from
+        // `localLoads.loads` via `sourceLoads`. In cloud mode we keep the
+        // existing Supabase fetch.
+        if appMode.isLocal {
+            isLoading = false
+            return
+        }
         do {
             loads = try await supabase.fetchLoads()
         } catch {
@@ -224,6 +252,13 @@ struct LoadsListView: View {
             return
         }
         loadToDelete = nil
+        // Free Local Mode: delete from the on-device JSON store. No cloud
+        // round-trip required, no auth check, can't fail with a network
+        // error.
+        if appMode.isLocal {
+            localLoads.delete(id: loadId)
+            return
+        }
         Task {
             do {
                 try await supabase.deleteLoad(id: loadId)

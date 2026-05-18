@@ -60,22 +60,22 @@ struct WelcomeView: View {
                     // ─── Free Local Mode card ──────────────────────────
                     modeCard(
                         title: "Free Local Mode",
-                        subtitle: "Stored on this device only",
+                        subtitle: "Stays on this device · No account",
                         bullets: [
                             "No account required",
                             "Works offline",
                             "Manual entry for loads, brokers, contacts, expenses, settlements",
                             "Smart Scan works locally (no AI costs)",
                         ],
-                        ctaTitle: "Start Free on this iPhone",
+                        ctaTitle: "Use Free Local Mode",
                         accent: Color.spGold
                     ) {
                         showLocalConfirm = true
                     }
 
-                    // ─── Cloud Pro card ────────────────────────────────
+                    // ─── Cloud Sync card ───────────────────────────────
                     modeCard(
-                        title: "Cloud Pro",
+                        title: "Cloud Sync",
                         subtitle: "Sign in to sync across devices",
                         bullets: [
                             "Multi-device sync (iPhone + iPad + web)",
@@ -83,7 +83,7 @@ struct WelcomeView: View {
                             "Web portal at app.sacredpathway.org",
                             "Premium AI extraction and exports",
                         ],
-                        ctaTitle: "Sign in for Cloud Pro",
+                        ctaTitle: "Sign in / Cloud Sync",
                         accent: Color.spGreenAccent
                     ) {
                         appMode.setCloud()

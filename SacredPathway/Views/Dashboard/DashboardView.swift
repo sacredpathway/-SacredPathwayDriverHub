@@ -5,10 +5,19 @@ struct DashboardView: View {
     // Observed so changing Pay Week Start Day in Settings re-shapes the
     // "This Week" totals instantly without needing to re-launch the app.
     @ObservedObject private var payWeek = PayWeekService.shared
+    @ObservedObject private var appMode = AppMode.shared
+    @ObservedObject private var localLoads = LocalLoadsRepository.shared
     @State private var loads: [Load] = []
     @State private var allExpenses: [Expense] = []
     @State private var isLoading = true
     @State private var selectedPeriod: TimePeriod = .allTime
+
+    /// Source of truth for dashboard totals. Local Mode pulls from the
+    /// on-device JSON store; cloud mode keeps the existing @State loads
+    /// fed by Supabase fetchLoads().
+    private var sourceLoads: [Load] {
+        appMode.isLocal ? localLoads.loads : loads
+    }
 
     enum TimePeriod: String, CaseIterable {
         case week = "This Week"
@@ -18,7 +27,7 @@ struct DashboardView: View {
 
     // MARK: - Computed Metrics
     var filteredLoads: [Load] {
-        filterByPeriod(loads, keyPath: \.createdAt)
+        filterByPeriod(sourceLoads, keyPath: \.createdAt)
     }
     var filteredExpenses: [Expense] {
         filterByPeriod(allExpenses, keyPath: \.createdAt)
@@ -44,6 +53,10 @@ struct DashboardView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
+                        if appMode.isLocal {
+                            LocalModeBanner()
+                                .padding(.horizontal, -16)
+                        }
                         headerSection
                         periodPicker
                         financialCards
@@ -313,6 +326,14 @@ struct DashboardView: View {
     // MARK: - Data Loading
     private func loadData() async {
         isLoading = true
+        // Free Local Mode: LocalLoadsRepository is already populated.
+        // Expenses still live cloud-only for Phase C — they'll show as
+        // empty for local users until Phase D adds LocalExpensesRepository.
+        if appMode.isLocal {
+            allExpenses = []
+            isLoading = false
+            return
+        }
         do {
             loads = try await supabase.fetchLoads()
             allExpenses = try await supabase.fetchAllExpenses()

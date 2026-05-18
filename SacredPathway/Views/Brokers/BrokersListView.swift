@@ -2,11 +2,19 @@ import SwiftUI
 
 struct BrokersListView: View {
     @EnvironmentObject var supabase: SupabaseService
+    @ObservedObject private var appMode = AppMode.shared
+    @ObservedObject private var localBrokers = LocalBrokersRepository.shared
     @State private var brokers: [Broker] = []
     @State private var isLoading = true
     @State private var searchText = ""
     @State private var sortBy: SortOption = .revenue
     @State private var showingAddBroker = false
+
+    /// Source of truth for displayed brokers — Free Local Mode reads the
+    /// on-device JSON store, Cloud Sync uses the existing Supabase fetch.
+    private var sourceBrokers: [Broker] {
+        appMode.isLocal ? localBrokers.brokers : brokers
+    }
 
     enum SortOption: String, CaseIterable {
         case revenue = "Revenue"
@@ -16,7 +24,7 @@ struct BrokersListView: View {
     }
 
     var filteredBrokers: [Broker] {
-        var result = brokers
+        var result = sourceBrokers
         if !searchText.isEmpty {
             result = result.filter { $0.brokerName.localizedCaseInsensitiveContains(searchText) }
         }
@@ -30,7 +38,7 @@ struct BrokersListView: View {
     }
 
     var topBrokerByRevenue: Broker? {
-        brokers.max(by: { ($0.totalRevenue ?? 0) < ($1.totalRevenue ?? 0) })
+        sourceBrokers.max(by: { ($0.totalRevenue ?? 0) < ($1.totalRevenue ?? 0) })
     }
 
     var body: some View {
@@ -39,6 +47,9 @@ struct BrokersListView: View {
 
             NavigationStack {
                 VStack(spacing: 0) {
+                    if appMode.isLocal {
+                        LocalModeBanner()
+                    }
                     // Search bar
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass").foregroundStyle(Color.spTextSecondary)
@@ -123,7 +134,7 @@ struct BrokersListView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         HStack(spacing: 12) {
-                            Text("\(brokers.count) brokers")
+                            Text("\(sourceBrokers.count) brokers")
                                 .font(.caption).foregroundStyle(Color.spTextSecondary)
                             Button { showingAddBroker = true } label: {
                                 Image(systemName: "plus.circle.fill").foregroundStyle(Color.spGold).font(.title3)
@@ -178,6 +189,13 @@ struct BrokersListView: View {
     }
 
     private func loadBrokers() async {
+        // Free Local Mode: LocalBrokersRepository already holds the list
+        // in memory (loaded from disk at app launch); just flip the loading
+        // flag and let `sourceBrokers` route through the @ObservedObject.
+        if appMode.isLocal {
+            isLoading = false
+            return
+        }
         do { brokers = try await supabase.fetchBrokers() } catch { print("Error: \(error)") }
         isLoading = false
     }
@@ -263,8 +281,39 @@ struct AddBrokerView: View {
     }
 
     private func save() async {
-        guard let profileId = supabase.client.auth.currentUser?.id else { errorMessage = "Not signed in"; return }
         isSaving = true
+        defer { isSaving = false }
+
+        // ── Free Local Mode ──
+        // Persist via the on-device repositories. profileId comes from the
+        // per-install UUID (no Supabase auth required).
+        if AppMode.shared.isLocal {
+            let installId = AppMode.shared.localInstallId
+            let broker = Broker(
+                profileId: installId,
+                brokerName: brokerName,
+                normalizedName: Broker.normalize(brokerName),
+                mcNumber: mcNumber.isEmpty ? nil : mcNumber,
+                totalLoads: 0,
+                totalRevenue: 0
+            )
+            let created = LocalBrokersRepository.shared.create(broker)
+            if !contactName.isEmpty, let brokerId = created.id {
+                let contact = BrokerContact(
+                    brokerId: brokerId,
+                    contactName: contactName,
+                    email: contactEmail.isEmpty ? nil : contactEmail,
+                    phone: contactPhone.isEmpty ? nil : contactPhone,
+                    lastInteractionAt: Date()
+                )
+                _ = LocalBrokerContactsRepository.shared.create(contact)
+            }
+            dismiss()
+            return
+        }
+
+        // ── Cloud Sync (existing path) ──
+        guard let profileId = supabase.client.auth.currentUser?.id else { errorMessage = "Not signed in"; return }
         do {
             let broker = Broker(
                 profileId: profileId,
@@ -289,6 +338,5 @@ struct AddBrokerView: View {
             }
             dismiss()
         } catch { errorMessage = error.localizedDescription }
-        isSaving = false
     }
 }

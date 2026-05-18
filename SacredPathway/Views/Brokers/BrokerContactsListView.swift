@@ -13,6 +13,7 @@ import SwiftUI
 /// Dedupe priority: MC number → email/phone → broker name.
 struct BrokerContactsListView: View {
     @EnvironmentObject var supabase: SupabaseService
+    @ObservedObject private var appMode = AppMode.shared
 
     @State private var rows: [Row] = []
     @State private var isLoading = true
@@ -53,6 +54,9 @@ struct BrokerContactsListView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             VStack(spacing: 0) {
+                if appMode.isLocal {
+                    LocalModeBanner()
+                }
                 // Search bar
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
@@ -267,6 +271,31 @@ struct BrokerContactsListView: View {
     private func reload() async {
         isLoading = true
         defer { isLoading = false }
+
+        // ── Free Local Mode ──
+        // Build rows from the on-device repositories. No network, no auth
+        // — broker_contacts.json + brokers.json are already in memory.
+        if appMode.isLocal {
+            let brokers = await LocalBrokersRepository.shared.fetchAll()
+            var built: [Row] = []
+            for broker in brokers {
+                guard let id = broker.id else { continue }
+                let contacts = await LocalBrokerContactsRepository.shared
+                    .fetch(forBroker: id)
+                built.append(Row(
+                    id: id,
+                    broker: broker,
+                    contact: contacts.first,
+                    lastLoadReference: nil
+                ))
+            }
+            rows = built.sorted { a, b in
+                (a.broker.updatedAt ?? .distantPast) > (b.broker.updatedAt ?? .distantPast)
+            }
+            return
+        }
+
+        // ── Cloud Sync (existing path) ──
         do {
             let brokers = try await supabase.fetchBrokers()
             // Fetch contacts in parallel; cap concurrency at 6 so we don't
@@ -528,9 +557,45 @@ struct ImportContactsSheet: View {
     /// against existing brokers via `Broker.normalize(_:)` so "TQL" and
     /// "Total Quality Logistics" don't end up as two separate companies.
     private func importOne(_ c: ImportedContact) async throws {
-        guard let profileId = supabase.client.auth.currentUser?.id else { return }
         let brokerName = (c.organization?.isEmpty == false ? c.organization! : c.displayName)
         let normalized = Broker.normalize(brokerName)
+
+        // ── Free Local Mode ──
+        if AppMode.shared.isLocal {
+            let installId = AppMode.shared.localInstallId
+            let broker: Broker
+            if let existing = LocalBrokersRepository.shared.findByNormalizedName(normalized) {
+                broker = existing
+            } else {
+                let newBroker = Broker(
+                    profileId: installId,
+                    brokerName: brokerName,
+                    normalizedName: normalized,
+                    mcNumber: nil,
+                    totalLoads: 0,
+                    totalRevenue: 0
+                )
+                broker = LocalBrokersRepository.shared.create(newBroker)
+            }
+            guard let brokerId = broker.id else { return }
+            if LocalBrokerContactsRepository.shared
+                .findContact(brokerId: brokerId, name: c.displayName) != nil {
+                return
+            }
+            let contact = BrokerContact(
+                brokerId: brokerId,
+                contactName: c.displayName,
+                email: c.email,
+                phone: c.phone,
+                phoneExtension: c.phoneExtension,
+                lastInteractionAt: Date()
+            )
+            _ = LocalBrokerContactsRepository.shared.create(contact)
+            return
+        }
+
+        // ── Cloud Sync (existing path) ──
+        guard let profileId = supabase.client.auth.currentUser?.id else { return }
 
         // Try to find an existing broker by normalized name; otherwise create one.
         // Note: `try?` over a throwing function returning `Broker?` flattens to `Broker?`,

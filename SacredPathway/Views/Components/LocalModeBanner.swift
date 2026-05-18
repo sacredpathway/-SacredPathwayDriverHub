@@ -38,7 +38,7 @@ struct LocalModeBanner: View {
                 Text("Free Local Mode")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.spTextPrimary)
-                Text("Stored on this device only")
+                Text("Data saved on this device")
                     .font(.caption2)
                     .foregroundStyle(Color.spTextSecondary)
             }

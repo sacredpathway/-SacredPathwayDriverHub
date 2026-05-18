@@ -225,6 +225,12 @@ struct ManualLoadEntryView: View {
     }
 
     private func loadBrokers() async {
+        // Free Local Mode reads brokers from the on-device repo.
+        if AppMode.shared.isLocal {
+            savedBrokers = await LocalBrokersRepository.shared.fetchAll()
+            updateMatchedBroker()
+            return
+        }
         do {
             savedBrokers = try await supabase.fetchBrokers()
             updateMatchedBroker()
@@ -251,12 +257,29 @@ struct ManualLoadEntryView: View {
     }
 
     private func addBrokerAndFinish() async {
+        let trimmed = brokerName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { showSavedAlert = true; return }
+
+        // Free Local Mode — write directly to on-device repo.
+        if AppMode.shared.isLocal {
+            let installId = AppMode.shared.localInstallId
+            let broker = Broker(
+                profileId: installId,
+                brokerName: trimmed,
+                normalizedName: Broker.normalize(trimmed),
+                mcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                totalLoads: 0,
+                totalRevenue: 0
+            )
+            _ = LocalBrokersRepository.shared.create(broker)
+            showSavedAlert = true
+            return
+        }
+
         guard let profileId = supabase.client.auth.currentUser?.id else {
             showSavedAlert = true
             return
         }
-        let trimmed = brokerName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { showSavedAlert = true; return }
         do {
             let broker = Broker(
                 profileId: profileId,
@@ -334,6 +357,59 @@ struct ManualLoadEntryView: View {
     // MARK: - Save
 
     private func saveLoad() {
+        // ── Free Local Mode ──
+        // Persist via LocalLoadsRepository. profileId is the per-install
+        // UUID; no Supabase auth required.
+        if AppMode.shared.isLocal {
+            isSaving = true
+            errorMessage = nil
+            if let existing = existingLoad, existing.id != nil {
+                var updated = existing
+                updated.loadNumber = loadNumber.isEmpty ? nil : loadNumber
+                updated.brokerName = brokerName.isEmpty ? nil : brokerName
+                updated.brokerMcNumber = brokerMcNumber.isEmpty ? nil : brokerMcNumber
+                updated.origin = origin.isEmpty ? nil : origin
+                updated.destination = destination.isEmpty ? nil : destination
+                updated.totalMiles = Double(totalMiles)
+                updated.lineHaulRate = Double(lineHaulRate)
+                updated.fuelSurcharge = Double(fuelSurcharge)
+                updated.accessorialCharges = Double(accessorialCharges)
+                updated.totalRevenue = computedRevenue > 0 ? computedRevenue : nil
+                LocalLoadsRepository.shared.update(updated)
+                showSavedAlert = true
+            } else {
+                let installId = AppMode.shared.localInstallId
+                let load = Load(
+                    profileId: installId,
+                    loadNumber: loadNumber.isEmpty ? nil : loadNumber,
+                    brokerName: brokerName.isEmpty ? nil : brokerName,
+                    brokerMcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                    origin: origin.isEmpty ? nil : origin,
+                    destination: destination.isEmpty ? nil : destination,
+                    totalMiles: Double(totalMiles),
+                    lineHaulRate: Double(lineHaulRate),
+                    fuelSurcharge: Double(fuelSurcharge),
+                    accessorialCharges: Double(accessorialCharges),
+                    totalRevenue: computedRevenue > 0 ? computedRevenue : nil,
+                    status: "pending"
+                )
+                _ = LocalLoadsRepository.shared.create(load)
+                // Mirror the cloud broker-attribution path: if the typed
+                // broker doesn't yet exist in LocalBrokersRepository, show
+                // the prompt so the user can add it for future scans.
+                updateMatchedBroker()
+                let trimmed = brokerName.trimmingCharacters(in: .whitespaces)
+                if !trimmed.isEmpty, matchedBroker == nil {
+                    showAddBrokerPrompt = true
+                } else {
+                    showSavedAlert = true
+                }
+            }
+            isSaving = false
+            return
+        }
+
+        // ── Cloud Sync (existing path) ──
         guard let profileId = supabase.client.auth.currentUser?.id else {
             errorMessage = "Not logged in"
             return

@@ -6,6 +6,7 @@ struct SettingsView: View {
     // Observed so the "Current: <tier>" label and any other gated copy
     // refresh the moment a purchase or restore changes activeTier.
     @ObservedObject private var subscriptions = SubscriptionService.shared
+    @ObservedObject private var appMode = AppMode.shared
 
     // Pro/upgrade paywall — presented as a sheet from the top "Pro" section.
     // PaywallView itself is unchanged; this is just an additional entry point.
@@ -24,6 +25,9 @@ struct SettingsView: View {
 
             NavigationStack {
                 VStack(spacing: 0) {
+                    if appMode.isLocal {
+                        LocalModeBanner()
+                    }
                     // Sacred Pathway Logo Header
                     VStack(spacing: 12) {
                         Image("SacredPathwayLogo")
