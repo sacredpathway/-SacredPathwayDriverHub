@@ -560,6 +560,18 @@ enum LocalDocumentParser {
             break
         }
 
+        // ---- Pass N+1: rate-con-only broadening (2026-05-18) ----
+        // Real-world rate cons sometimes use labels the generic sweep doesn't
+        // know about: "Confirmation #", "Tender #", "Booking #", "Tracking #",
+        // "RC #", or even bare "Reference #" as the load identifier. They
+        // also sometimes print the rate as "Carrier Rate", "Tender Amount",
+        // "Load Pay", "Total Pay" — labels the generic strong-token list
+        // doesn't cover. This extractor runs ONLY on non-recon docs so the
+        // Ref# protection on settlement statements stays intact.
+        if out.documentType != .recon {
+            RateCon.fill(&out, joined: joined, lines: lines)
+        }
+
         // ---- Final validation: load# vs reference# swap ----
         // If loadNumber is suspiciously short (<= 5 digits, pure numeric)
         // AND a longer freight-style identifier exists in the doc, the short
@@ -568,8 +580,83 @@ enum LocalDocumentParser {
         // and demote the short one into referenceNumber (Info field).
         validateLoadNumberAgainstAlternates(&out, joined: joined)
 
+        // ---- Debug logging (DEBUG builds only) ----
+        // Emits the OCR context around the detected loadNumber + rate and
+        // the final parsed values so the on-device console shows exactly
+        // what the parser saw. Tag: `SP_DEBUG_RATECON`.
+        #if DEBUG
+        logRateConExtraction(out: out, lines: lines)
+        #endif
+
         return out
     }
+
+    #if DEBUG
+    /// Emit `SP_DEBUG_RATECON` lines to the device console showing what the
+    /// parser pulled off the page. Used to triage rate-con parser misses on
+    /// real broker docs — find the lines, paste them into a test fixture,
+    /// regression-test against them.
+    static func logRateConExtraction(out: ParsedLoadFields, lines: [String]) {
+        let tag = "SP_DEBUG_RATECON"
+        print("[\(tag)] documentType=\(out.documentType.rawValue) vendor=\(out.sourceVendor ?? "-")")
+        print("[\(tag)] FINAL loadNumber=\(out.loadNumber ?? "<nil>") rate=\(out.rate.map { String($0) } ?? "<nil>")")
+        print("[\(tag)] FINAL referenceNumber=\(out.referenceNumber ?? "<nil>") poNumber=\(out.poNumber ?? "<nil>")")
+
+        // Show OCR context around the detected load number (±2 lines).
+        if let ln = out.loadNumber, !lines.isEmpty {
+            if let idx = lines.firstIndex(where: { $0.contains(ln) }) {
+                let lo = max(0, idx - 2)
+                let hi = min(lines.count - 1, idx + 2)
+                print("[\(tag)] loadNumber OCR context [\(lo)…\(hi)]:")
+                for i in lo...hi {
+                    let marker = (i == idx) ? "  > " : "    "
+                    print("[\(tag)]\(marker)\(i): \(lines[i])")
+                }
+            } else {
+                print("[\(tag)] loadNumber=\(ln) but NOT found verbatim in any OCR line — picked up by post-pass.")
+            }
+        } else {
+            print("[\(tag)] loadNumber=<nil> — no label matched. Top 12 OCR lines:")
+            for (i, line) in lines.prefix(12).enumerated() {
+                print("[\(tag)]    \(i): \(line)")
+            }
+        }
+
+        // Show OCR context around the detected rate amount.
+        if let r = out.rate {
+            // Pretty-print the value with both a `$` form and a comma-grouped
+            // form so we can locate it whether OCR kept formatting or not.
+            let plain = String(format: "%.2f", r)
+            let dollarPlain = "$" + plain
+            let withCommas: String = {
+                let fmt = NumberFormatter()
+                fmt.numberStyle = .currency
+                fmt.locale = Locale(identifier: "en_US")
+                return fmt.string(from: NSNumber(value: r)) ?? plain
+            }()
+            let dropCents = String(Int(r))
+            if let idx = lines.firstIndex(where: {
+                $0.contains(plain) || $0.contains(dollarPlain) ||
+                $0.contains(withCommas) || $0.contains(dropCents)
+            }) {
+                let lo = max(0, idx - 2)
+                let hi = min(lines.count - 1, idx + 2)
+                print("[\(tag)] rate OCR context [\(lo)…\(hi)]:")
+                for i in lo...hi {
+                    let marker = (i == idx) ? "  > " : "    "
+                    print("[\(tag)]\(marker)\(i): \(lines[i])")
+                }
+            } else {
+                print("[\(tag)] rate=\(plain) but NOT found verbatim in any OCR line.")
+            }
+        } else {
+            print("[\(tag)] rate=<nil> — no rate label matched. Dumping any $ lines:")
+            for (i, line) in lines.enumerated() where line.contains("$") {
+                print("[\(tag)]    \(i): \(line)")
+            }
+        }
+    }
+    #endif
 
     // MARK: - Vendor detection
 
@@ -1150,6 +1237,192 @@ enum LocalDocumentParser {
             if out.shipperName == nil {
                 out.shipperName = "Lowe's Home Centers, LLC"
                 out.confidence["shipperName"] = 0.6
+            }
+        }
+    }
+
+    // MARK: - Rate-con-specific broadening (2026-05-18)
+
+    /// Rate-confirmation extractor that fires AFTER the generic regex sweep
+    /// and AFTER any vendor-specific override. Its job is to fill in the
+    /// `loadNumber` and `rate` fields when the generic patterns missed.
+    ///
+    /// Critical constraint — **NEVER runs on recon/settlement docs.**
+    /// The caller already gates this with `documentType != .recon`, but the
+    /// guard at the top of `fill` re-asserts that invariant. Rate-con docs
+    /// use a much wider label vocabulary (Confirmation #, Tender #, Booking
+    /// #, sometimes even plain Reference #) — promoting any of those on a
+    /// recon doc would defeat the existing Ref# protection.
+    ///
+    /// Strategy:
+    ///   1. If `loadNumber` is missing, try a broadened label list
+    ///      (confirmation, conf, tender, booking, tracking, rc, carrier id,
+    ///      load id) on the same line as the value.
+    ///   2. If STILL missing, allow "Reference"/"Ref" as a load-number
+    ///      fallback on rate cons only — many broker rate cons literally
+    ///      label the load identifier as "Reference Number".
+    ///   3. If STILL missing, pick the most freight-like alphanumeric in
+    ///      the top 25 OCR lines, excluding tokens that are obviously a
+    ///      phone, MC, weight, mileage, date, or dollar amount.
+    ///   4. Then for `rate`: a broader strong-token list (Carrier Rate,
+    ///      Tender Amount, Load Pay, Total Pay, Pay Amount, Booked Rate,
+    ///      Trip Pay).
+    enum RateCon {
+        static func fill(_ out: inout ParsedLoadFields,
+                         joined: String,
+                         lines: [String]) {
+
+            // Hard guard — never touch recon docs.
+            guard out.documentType != .recon else { return }
+
+            // ── Step 1: broader label-based loadNumber patterns ──
+            if out.loadNumber == nil {
+                // Note: keep "ref|reference" OUT of this list. Those land
+                // in step 2, where we re-check that it's a rate-con only.
+                let labels: [String] = [
+                    "confirmation", "rate\\s*confirmation", "load\\s*confirmation",
+                    "conf",
+                    "tender",
+                    "booking",
+                    "tracking",
+                    "rc",
+                    "carrier\\s*id", "carrier\\s*number",
+                    "load\\s*id", "load"
+                ]
+                for label in labels {
+                    let pat = #"(?i)\b"# + label + #"[ \t]*(?:number|no\.?|num\.?|id|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{3,20})"#
+                    if let raw = firstRegex(joined, pattern: pat) {
+                        let v = raw.cleanID
+                        guard v.contains(where: { $0.isNumber }) else { continue }
+                        // Skip if value is just a label word (e.g. "Number",
+                        // "Carrier", "Pickup") — these slip through when the
+                        // OCR puts two labels next to each other.
+                        let lower = v.lowercased()
+                        let bad: Set<String> = [
+                            "number", "carrier", "pickup", "delivery",
+                            "shipper", "consignee", "reference", "phone",
+                            "broker"
+                        ]
+                        if bad.contains(lower) { continue }
+                        out.loadNumber = v
+                        out.confidence["loadNumber"] = 0.9
+                        break
+                    }
+                }
+            }
+
+            // ── Step 2: "Reference" / "Ref" as a load-number fallback ──
+            // ONLY for rate cons — recon docs are gated out by the top-of-
+            // function guard. A real-world rate con often labels its load
+            // identifier as "Reference Number" (CHR, Convoy, sometimes TQL).
+            // If we've already pulled a generic-regex load number, leave it
+            // alone.
+            if out.loadNumber == nil {
+                let refPattern = #"(?i)\b(?:reference|ref)[ \t]*(?:number|num|no\.?|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{4,20})"#
+                if let raw = firstRegex(joined, pattern: refPattern) {
+                    let v = raw.cleanID
+                    if v.contains(where: { $0.isNumber }), v.count >= 5 {
+                        out.loadNumber = v
+                        out.confidence["loadNumber"] = 0.75
+                        // Don't double-fill referenceNumber with the same
+                        // value — it would render twice in the review screen.
+                        if out.referenceNumber == v {
+                            out.referenceNumber = nil
+                        }
+                    }
+                }
+            }
+
+            // ── Step 3: positional fallback in top 25 OCR lines ──
+            // Last-ditch: rate cons commonly print the load number near the
+            // top with no useful label ("12345678" stamped under the logo).
+            // Find the longest digit-only / alphanumeric token in the top
+            // 25 lines that isn't obviously a phone, MC#, weight, miles,
+            // date, time, or dollar amount.
+            if out.loadNumber == nil {
+                let topSlice = Array(lines.prefix(25))
+                var bestToken: String?
+                for line in topSlice {
+                    let lower = line.lowercased()
+                    // Skip lines that are obviously something else.
+                    if lower.contains("phone") || lower.contains("fax")
+                        || lower.contains("mc#") || lower.contains("mc ")
+                        || lower.contains("weight") || lower.contains("wt")
+                        || lower.contains("miles") || lower.contains("mi.")
+                        || lower.contains("$") || lower.contains("zip")
+                        || lower.contains("dot") || lower.contains("ein") {
+                        continue
+                    }
+                    // Skip date-ish lines.
+                    if firstRegex(line, pattern: #"\b\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}\b"#) != nil { continue }
+                    // Pull every alphanumeric token in the line that could
+                    // be a freight ID (6–12 chars, contains a digit).
+                    let candidates = allMatches(
+                        line,
+                        pattern: #"\b([A-Z]{0,4}\-?[0-9]{5,10}|[0-9]{6,10}|[A-Z]{2,}[0-9]{4,})\b"#
+                    )
+                    for c in candidates {
+                        let clean = c.cleanID
+                        guard clean.contains(where: { $0.isNumber }) else { continue }
+                        // Exclude tokens that look like phone numbers (10 digits).
+                        if clean.allSatisfy({ $0.isNumber }), clean.count == 10 { continue }
+                        // Exclude tokens that look like zip codes (5 digits).
+                        if clean.allSatisfy({ $0.isNumber }), clean.count == 5 { continue }
+                        // Exclude already-known fields.
+                        if clean == out.brokerMcNumber || clean == out.poNumber
+                            || clean == out.trailerNumber || clean == out.bolNumber {
+                            continue
+                        }
+                        // Keep the longest.
+                        if (bestToken?.count ?? 0) < clean.count {
+                            bestToken = clean
+                        }
+                    }
+                }
+                if let pick = bestToken, pick.count >= 6 {
+                    out.loadNumber = pick
+                    out.confidence["loadNumber"] = 0.55
+                }
+            }
+
+            // ── Step 4: broader rate-amount patterns ──
+            // Only run if `rate` is still nil — the existing strong/weak
+            // token sweep (in extractFields) was authoritative when it hit.
+            if out.rate == nil {
+                let keywords = [
+                    "carrier\\s*rate", "carrier\\s*pay",
+                    "tender\\s*(?:amount|rate|pay)?",
+                    "load\\s*pay", "load\\s*amount", "load\\s*rate",
+                    "total\\s*pay", "pay\\s*amount", "pay\\s*total",
+                    "booked\\s*rate", "trip\\s*pay",
+                    "agreed\\s*amount", "agreed\\s*rate"
+                ]
+                if let v = extractMoney(joined, keywords: keywords) {
+                    out.rate = v
+                    out.confidence["rate"] = 0.85
+                }
+            }
+
+            // ── Step 5: bare "$X,XXX" inside the rate-confirmation block ──
+            // CHR/Convoy/TQL sometimes print only "$3,250.00" on its own
+            // line under a label like "Carrier Rate Confirmation" with no
+            // explicit "Rate:" token in front. If we still have nothing,
+            // pick the largest standalone dollar amount in the top 60% of
+            // the doc and treat it as the rate. Guarded so we never
+            // overwrite a value the strong-token sweep already chose.
+            if out.rate == nil, lines.count > 0 {
+                let cut = max(1, (lines.count * 6) / 10)
+                let topHalf = lines.prefix(cut).joined(separator: "\n")
+                let amounts = allMatches(
+                    topHalf,
+                    pattern: #"\$\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[0-9]{3,6}(?:\.[0-9]{1,2})?)"#
+                )
+                .compactMap { Double($0.replacingOccurrences(of: ",", with: "")) }
+                .filter { $0 >= 200 && $0 <= 50_000 }
+                if let max = amounts.max() {
+                    out.rate = max
+                    out.confidence["rate"] = 0.5
+                }
             }
         }
     }
