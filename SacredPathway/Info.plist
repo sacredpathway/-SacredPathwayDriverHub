@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Encryption compliance — answer "No" once, baked into the binary.
+	     Driver Hub uses only HTTPS (Supabase + Cloudflare Pages) and the
+	     iOS / Apple-provided crypto. No custom cryptography → ECCN 5D002
+	     does not apply → ITSAppUsesNonExemptEncryption = NO. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSPhotoLibraryAddOnlyUsageDescription</key>
 	<string>Sacred Pathway needs permission to save generated paystubs and processed documents to your photo library.</string>
 	<key>NSContactsUsageDescription</key>
