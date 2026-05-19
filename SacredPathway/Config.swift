@@ -100,12 +100,12 @@ enum Config {
     enum Web {
         static let dashboardURL = URL(string: "https://app.sacredpathway.org/")!
 
-        /// Gate for the Settings → Web Access row. Flip to `true` only
-        /// after `dashboardURL` is actually deployed and returns 200.
-        /// While false the row is hidden — keeps users (and App Review)
-        /// from hitting a dead link on `app.sacredpathway.org`, which
-        /// currently has no DNS record.
-        static let portalLive = false
+        /// Gate for the Settings → Web Access row. Flipped to `true`
+        /// 2026-05-18 after the Cloudflare Pages deploy at
+        /// `https://app.sacredpathway.org` verified live + HTTPS + auth
+        /// (email/password sign-in working). Cloud Sync users can now
+        /// open the web dashboard from inside the iOS app.
+        static let portalLive = true
     }
 
     // MARK: - Legal URLs

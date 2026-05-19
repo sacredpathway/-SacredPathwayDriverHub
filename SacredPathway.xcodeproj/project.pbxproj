@@ -909,7 +909,7 @@
 				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 29;
+				CURRENT_PROJECT_VERSION = 30;
 				DEVELOPMENT_TEAM = DCCSGYD5A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SacredPathway/Info.plist;
@@ -925,7 +925,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway;
 				PRODUCT_NAME = SacredPathway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -943,7 +943,7 @@
 				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 29;
+				CURRENT_PROJECT_VERSION = 30;
 				DEVELOPMENT_TEAM = DCCSGYD5A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SacredPathway/Info.plist;
@@ -959,7 +959,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway;
 				PRODUCT_NAME = SacredPathway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
