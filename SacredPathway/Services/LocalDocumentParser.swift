@@ -595,6 +595,45 @@ enum LocalDocumentParser {
         // and demote the short one into referenceNumber (Info field).
         validateLoadNumberAgainstAlternates(&out, joined: joined)
 
+        // ---- PO ↔ Load mirror fallback (2026-05-21) ----
+        // Real-world rate cons frequently print only ONE identifier the
+        // carrier needs — sometimes labeled "Load #", sometimes "PO #",
+        // sometimes "Confirmation #". When the doc gives only one of the
+        // pair, mirror it into the other so the carrier doesn't have to
+        // type the same number twice on the review screen.
+        //
+        // Rules:
+        //   • If both are set AND different → DO NOT touch. The broker
+        //     deliberately printed two distinct values; respect that.
+        //   • If both are set AND equal → leave alone (already mirrored).
+        //   • If exactly one is set → copy it into the empty one with the
+        //     same confidence so downstream UI / save-paths treat the
+        //     mirrored value as if the parser had explicitly found it.
+        //   • If both are nil → no-op. Carrier types it themselves.
+        //
+        // Skip for recon / settlement docs — those legitimately list a
+        // PO# that's the original tender plus a separate load# the broker
+        // uses for the remittance run; mirroring would corrupt history.
+        if out.documentType != .recon {
+            switch (out.loadNumber, out.poNumber) {
+            case (nil, let po?):
+                out.loadNumber = po
+                // Mark slightly lower than the source — this value was
+                // inferred, not directly extracted from a "Load #" label.
+                out.confidence["loadNumber"] = (out.confidence["poNumber"] ?? 0.8) * 0.95
+            case (let ln?, nil):
+                out.poNumber = ln
+                out.confidence["poNumber"] = (out.confidence["loadNumber"] ?? 0.8) * 0.95
+            case (let ln?, let po?) where ln == po:
+                // Already equal — nothing to do.
+                _ = (ln, po)
+            default:
+                // Either both nil (no-op) or both set to DIFFERENT values
+                // (respect the broker's explicit distinction — do nothing).
+                break
+            }
+        }
+
         // ---- Debug logging (DEBUG builds only) ----
         // Emits the OCR context around the detected loadNumber + rate and
         // the final parsed values so the on-device console shows exactly

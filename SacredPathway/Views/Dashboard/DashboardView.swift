@@ -12,6 +12,10 @@ struct DashboardView: View {
     @State private var allExpenses: [Expense] = []
     @State private var isLoading = true
     @State private var selectedPeriod: TimePeriod = .allTime
+    /// Human-readable error surfaced when fetchLoads / fetchAllExpenses
+    /// throws. Without this, a network blip or expired token would silently
+    /// produce a zero-dollar dashboard that looks identical to "no data".
+    @State private var loadError: String? = nil
 
     /// Source of truth for dashboard totals. Local Mode pulls from the
     /// on-device JSON store; cloud mode keeps the existing @State loads
@@ -65,6 +69,9 @@ struct DashboardView: View {
                         }
                         headerSection
                         periodPicker
+                        if let loadError {
+                            loadErrorBanner(message: loadError)
+                        }
                         financialCards
                         metricsRow
                         expenseBreakdown
@@ -329,9 +336,41 @@ struct DashboardView: View {
         }
     }
 
+    // MARK: - Error banner
+
+    /// Inline red-tinted card shown above the tiles when the most recent
+    /// fetch threw. Replaces the previous silent failure (catch { print }).
+    /// Tappable in the future if we want a retry shortcut; today the
+    /// existing pull-to-refresh / .task path is the recovery mechanism.
+    @ViewBuilder
+    private func loadErrorBanner(message: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(Color.spDanger)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Couldn't refresh dashboard")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.spTextPrimary)
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+        }
+        .padding(12)
+        .background(Color.spDanger.opacity(0.10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.spDanger.opacity(0.35), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
     // MARK: - Data Loading
     private func loadData() async {
         isLoading = true
+        loadError = nil
         // Free Local Mode: LocalLoadsRepository and LocalExpensesRepository
         // are already in memory from disk on app launch. The dashboard
         // observes them via @ObservedObject, so the totals refresh
@@ -344,7 +383,11 @@ struct DashboardView: View {
             loads = try await supabase.fetchLoads()
             allExpenses = try await supabase.fetchAllExpenses()
         } catch {
+            // Surface to UI so a network blip / expired token doesn't look
+            // like "your data is gone". The Console log stays so the
+            // engineering team still has the full error available in Xcode.
             print("Error loading dashboard: \(error)")
+            loadError = "Couldn't load your latest data: \(error.localizedDescription). Pull down to retry."
         }
         isLoading = false
     }

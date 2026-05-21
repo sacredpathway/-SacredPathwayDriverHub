@@ -67,6 +67,33 @@ struct SettingsView: View {
                                         }
                                     }
                                 }
+
+                                // ── Escape hatch out of Free Local Mode ──
+                                // For users who picked Local Mode on WelcomeView
+                                // but actually have an existing Cloud Sync
+                                // account with data in Supabase. Tapping this
+                                // calls AppMode.setCloud() which flips the
+                                // mode flag in UserDefaults; the root view
+                                // re-routes through AccessGate → LoginView on
+                                // the next render. Local JSON data stays on
+                                // disk (BackupRestoreView can still export it
+                                // after the switch). No Supabase write, no
+                                // migration, no data reset.
+                                Button {
+                                    appMode.setCloud()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "icloud.and.arrow.up")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Switch to Cloud Sync")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Sign in to see your Supabase account data")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                    }
+                                }
                             }
                             .listRowBackground(Color.spCardBg)
                             .headerProminence(.increased)
