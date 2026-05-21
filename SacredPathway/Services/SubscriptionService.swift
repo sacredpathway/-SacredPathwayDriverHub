@@ -44,6 +44,48 @@ enum SubscriptionTier: String, CaseIterable, Identifiable, Comparable {
     }
 }
 
+/// Public access level the UI reads to choose between "Free Basic" copy,
+/// "You're subscribed" copy, and feature gating. Centralizes the rule
+/// "no active paid entitlement = Free Basic" so individual views never
+/// need to interpret StoreKit transactions themselves.
+///
+/// Mapping (from `SubscriptionService.activeTier`):
+///   .free    → .freeBasic   (no paid entitlement OR unrecognized product)
+///   .pro     → .pro         (Pro Monthly, Pro Annual, or Driver Hub Pro Monthly)
+///   .carrier → .carrier     (Carrier Monthly or Carrier Annual)
+///
+/// Important: Free Basic is an in-app concept. There is NO $0 product in
+/// App Store Connect — the user just doesn't have an active paid receipt.
+/// Apple's $0-subscription policies don't apply because nothing is being
+/// purchased.
+enum AccessLevel: String, CaseIterable, Identifiable, Comparable {
+    case freeBasic
+    case pro
+    case carrier
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .freeBasic: return "Free Basic"
+        case .pro:       return "Pro"
+        case .carrier:   return "Carrier"
+        }
+    }
+
+    /// True only for paid tiers. The paywall uses this to flip the header
+    /// from "upgrade" copy to "you're subscribed" copy.
+    var isPaid: Bool { self != .freeBasic }
+
+    private var rank: Int {
+        switch self { case .freeBasic: 0; case .pro: 1; case .carrier: 2 }
+    }
+
+    static func < (lhs: AccessLevel, rhs: AccessLevel) -> Bool {
+        lhs.rank < rhs.rank
+    }
+}
+
 /// Loading state for the product list. Drives the paywall UI.
 enum ProductLoadState: Equatable {
     case idle
@@ -264,6 +306,25 @@ final class SubscriptionService: ObservableObject {
     }
 
     // MARK: - Entitlement API (single source of truth)
+
+    /// Public access level for the UI to read. Maps `activeTier` to the
+    /// `AccessLevel` vocabulary (`.freeBasic` instead of `.free`) so paywall
+    /// + Free Basic logic has one canonical thing to switch on.
+    ///
+    /// Free-only launch override: if the master subscription flag is off,
+    /// every user is reported as Carrier so all features unlock (the dev /
+    /// pre-launch state).
+    var accessLevel: AccessLevel {
+        #if DEBUG
+        if DemoMode.unlockAllFeatures { return .carrier }
+        #endif
+        if !FeatureFlags.subscriptionsEnabled { return .carrier }
+        switch activeTier {
+        case .free:    return .freeBasic
+        case .pro:     return .pro
+        case .carrier: return .carrier
+        }
+    }
 
     /// Does the user have access to Pro features? (true if active tier is Pro OR Carrier)
     var hasProAccess: Bool {

@@ -44,7 +44,13 @@ struct PaywallView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         header
-                        tierPicker
+
+                        // Tier picker is only meaningful when the user is
+                        // shopping. For already-subscribed users we render
+                        // the subscribed state directly with no picker.
+                        if !sub.accessLevel.isPaid {
+                            tierPicker
+                        }
 
                         content
 
@@ -101,26 +107,93 @@ struct PaywallView: View {
     }
 
     // MARK: - Header
+    //
+    // Header copy is now state-aware. Three states:
+    //   1. Subscribed (.pro / .carrier) → "You're subscribed to <X>" with no
+    //      trial headline at all. Manage Subscription + Close are the only
+    //      actions surfaced; the product list is hidden via `subscribedState`.
+    //   2. Free Basic and the SELECTED tier has at least one product with a
+    //      StoreKit-confirmed free trial → trial headline.
+    //   3. Free Basic and the selected tier has no eligible free trial →
+    //      neutral "Upgrade" headline. Never lie about a trial that doesn't
+    //      exist for the product the user is about to buy.
 
+    @ViewBuilder
     private var header: some View {
+        if sub.accessLevel.isPaid {
+            subscribedHeader
+        } else {
+            freeBasicHeader
+        }
+    }
+
+    /// "You're subscribed to <Tier>" — no trial pitch, no upgrade urgency.
+    private var subscribedHeader: some View {
         VStack(spacing: 10) {
-            Image(systemName: "sparkles")
+            Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 36))
-                .foregroundStyle(Color.spGold)
-            Text("Start Your 7-Day Free Trial")
+                .foregroundStyle(Color.spSuccess)
+            Text("You're subscribed to \(sub.accessLevel.displayName)")
                 .font(.title2.weight(.bold))
                 .foregroundStyle(Color.spTextPrimary)
                 .multilineTextAlignment(.center)
+            Text(subscribedBlurb)
+                .font(.caption)
+                .foregroundStyle(Color.spTextSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+        }
+    }
 
-            // Gating-context tagline. Visible only when the paywall is
-            // acting as the access gate so brand-new users immediately
-            // see the value-for-money pitch.
-            if isGatedFullScreen {
-                Text("Create your account for free. Try Driver Hub Pro free for 7 days.")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.spGoldLight)
+    private var subscribedBlurb: String {
+        switch sub.accessLevel {
+        case .pro:
+            return "Pro unlocks unlimited loads, PDF paystub export, broker intelligence, and Smart Insights."
+        case .carrier:
+            return "Carrier unlocks everything in Pro plus multi-driver, white-label paystubs, driver scorecard, and IFTA auto-tracking."
+        case .freeBasic:
+            return ""
+        }
+    }
+
+    /// Free Basic + tier-aware. Only shows the 7-day trial headline if the
+    /// SELECTED tier has at least one StoreKit-confirmed free intro offer.
+    /// Otherwise we render a neutral upgrade headline so reviewers and
+    /// already-subscribed (but mis-detected) users don't see false promises.
+    private var freeBasicHeader: some View {
+        let selectedTierHasTrial = sub.products(for: selectedTier).contains { $0.hasFreeTrialOffer }
+
+        return VStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 36))
+                .foregroundStyle(Color.spGold)
+
+            if selectedTierHasTrial {
+                Text("Start Your Free Trial")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(Color.spTextPrimary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 8)
+
+                if isGatedFullScreen {
+                    Text("Create your account for free. Try \(selectedTier.displayName) free, then keep going if you love it.")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.spGoldLight)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
+                }
+            } else {
+                Text("Upgrade to \(selectedTier.displayName)")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(Color.spTextPrimary)
+                    .multilineTextAlignment(.center)
+
+                if isGatedFullScreen {
+                    Text("Create your account for free. Pick a plan to unlock the full app.")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.spGoldLight)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
+                }
             }
 
             Text("Unlimited loads, PDF paystub exports, broker intelligence, and fleet-level tools — all in one place.")
@@ -145,13 +218,73 @@ struct PaywallView: View {
 
     @ViewBuilder
     private var content: some View {
-        switch sub.loadState {
-        case .idle, .loading:
-            loadingState
-        case .failed(let message):
-            errorState(message: message)
-        case .loaded:
-            loadedState
+        if sub.accessLevel.isPaid {
+            // Already subscribed — never show purchase CTAs again here.
+            // Manage Subscription deep-links to Apple's subscription page,
+            // which is the only correct way to upgrade / downgrade /
+            // cancel an active subscription on iOS.
+            subscribedState
+        } else {
+            switch sub.loadState {
+            case .idle, .loading:
+                loadingState
+            case .failed(let message):
+                errorState(message: message)
+            case .loaded:
+                loadedState
+            }
+        }
+    }
+
+    /// "You're subscribed" block — replaces the product list for paid users.
+    /// Two actions only: Manage Subscription (Apple), Close (or Sign Out if
+    /// we somehow got here from the gated full-screen path, which shouldn't
+    /// happen for a subscribed user but is handled defensively).
+    private var subscribedState: some View {
+        VStack(spacing: 14) {
+            tierSummaryCard(activeSubscribedTier)
+
+            // Apple's deep-link to system Subscriptions. Same URL the
+            // SubscriptionSettingsView screen uses.
+            Link(destination: Config.Legal.manageSubscriptionsURL) {
+                HStack {
+                    Image(systemName: "gearshape.fill")
+                    Text("Manage Subscription")
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                }
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.spGold)
+                .foregroundStyle(Color.spBlack)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+
+            Button {
+                dismiss()
+            } label: {
+                Text("Close")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.spCardBg)
+                    .foregroundStyle(Color.spGold)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.spGold.opacity(0.4), lineWidth: 1))
+            }
+        }
+    }
+
+    /// Bridge `AccessLevel` → `SubscriptionTier` for the tier summary card.
+    /// (We can't reuse `selectedTier` because the user could have toggled
+    /// the picker before becoming subscribed; we always render their actual
+    /// active tier in the subscribed state.)
+    private var activeSubscribedTier: SubscriptionTier {
+        switch sub.accessLevel {
+        case .pro:       return .pro
+        case .carrier:   return .carrier
+        case .freeBasic: return .pro    // unreachable in subscribedState
         }
     }
 
@@ -341,16 +474,24 @@ struct PaywallView: View {
         }
     }
 
-    /// Apple-compliant per-product disclosure shown next to the CTA. Pulls the
-    /// price + period from StoreKit so the wording always matches App Store
-    /// Connect — no risk of stale hardcoded copy triggering a 3.1.2 rejection.
+    /// Apple-compliant per-product disclosure shown next to the CTA. Pulls
+    /// the trial length, price, and period from StoreKit so the wording always
+    /// matches App Store Connect — no risk of stale hardcoded copy triggering
+    /// a 3.1.2 rejection. Only invoked when `product.hasFreeTrialOffer` is true
+    /// (caller-gated), so the trial sentence is guaranteed to be accurate.
     private func trialDisclosure(for product: Product) -> String {
         let price = product.displayPrice
         let period = product.billingPeriodText.isEmpty
             ? "per renewal period"
             : product.billingPeriodText
+        // freeTrialSummary already contains the StoreKit-confirmed length,
+        // e.g. "7 days free, then $49.99/per month". Falling back to a
+        // generic phrasing here is defensive — caller never invokes this
+        // function unless hasFreeTrialOffer is true.
+        let trial = product.freeTrialSummary ?? "Free trial included."
+        let name = product.displayName.isEmpty ? "this plan" : product.displayName
         return """
-        Start your 7-day free trial. After the trial, \(product.displayName.isEmpty ? "Driver Hub Pro" : product.displayName) auto-renews at \(price) \(period) until canceled. Cancel anytime in your Apple ID Subscriptions settings at least 24 hours before the trial ends to avoid charges. Payment is charged to your Apple ID at confirmation of purchase.
+        \(trial). After the trial, \(name) auto-renews at \(price) \(period) until canceled. Cancel anytime in your Apple ID Subscriptions settings at least 24 hours before the trial ends to avoid charges. Payment is charged to your Apple ID at confirmation of purchase.
         """
     }
 
