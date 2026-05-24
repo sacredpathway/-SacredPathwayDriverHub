@@ -34,12 +34,12 @@ struct SmartInsightsView: View {
     }
 
     var weeklyProfit: Double {
-        // Use the user-configured pay-week (Settings → Pay Week) so
-        // "This Week" profit matches the rest of the app's weekly totals.
+        // Loads are bucketed by PICKUP DATE — single source of truth per
+        // the weekly-grouping spec (2026-05-24). Expenses keep createdAt
+        // (no pickup-date concept on expenses).
         let week = PayWeekService.shared.weekInterval()
-        let weekLoads = loads.filter { load in
-            let d = load.createdAt ?? .distantPast
-            return d >= week.start && d < week.end
+        let weekLoads = loads.filter {
+            PayWeekService.pickupFalls(in: week, pickupDate: $0.pickupDate)
         }
         let weekExpenses = expenses.filter { exp in
             let d = exp.createdAt ?? .distantPast

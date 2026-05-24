@@ -36,9 +36,16 @@ struct DashboardView: View {
     }
 
     // MARK: - Computed Metrics
+    // Loads are bucketed by PICKUP DATE — the single source of truth for
+    // week/month grouping per the user spec (2026-05-24). Do not switch
+    // back to createdAt: loads created today for a Friday pickup must
+    // belong to Friday's week, not today's. Loads with a nil pickupDate
+    // are excluded from week/month windows by design.
     var filteredLoads: [Load] {
-        filterByPeriod(sourceLoads, keyPath: \.createdAt)
+        filterByPeriod(sourceLoads, keyPath: \.pickupDate)
     }
+    // Expenses keep `createdAt` — they have no pickup-date concept and
+    // are not part of the "weekly load grouping" spec.
     var filteredExpenses: [Expense] {
         filterByPeriod(sourceExpenses, keyPath: \.createdAt)
     }

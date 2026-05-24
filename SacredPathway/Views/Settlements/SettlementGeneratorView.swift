@@ -77,13 +77,12 @@ struct SettlementGeneratorView: View {
                     if loadDriver != driverId { return false }
                 }
             }
-            // Period filter — match on pickup date OR delivery date OR
-            // created_at falling within the period.
-            let candidates = [load.pickupDate, load.deliveryDate, load.createdAt].compactMap { $0 }
-            let inPeriod = candidates.contains { date in
-                date >= startOfDay(periodStart) && date <= endOfDay(periodEnd)
-            }
-            return inPeriod || candidates.isEmpty // include undated loads as fallback
+            // Period filter — PICKUP DATE is the single source of truth
+            // for which settlement period a load belongs to (spec
+            // 2026-05-24). No delivery or createdAt fallback. Loads
+            // without a pickup date are excluded from the period.
+            guard let d = load.pickupDate else { return false }
+            return d >= startOfDay(periodStart) && d <= endOfDay(periodEnd)
         }
     }
 

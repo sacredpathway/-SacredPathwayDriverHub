@@ -77,6 +77,27 @@ final class PayWeekService: ObservableObject {
         return date >= interval.start && date < interval.end
     }
 
+    // MARK: - Pickup-date week grouping (single source of truth for loads)
+    //
+    // Per spec (2026-05-24): every load belongs to the week that contains
+    // its PICKUP DATE. Do not use delivery date, creation date, or upload
+    // date. Loads without a pickup date are excluded from weekly buckets.
+    // Use these helpers everywhere loads are filtered into a week so the
+    // rule stays consistent across Dashboard, Loads list, Insights,
+    // Settlements, Share Summary, and reports.
+
+    /// Returns true when `pickupDate` falls inside `week` (half-open
+    /// interval [start, end)). Nil pickup → false (load is not in any week).
+    static func pickupFalls(in week: DateInterval, pickupDate: Date?) -> Bool {
+        guard let d = pickupDate else { return false }
+        return d >= week.start && d < week.end
+    }
+
+    /// Convenience: does this `pickupDate` fall inside the current pay-week?
+    func pickupIsInCurrentPayWeek(_ pickupDate: Date?, now: Date = Date()) -> Bool {
+        Self.pickupFalls(in: weekInterval(for: now), pickupDate: pickupDate)
+    }
+
     /// End-of-week display (e.g. "Sunday" when start = Monday).
     var endDayDisplayName: String {
         let endIdx = ((firstWeekday - 1 + 6) % 7) + 1

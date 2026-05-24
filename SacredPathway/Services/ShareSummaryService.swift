@@ -119,10 +119,13 @@ enum ShareSummaryService {
     ) -> Summary {
         let (rangeStart, rangeEnd) = range.interval
 
-        // Loads — keyed off pickup_date if present, else created_at.
+        // Loads — keyed off PICKUP DATE only. Single source of truth per
+        // the weekly-grouping spec (2026-05-24): no fallback to
+        // deliveryDate or createdAt. Loads without a pickup date are
+        // excluded from every range filter — they have no week to
+        // belong to.
         func loadInRange(_ l: Load) -> Bool {
-            let candidate = l.pickupDate ?? l.deliveryDate ?? l.createdAt
-            guard let d = candidate else { return false }
+            guard let d = l.pickupDate else { return false }
             return d >= rangeStart && d < rangeEnd
         }
         let loads = allLoads.filter(loadInRange)

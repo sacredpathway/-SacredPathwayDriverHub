@@ -258,14 +258,14 @@ struct LoadDetailView: View {
 
     /// Compute this pay-week's total revenue (across ALL loads, not just
     /// this load). Surfaced at the bottom of the share text as a quick
-    /// "for context" footer per the user spec.
+    /// "for context" footer per the user spec. PICKUP DATE only — single
+    /// source of truth per the weekly-grouping spec (2026-05-24).
     private func loadWeeklyRevenueTotal() async {
         do {
             let all = try await supabase.fetchLoads()
             let week = PayWeekService.shared.weekInterval()
             let total = all.reduce(0.0) { acc, l in
-                let d = l.pickupDate ?? l.createdAt ?? .distantPast
-                guard d >= week.start && d < week.end else { return acc }
+                guard PayWeekService.pickupFalls(in: week, pickupDate: l.pickupDate) else { return acc }
                 return acc + (l.totalRevenue ?? 0)
             }
             weeklyRevenueTotal = total

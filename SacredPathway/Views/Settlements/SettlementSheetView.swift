@@ -651,10 +651,13 @@ struct SettlementSheetView: View {
         defer { savedLoadsLoading = false }
         do {
             let all = try await supabase.fetchLoads()
+            // PICKUP DATE is the single source of truth for settlement-
+            // period membership (spec 2026-05-24). Loads without a pickup
+            // date are not picked up by the period filter.
             savedLoadsForPicker = all.filter { load in
-                let candidate = load.deliveryDate ?? load.pickupDate ?? load.createdAt ?? Date()
-                return candidate >= startOfDay(periodStart) &&
-                       candidate <= endOfDay(periodEnd)
+                guard let d = load.pickupDate else { return false }
+                return d >= startOfDay(periodStart) &&
+                       d <= endOfDay(periodEnd)
             }
         } catch {
             savedLoadsForPicker = []

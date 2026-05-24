@@ -909,7 +909,7 @@
 				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = DCCSGYD5A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SacredPathway/Info.plist;
@@ -943,7 +943,7 @@
 				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = DCCSGYD5A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SacredPathway/Info.plist;

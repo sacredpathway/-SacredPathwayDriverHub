@@ -36,14 +36,14 @@ struct LoadsListView: View {
     }
 
     /// Loads filtered to the current pay-week unless "All Loads" is selected.
-    /// Filter key: pickupDate when present, otherwise createdAt. This handles
-    /// loads created before pickup is known and back-dated entries.
+    /// Filter key: PICKUP DATE only — single source of truth per spec
+    /// (2026-05-24). Loads without a pickup date are excluded from
+    /// "This Week" (they still show under "All Loads").
     private var visibleLoads: [Load] {
         if showAllLoads { return sourceLoads }
         let week = payWeek.weekInterval()
-        return sourceLoads.filter { load in
-            let d = load.pickupDate ?? load.createdAt ?? .distantPast
-            return d >= week.start && d < week.end
+        return sourceLoads.filter {
+            PayWeekService.pickupFalls(in: week, pickupDate: $0.pickupDate)
         }
     }
 

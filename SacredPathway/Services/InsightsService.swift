@@ -486,8 +486,11 @@ enum PerformanceAnalytics {
     static func summary(loads: [Load], expenses: [Expense], window: Window = .last30Days) -> Summary {
         let (start, end) = bounds(for: window)
         var s = Summary()
+        // PICKUP DATE is the single source of truth for windowing loads
+        // (spec 2026-05-24). Loads without a pickup date are excluded —
+        // they don't belong to any time window.
         let inWindowLoads = loads.filter { l in
-            let d = l.deliveryDate ?? l.pickupDate ?? l.createdAt ?? Date()
+            guard let d = l.pickupDate else { return false }
             return (start == nil || d >= start!) && (end == nil || d <= end!)
         }
         for load in inWindowLoads {
@@ -572,7 +575,10 @@ enum PerformanceAnalytics {
         }
 
         for load in loads {
-            let d = load.deliveryDate ?? load.pickupDate ?? load.createdAt ?? Date()
+            // PICKUP DATE is the single source of truth for which week a
+            // load belongs to (spec 2026-05-24). Loads without a pickup
+            // date are skipped.
+            guard let d = load.pickupDate else { continue }
             if let start = start, d < start { continue }
             if let end = end, d > end { continue }
             let wk = startOfWeek(d, cal: cal)

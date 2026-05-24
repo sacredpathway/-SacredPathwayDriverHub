@@ -104,9 +104,14 @@ enum CPAExportService {
             let d = exp.receiptDate ?? exp.createdAt
             return d.map { range.contains($0) } ?? false
         }
+        // PICKUP DATE is the single source of truth for which period a
+        // load belongs to (spec 2026-05-24). CPA reports must match the
+        // dashboard / settlement weekly bucketing — no delivery or
+        // createdAt fallback. Loads without a pickup date are excluded
+        // from the export.
         let filteredLoads = loads.filter { load in
-            let d = load.deliveryDate ?? load.pickupDate ?? load.createdAt
-            return d.map { range.contains($0) } ?? false
+            guard let d = load.pickupDate else { return false }
+            return range.contains(d)
         }
         let filteredSettlements = settlements.filter { s in
             let d = s.settlementPeriodEnd ?? s.settlementPeriodStart ?? s.createdAt
@@ -236,7 +241,9 @@ enum CPAExportService {
             return "\(c.year ?? 0)-\(c.month ?? 0)"
         }
         for l in loads {
-            guard let d = l.deliveryDate ?? l.pickupDate ?? l.createdAt else { continue }
+            // PICKUP DATE only — single source of truth for which month
+            // a load belongs to (spec 2026-05-24).
+            guard let d = l.pickupDate else { continue }
             grouped[key(d), default: Bucket()].rev += l.totalRevenue ?? 0
         }
         for e in expenses {
