@@ -259,12 +259,22 @@ struct LoadsListView: View {
             localLoads.delete(id: loadId)
             return
         }
+        // Tombstone immediately so totals on every observer (Dashboard,
+        // Insights, Settlements) drop the row BEFORE the round-trip
+        // completes. If the server delete fails the row reappears on the
+        // next successful refresh — fail-safe.
+        LoadsSyncService.shared.tombstone(loadId)
         Task {
             do {
                 try await supabase.deleteLoad(id: loadId)
                 loads.removeAll { $0.id == loadId }
             } catch {
                 deleteError = "Delete failed: \(error.localizedDescription)"
+                // Server delete failed. A successful refresh wipes every
+                // tombstone (see LoadsSyncService.refresh), so the row
+                // reappears as soon as the next round-trip succeeds —
+                // we don't have to clear tombstones by hand here.
+                await LoadsSyncService.shared.refresh(supabase: supabase)
             }
         }
     }

@@ -107,6 +107,8 @@
 		CA00000000000000000000A5 /* CPAPDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A6 /* CPAPDFGenerator.swift */; };
 		CA00000000000000000000A7 /* CPAReadyExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A8 /* CPAReadyExportView.swift */; };
 		5B0000000000000000000001 /* PayWeekService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000002 /* PayWeekService.swift */; };
+		5B0000000000000000000E01 /* WeeklyStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000E02 /* WeeklyStatsService.swift */; };
+		5B0000000000000000000F01 /* LoadsSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000F02 /* LoadsSyncService.swift */; };
 		5B0000000000000000000003 /* PayWeekSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000004 /* PayWeekSettingsView.swift */; };
 		5B0000000000000000000005 /* BrokerContactsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000006 /* BrokerContactsListView.swift */; };
 		5B00000000000000000000C1 /* ContactsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C2 /* ContactsBridge.swift */; };
@@ -228,6 +230,8 @@
 		CA00000000000000000000A6 /* CPAPDFGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAPDFGenerator.swift; sourceTree = "<group>"; };
 		CA00000000000000000000A8 /* CPAReadyExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAReadyExportView.swift; sourceTree = "<group>"; };
 		5B0000000000000000000002 /* PayWeekService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWeekService.swift; sourceTree = "<group>"; };
+		5B0000000000000000000E02 /* WeeklyStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyStatsService.swift; sourceTree = "<group>"; };
+		5B0000000000000000000F02 /* LoadsSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadsSyncService.swift; sourceTree = "<group>"; };
 		5B0000000000000000000004 /* PayWeekSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWeekSettingsView.swift; sourceTree = "<group>"; };
 		5B0000000000000000000006 /* BrokerContactsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerContactsListView.swift; sourceTree = "<group>"; };
 		5B00000000000000000000C2 /* ContactsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsBridge.swift; sourceTree = "<group>"; };
@@ -340,6 +344,8 @@
 				CA00000000000000000000A4 /* CPAExportService.swift */,
 				CA00000000000000000000A6 /* CPAPDFGenerator.swift */,
 				5B0000000000000000000002 /* PayWeekService.swift */,
+				5B0000000000000000000E02 /* WeeklyStatsService.swift */,
+				5B0000000000000000000F02 /* LoadsSyncService.swift */,
 				5B00000000000000000000C2 /* ContactsBridge.swift */,
 				5B00000000000000000000C4 /* ShareSummaryService.swift */,
 				EA0000000000000000000010 /* Local */,
@@ -757,6 +763,8 @@
 				CA00000000000000000000A5 /* CPAPDFGenerator.swift in Sources */,
 				CA00000000000000000000A7 /* CPAReadyExportView.swift in Sources */,
 				5B0000000000000000000001 /* PayWeekService.swift in Sources */,
+				5B0000000000000000000E01 /* WeeklyStatsService.swift in Sources */,
+				5B0000000000000000000F01 /* LoadsSyncService.swift in Sources */,
 				5B0000000000000000000003 /* PayWeekSettingsView.swift in Sources */,
 				5B0000000000000000000005 /* BrokerContactsListView.swift in Sources */,
 				5B00000000000000000000C1 /* ContactsBridge.swift in Sources */,
@@ -909,7 +917,7 @@
 				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = DCCSGYD5A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SacredPathway/Info.plist;
@@ -925,7 +933,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.2;
+				MARKETING_VERSION = 2.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway;
 				PRODUCT_NAME = SacredPathway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -943,7 +951,7 @@
 				CODE_SIGN_ENTITLEMENTS = SacredPathway/SacredPathway.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = DCCSGYD5A4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SacredPathway/Info.plist;
@@ -959,7 +967,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.2;
+				MARKETING_VERSION = 2.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway;
 				PRODUCT_NAME = SacredPathway;
 				PROVISIONING_PROFILE_SPECIFIER = "";

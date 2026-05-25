@@ -8,7 +8,14 @@ struct DashboardView: View {
     @ObservedObject private var appMode = AppMode.shared
     @ObservedObject private var localLoads = LocalLoadsRepository.shared
     @ObservedObject private var localExpenses = LocalExpensesRepository.shared
-    @State private var loads: [Load] = []
+    // Canonical income source-of-truth. Routes between LocalLoadsRepository
+    // and the Supabase cache based on AppMode, dedupes by id, and excludes
+    // tombstoned (pending-delete) rows. Every income total on the dashboard
+    // — Revenue, Net Profit, Key Metrics, Recent Loads — reads from this
+    // and only this. Two devices in Cloud Mode see the same `loads.count`
+    // here because they read the same Supabase rows through the same
+    // dedupe + tombstone pipeline.
+    @ObservedObject private var loadsSync = LoadsSyncService.shared
     @State private var allExpenses: [Expense] = []
     @State private var isLoading = true
     @State private var selectedPeriod: TimePeriod = .allTime
@@ -16,12 +23,19 @@ struct DashboardView: View {
     /// throws. Without this, a network blip or expired token would silently
     /// produce a zero-dollar dashboard that looks identical to "no data".
     @State private var loadError: String? = nil
+    /// DEBUG-only: holds the multi-period dump produced by a long-press on
+    /// the Revenue card. Renders in a sheet so the user can screenshot or
+    /// AirDrop it to the engineering team when a weekly total looks off.
+    @State private var debugDumpText: String? = nil
 
-    /// Source of truth for dashboard totals. Local Mode pulls from the
-    /// on-device JSON store; cloud mode keeps the existing @State loads
-    /// fed by Supabase fetchLoads().
+    /// Source of truth for dashboard totals — always the
+    /// `LoadsSyncService.loads` snapshot. The service has already deduped,
+    /// applied tombstones, and reconciled with the active backing store
+    /// (LocalLoadsRepository or the Supabase cache). NEVER read
+    /// `localLoads.loads` or a per-view `@State loads` array directly for
+    /// totals — that's what produced device-to-device drift.
     private var sourceLoads: [Load] {
-        appMode.isLocal ? localLoads.loads : loads
+        loadsSync.loads
     }
 
     /// Source of truth for expense totals — local repo when offline.
@@ -36,13 +50,20 @@ struct DashboardView: View {
     }
 
     // MARK: - Computed Metrics
-    // Loads are bucketed by PICKUP DATE — the single source of truth for
-    // week/month grouping per the user spec (2026-05-24). Do not switch
-    // back to createdAt: loads created today for a Friday pickup must
-    // belong to Friday's week, not today's. Loads with a nil pickupDate
-    // are excluded from week/month windows by design.
+    // Loads route through WeeklyStatsService — the centralized rule for
+    // every period bucket. It dedupes by id before reducing, so duplicate
+    // rows on disk (iCloud merge, historic double-save) can never inflate
+    // a total. Pickup-date is the only date used; nil-pickup loads are
+    // excluded from windowed totals per the 2026-05-24 spec.
+    private var statsPeriod: StatsPeriod {
+        switch selectedPeriod {
+        case .week:    return .week
+        case .month:   return .month
+        case .allTime: return .allTime
+        }
+    }
     var filteredLoads: [Load] {
-        filterByPeriod(sourceLoads, keyPath: \.pickupDate)
+        WeeklyStatsService.loads(in: statsPeriod, loads: sourceLoads)
     }
     // Expenses keep `createdAt` — they have no pickup-date concept and
     // are not part of the "weekly load grouping" spec.
@@ -169,6 +190,22 @@ struct DashboardView: View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
                 SummaryCard(title: "Revenue", value: totalRevenue.asCurrency, color: .spGreenAccent, icon: "arrow.up.right")
+                    // DEBUG-only: long-press the Revenue card to dump the
+                    // exact records feeding the headline number — Weekly,
+                    // Biweekly, Monthly, Last-30-Days, and All Time. Lets
+                    // the user prove on the spot when a total looks wrong.
+                    #if DEBUG
+                    .onLongPressGesture(minimumDuration: 0.6) {
+                        // Long-press now dumps the full cross-device audit
+                        // (device, mode, sync timestamp, dupes, tombstones,
+                        // every record) on top of the per-period totals.
+                        // Replaces the older per-period-only dump because
+                        // this is a strict superset and matches the
+                        // 2026-05-25 cross-device data-consistency spec.
+                        debugDumpText = LoadsSyncService.shared.crossDeviceAuditReport()
+                        print(debugDumpText ?? "")
+                    }
+                    #endif
                 SummaryCard(title: "Expenses", value: totalExpenses.asCurrency, color: .spDanger, icon: "arrow.down.left")
             }
             SummaryCard(
@@ -178,6 +215,34 @@ struct DashboardView: View {
                 icon: netProfit >= 0 ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
             )
         }
+        #if DEBUG
+        .sheet(item: Binding(
+            get: { debugDumpText.map { DebugDump(text: $0) } },
+            set: { debugDumpText = $0?.text }
+        )) { dump in
+            NavigationStack {
+                ScrollView {
+                    Text(dump.text)
+                        .font(.system(.footnote, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
+                .navigationTitle("Cross-Device Audit")
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        // ShareLink so the dump can be AirDropped / mailed
+                        // to engineering directly from a tester's device —
+                        // no screenshots, no copy/paste truncation.
+                        ShareLink(item: dump.text)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { debugDumpText = nil }
+                    }
+                }
+            }
+        }
+        #endif
     }
 
     // MARK: - Key Metrics Row
@@ -235,27 +300,33 @@ struct DashboardView: View {
                     .background(Color.spCardBg)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             } else {
-                ForEach(sorted, id: \.key) { category, expenses in
-                    let total = expenses.reduce(0) { $0 + $1.amount }
-                    let pct = totalExpenses > 0 ? total / totalExpenses * 100 : 0
-                    HStack {
-                        Image(systemName: categoryIcon(category))
-                            .foregroundStyle(categoryColor(category))
-                            .frame(width: 24)
-                        Text(category.capitalized)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.spTextPrimary)
-                        Spacer()
-                        Text(total.asCurrency)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.spTextPrimary)
-                        Text(String(format: "%.0f%%", pct))
-                            .font(.caption)
-                            .foregroundStyle(Color.spTextSecondary)
-                            .frame(width: 36, alignment: .trailing)
+                // Baseline (v2.1.1_upload/iPhone/01) shows the four category
+                // rows inside a SINGLE rounded card. Applying `.background`
+                // to a `ForEach` clips each row individually instead, so
+                // wrap the ForEach in a VStack and clip once at the parent.
+                VStack(spacing: 0) {
+                    ForEach(sorted, id: \.key) { category, expenses in
+                        let total = expenses.reduce(0) { $0 + $1.amount }
+                        let pct = totalExpenses > 0 ? total / totalExpenses * 100 : 0
+                        HStack {
+                            Image(systemName: categoryIcon(category))
+                                .foregroundStyle(categoryColor(category))
+                                .frame(width: 24)
+                            Text(category.capitalized)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.spTextPrimary)
+                            Spacer()
+                            Text(total.asCurrency)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.spTextPrimary)
+                            Text(String(format: "%.0f%%", pct))
+                                .font(.caption)
+                                .foregroundStyle(Color.spTextSecondary)
+                                .frame(width: 36, alignment: .trailing)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
                 }
                 .background(Color.spCardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -272,7 +343,11 @@ struct DashboardView: View {
 
             if isLoading {
                 ProgressView().frame(maxWidth: .infinity, minHeight: 80).tint(Color.spGold)
-            } else if loads.isEmpty {
+            } else if sourceLoads.isEmpty {
+                // Empty state had been gated on the cloud-only `loads` array,
+                // so Local Mode would show "No loads yet" forever even when
+                // there were rows in LocalLoadsRepository. Baseline screenshot
+                // (v2.1.1_upload/iPhone/01) has Recent Loads populated.
                 VStack(spacing: 12) {
                     Image(systemName: "truck.box")
                         .font(.system(size: 40))
@@ -290,7 +365,7 @@ struct DashboardView: View {
                 .background(Color.spCardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
-                ForEach(loads.prefix(5)) { load in
+                ForEach(sourceLoads.prefix(5)) { load in
                     NavigationLink(destination: LoadDetailView(load: load)) {
                         LoadRowView(load: load)
                     }
@@ -307,7 +382,10 @@ struct DashboardView: View {
                 .font(.headline)
                 .foregroundStyle(Color.spGold)
 
-            if allExpenses.isEmpty {
+            if sourceExpenses.isEmpty {
+                // Same Local-Mode gating bug as Recent Loads — empty state
+                // had been keyed off the cloud-only `allExpenses`. Switched
+                // to `sourceExpenses` so Local Mode renders real rows.
                 Text("Start tracking your finances to see your overview.")
                     .font(.subheadline)
                     .foregroundStyle(Color.spTextSecondary)
@@ -317,25 +395,31 @@ struct DashboardView: View {
                     .background(Color.spCardBg)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             } else {
-                ForEach(allExpenses.prefix(5)) { expense in
-                    HStack(spacing: 10) {
-                        Image(systemName: categoryIcon(expense.category))
-                            .foregroundStyle(categoryColor(expense.category))
-                            .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(expense.category.capitalized)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.spTextPrimary)
-                            if let vendor = expense.vendorName, !vendor.isEmpty {
-                                Text(vendor).font(.caption).foregroundStyle(Color.spTextSecondary)
+                // Wrap the ForEach in a VStack so the unified card style
+                // (one rounded background containing every row) matches the
+                // Expense Breakdown pattern in the v2.1.1 baseline. The old
+                // ForEach-only modifier clipped each row individually.
+                VStack(spacing: 0) {
+                    ForEach(sourceExpenses.prefix(5)) { expense in
+                        HStack(spacing: 10) {
+                            Image(systemName: categoryIcon(expense.category))
+                                .foregroundStyle(categoryColor(expense.category))
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(expense.category.capitalized)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(Color.spTextPrimary)
+                                if let vendor = expense.vendorName, !vendor.isEmpty {
+                                    Text(vendor).font(.caption).foregroundStyle(Color.spTextSecondary)
+                                }
                             }
+                            Spacer()
+                            Text(expense.amount.asCurrency)
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Color.spDanger)
                         }
-                        Spacer()
-                        Text(expense.amount.asCurrency)
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color.spDanger)
+                        .padding(10)
                     }
-                    .padding(10)
                 }
                 .background(Color.spCardBg)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -378,23 +462,28 @@ struct DashboardView: View {
     private func loadData() async {
         isLoading = true
         loadError = nil
-        // Free Local Mode: LocalLoadsRepository and LocalExpensesRepository
-        // are already in memory from disk on app launch. The dashboard
-        // observes them via @ObservedObject, so the totals refresh
-        // automatically without any extra plumbing here.
+        // Loads route through LoadsSyncService.refresh — that one call
+        // populates the canonical store (Supabase in Cloud Mode, local
+        // JSON snapshot in Local Mode), applies dedupe + tombstones, and
+        // republishes to every observer. Expenses still load directly
+        // for now; the cross-device hardening shipped in this pass is
+        // scoped to income/load totals per the user request.
+        await loadsSync.refresh(supabase: supabase)
+        if loadsSync.lastSyncError != nil, !appMode.isLocal {
+            loadError = "Couldn't load your latest data: \(loadsSync.lastSyncError ?? ""). Pull down to retry."
+        }
+
         if appMode.isLocal {
             isLoading = false
             return
         }
         do {
-            loads = try await supabase.fetchLoads()
             allExpenses = try await supabase.fetchAllExpenses()
         } catch {
-            // Surface to UI so a network blip / expired token doesn't look
-            // like "your data is gone". The Console log stays so the
-            // engineering team still has the full error available in Xcode.
-            print("Error loading dashboard: \(error)")
-            loadError = "Couldn't load your latest data: \(error.localizedDescription). Pull down to retry."
+            print("Error loading dashboard expenses: \(error)")
+            if loadError == nil {
+                loadError = "Couldn't load your latest data: \(error.localizedDescription). Pull down to retry."
+            }
         }
         isLoading = false
     }
@@ -532,3 +621,12 @@ struct LoadRowView: View {
 }
 
 #Preview { DashboardView().environmentObject(SupabaseService()) }
+
+#if DEBUG
+/// Bridge so SwiftUI's `.sheet(item:)` can present a plain `String?` —
+/// `Identifiable` requirement is fulfilled by the wrapped text itself.
+private struct DebugDump: Identifiable {
+    let text: String
+    var id: String { String(text.prefix(64)) }
+}
+#endif

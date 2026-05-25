@@ -32,9 +32,20 @@ final class LocalLoadsRepository: ObservableObject {
     // MARK: - Read
 
     /// Re-read from disk. Safe to call any time; used at init and after
-    /// `wipeAll()` for testing.
+    /// `wipeAll()` for testing. Always runs a dedupe-by-id pass before
+    /// publishing so any duplicates that snuck in via iCloud merge or a
+    /// historic double-save bug do NOT inflate weekly totals.
     func reload() {
-        loads = LocalStore.loadArray(Load.self, fileName: fileName)
+        let raw = LocalStore.loadArray(Load.self, fileName: fileName)
+        let deduped = WeeklyStatsService.dedupe(raw)
+        if deduped.count != raw.count {
+            // Persist the cleaned list so the dupes don't reappear next launch.
+            LocalStore.saveArray(deduped, fileName: fileName)
+            #if DEBUG
+            print("[SP_DEBUG_LOCAL] LocalLoadsRepository dropped \(raw.count - deduped.count) duplicate load(s) on reload")
+            #endif
+        }
+        loads = deduped
         #if DEBUG
         print("[SP_DEBUG_LOCAL] LocalLoadsRepository loaded \(loads.count) loads from disk")
         #endif
@@ -62,13 +73,27 @@ final class LocalLoadsRepository: ObservableObject {
 
     /// Insert a new load. If the caller didn't supply an id, generate one.
     /// Returns the stored load so callers can read the assigned id.
+    ///
+    /// If a row with the same id is already in the store this method
+    /// routes to `update(...)` instead of appending. Without this guard a
+    /// SwiftUI view that calls `create(...)` twice — e.g. .task fires
+    /// after a re-render — would silently duplicate the load and double
+    /// the weekly revenue total.
     @discardableResult
     func create(_ load: Load) -> Load {
         var copy = load
         if copy.id == nil { copy.id = UUID() }
         if copy.createdAt == nil { copy.createdAt = Date() }
         copy.updatedAt = Date()
-        loads.append(copy)
+        if let id = copy.id, let idx = loads.firstIndex(where: { $0.id == id }) {
+            // Already exists — treat as an update, not a duplicate insert.
+            loads[idx] = copy
+            #if DEBUG
+            print("[SP_DEBUG_LOCAL] LocalLoadsRepository.create() received an existing id \(id); routed to update")
+            #endif
+        } else {
+            loads.append(copy)
+        }
         flush()
         return copy
     }
@@ -83,9 +108,16 @@ final class LocalLoadsRepository: ObservableObject {
     }
 
     /// Delete by id. No-op if missing.
+    ///
+    /// Always records a tombstone in `LoadsSyncService` so any observer
+    /// reading the canonical income list (Dashboard, Insights, Settlements)
+    /// drops the row immediately, even if a Combine republish hasn't run
+    /// yet. Without this, two-device users could see "deleted but still
+    /// counted" briefly between the delete and the next dashboard task.
     func delete(id: UUID) {
         let before = loads.count
         loads.removeAll { $0.id == id }
+        LoadsSyncService.shared.tombstone(id)
         if loads.count != before { flush() }
     }
 
