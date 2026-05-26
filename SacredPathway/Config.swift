@@ -108,6 +108,27 @@ enum Config {
         static let portalLive = true
     }
 
+    // MARK: - Sacred Road Supply (sibling brand storefront)
+    //
+    // Sacred Road Supply is Sacred Pathway LLC's trucker-gear e-commerce
+    // store at `https://shop.sacredpathway.org`. Built on Shopify with the
+    // same canonical brand palette (spGold + spDarkGreen) so the visual
+    // family is preserved across Driver Hub iOS + Sacred Road Supply.
+    //
+    // The Settings → Sacred Road Supply Store row opens the storefront in
+    // Safari (external browser, NOT in-app WebView — keeps clean separation
+    // and avoids Apple Guideline 3.1.1 IAP scrutiny on physical goods sold
+    // through Shopify's own checkout).
+    enum Store {
+        static let storeURL = URL(string: "https://shop.sacredpathway.org/")!
+
+        /// Gate for the Settings → Sacred Road Supply row. Set to `false`
+        /// until the Shopify storefront is published with products live.
+        /// Flip to `true` after Shopify launch + at least one collection
+        /// shows products + checkout completes a real test order.
+        static let storeLive = false
+    }
+
     // MARK: - Legal URLs
     //
     // These must point to LIVE, REACHABLE pages before submission. Apple

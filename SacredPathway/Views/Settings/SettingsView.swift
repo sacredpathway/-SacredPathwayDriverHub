@@ -552,6 +552,38 @@ struct SettingsView: View {
                             .headerProminence(.increased)
                         }
 
+                        // Sacred Road Supply storefront row.
+                        // Hidden until Config.Store.storeLive flips to true
+                        // (after Shopify launch + product import + verified
+                        // checkout). Opens shop.sacredpathway.org in Safari
+                        // — never in an in-app WebView, to keep clean
+                        // separation from Apple Guideline 3.1.1 (IAP applies
+                        // to digital goods sold IN the app; physical goods
+                        // sold via Shopify's external checkout are exempt).
+                        if Config.Store.storeLive {
+                            Section("Shop Trucker Gear") {
+                                Link(destination: Config.Store.storeURL) {
+                                    HStack {
+                                        Image(systemName: "bag.fill")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Sacred Road Supply")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Trucker-tested gear. Built by Sacred Pathway. Ships from U.S.")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.up.right.square")
+                                            .foregroundStyle(Color.spTextSecondary)
+                                            .font(.caption)
+                                    }
+                                }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
+                        }
+
                         Section("Legal") {
                             Link(destination: Config.Legal.privacyPolicyURL) {
                                 HStack {
