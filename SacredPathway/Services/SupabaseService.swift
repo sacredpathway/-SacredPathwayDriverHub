@@ -76,8 +76,11 @@ class SupabaseService: ObservableObject {
 
     // MARK: - Auth
 
-    func signUp(email: String, password: String) async throws {
-        try await client.auth.signUp(email: email, password: password)
+    func signUp(email: String, password: String, accountRole: AccountRole? = nil) async throws {
+        let metadata = accountRole.map { role in
+            ["account_role": AnyJSON.string(role.rawValue)]
+        }
+        try await client.auth.signUp(email: email, password: password, data: metadata)
     }
 
     func signIn(email: String, password: String) async throws {
@@ -194,6 +197,16 @@ class SupabaseService: ObservableObject {
 
     // MARK: - Profile
 
+    private struct ProfileRoleUpsert: Encodable {
+        let id: UUID
+        let accountRole: String
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case accountRole = "account_role"
+        }
+    }
+
     func fetchProfile() async {
         guard let userId = client.auth.currentUser?.id else { return }
         do {
@@ -207,6 +220,25 @@ class SupabaseService: ObservableObject {
         } catch {
             print("Error fetching profile: \(error)")
         }
+    }
+
+    func setAccountRole(_ role: AccountRole) async throws {
+        guard let userId = client.auth.currentUser?.id else {
+            throw NSError(
+                domain: "SacredPathway.Auth",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "Sign in before choosing an account role."]
+            )
+        }
+
+        let row = ProfileRoleUpsert(id: userId, accountRole: role.rawValue)
+        let profile: Profile = try await client.from("profiles")
+            .upsert(row, onConflict: "id", returning: .representation)
+            .select()
+            .single()
+            .execute()
+            .value
+        currentProfile = profile
     }
 
     func updateProfile(_ updates: [String: AnyEncodable]) async throws {

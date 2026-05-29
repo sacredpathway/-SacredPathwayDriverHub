@@ -14,15 +14,22 @@ struct SacredDispatchDashboardView: View {
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
 
                 Section {
                     let network = dispatch.networkSummary()
-                    Picker("Role", selection: $dispatch.activeRole) {
-                        ForEach(DispatchParticipantRole.allCases) { role in
-                            Text(role.displayName).tag(role)
+                    HStack(spacing: 10) {
+                        Image(systemName: "point.3.connected.trianglepath.dotted")
+                            .foregroundStyle(Color.spGold)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Dispatcher Mode")
+                                .font(.headline)
+                                .foregroundStyle(Color.spTextPrimary)
+                            Text("Dispatcher tools are separate from Driver Hub.")
+                                .font(.caption)
+                                .foregroundStyle(Color.spTextSecondary)
                         }
                     }
-                    .pickerStyle(.segmented)
 
                     HStack(spacing: 10) {
                         DispatchSummaryTile(title: "Carriers", value: "\(network.activeCarriers)", systemImage: "building.2.fill")
@@ -140,8 +147,8 @@ struct SacredDispatchDashboardView: View {
                             .environmentObject(supabase)
                     } label: {
                         DispatchMenuRow(
-                            title: "Dispatcher Payments",
-                            subtitle: "Legacy load-offer fee records",
+                            title: "Dispatcher Payment Tracking",
+                            subtitle: "Track owed, pending, and paid status only",
                             systemImage: "creditcard.fill",
                             badge: legacyUnpaidPaymentCount == 0 ? nil : "\(legacyUnpaidPaymentCount)"
                         )
@@ -163,6 +170,11 @@ struct SacredDispatchDashboardView: View {
             .scrollContentBackground(.hidden)
         }
         .navigationTitle("Sacred DISPATCH")
+        .onAppear {
+            if supabase.currentProfile?.accountRole == .dispatcher {
+                dispatch.activeRole = .dispatcher
+            }
+        }
         .task { await dispatch.reload(supabase: supabase) }
         .refreshable { await dispatch.reload(supabase: supabase) }
     }
@@ -199,6 +211,7 @@ struct DispatchLoadOffersView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 if dispatch.offers.isEmpty {
                     Text("No dispatch load offers yet.")
                         .font(.subheadline)
@@ -220,14 +233,16 @@ struct DispatchLoadOffersView: View {
         }
         .navigationTitle("Load Offers")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showingNewOffer = true
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundStyle(Color.spGold)
+            if dispatch.activeRole == .dispatcher {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingNewOffer = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(Color.spGold)
+                    }
+                    .accessibilityLabel("New Dispatch Offer")
                 }
-                .accessibilityLabel("New Dispatch Offer")
             }
         }
         .sheet(isPresented: $showingNewOffer) {
@@ -294,7 +309,7 @@ struct DispatchOfferDetailView: View {
                         }
                     }
 
-                    if offer.status == .pending {
+                    if offer.status == .pending && dispatch.activeRole != .dispatcher {
                         HStack(spacing: 12) {
                             Button {
                                 decline()
@@ -386,6 +401,7 @@ struct DispatchOfferEditorView: View {
     @State private var brokerMcNumber = ""
     @State private var brokerPhone = ""
     @State private var brokerEmail = ""
+    @State private var selectedRecipientId: UUID?
     @State private var origin = ""
     @State private var destination = ""
     @State private var pickupDate = Date()
@@ -394,7 +410,7 @@ struct DispatchOfferEditorView: View {
     @State private var gross = ""
     @State private var fuelSurcharge = ""
     @State private var accessorials = ""
-    @State private var feeType: DispatchFeeType = .flat
+    @State private var feeType: DispatchFeeType = .percentageGross
     @State private var feeAmount = ""
     @State private var feePercentage = ""
     @State private var invoiceCadence: DispatchInvoiceCadence = .weekly
@@ -405,6 +421,22 @@ struct DispatchOfferEditorView: View {
 
     var body: some View {
         Form {
+            Section("Recipient") {
+                let recipients = dispatch.offerRecipients(supabase: supabase)
+                if recipients.isEmpty {
+                    Text("Create a dispatch service request or agreement before sending offers as a dispatcher.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.spDanger)
+                } else {
+                    Picker("Carrier / Driver", selection: $selectedRecipientId) {
+                        ForEach(recipients) { recipient in
+                            Text("\(recipient.displayName) (\(recipient.role.displayName))")
+                                .tag(Optional(recipient.profileId))
+                        }
+                    }
+                }
+            }
+
             Section("Dispatcher") {
                 TextField("Name", text: $dispatcherName)
                 TextField("Company", text: $dispatcherCompany)
@@ -435,17 +467,17 @@ struct DispatchOfferEditorView: View {
 
             Section("Dispatcher Payment") {
                 Picker("Fee Type", selection: $feeType) {
-                    ForEach(DispatchFeeType.allCases) { type in
+                    ForEach(DispatchFeeType.loadOfferCases) { type in
                         Text(type.displayName).tag(type)
                     }
                 }
                 .pickerStyle(.segmented)
 
-                if feeType == .flat {
-                    TextField("Flat Fee", text: $feeAmount)
+                if feeType.usesPercentage {
+                    TextField("Percentage", text: $feePercentage)
                         .keyboardType(.decimalPad)
                 } else {
-                    TextField("Percentage", text: $feePercentage)
+                    TextField("Fee Amount", text: $feeAmount)
                         .keyboardType(.decimalPad)
                 }
 
@@ -479,6 +511,7 @@ struct DispatchOfferEditorView: View {
             }
         }
         .onAppear {
+            selectedRecipientId = selectedRecipientId ?? dispatch.offerRecipients(supabase: supabase).first?.profileId
             if dispatcherCompany.isEmpty {
                 dispatcherCompany = supabase.currentProfile?.companyName ?? ""
             }
@@ -502,12 +535,17 @@ struct DispatchOfferEditorView: View {
         errorMessage = nil
         Task {
             do {
+                guard let recipient = dispatch.offerRecipients(supabase: supabase).first(where: { $0.profileId == selectedRecipientId }) else {
+                    throw DispatchServiceError.missingOfferRecipient
+                }
                 let companyId = AppMode.shared.isLocal
                     ? AppMode.shared.localInstallId
-                    : (supabase.currentProfile?.id ?? supabase.client.auth.currentUser?.id ?? UUID())
+                    : (dispatch.activeAgreements().first { $0.id == recipient.agreementId }?.companyId ?? supabase.currentProfile?.id ?? supabase.client.auth.currentUser?.id ?? UUID())
                 let grossValue = DispatchFormatters.number(gross)
                 let draft = DispatchLoadOffer(
                     companyId: companyId,
+                    driverProfileId: recipient.profileId,
+                    agreementId: recipient.agreementId,
                     dispatcherName: DispatchFormatters.clean(dispatcherName),
                     dispatcherCompany: DispatchFormatters.clean(dispatcherCompany),
                     loadNumber: DispatchFormatters.clean(loadNumber),
@@ -525,8 +563,8 @@ struct DispatchOfferEditorView: View {
                     accessorialCharges: DispatchFormatters.number(accessorials),
                     loadGrossAmount: grossValue,
                     feeType: feeType,
-                    feeAmount: feeType == .flat ? DispatchFormatters.number(feeAmount) : nil,
-                    feePercentage: feeType == .percentage ? DispatchFormatters.number(feePercentage) : nil,
+                    feeAmount: feeType.requiresAmount ? DispatchFormatters.number(feeAmount) : nil,
+                    feePercentage: feeType.usesPercentage ? DispatchFormatters.number(feePercentage) : nil,
                     invoiceCadence: invoiceCadence,
                     dueDate: dueDate,
                     notes: DispatchFormatters.clean(notes)
@@ -550,6 +588,7 @@ struct DispatchChatThreadsView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 if dispatch.threads.isEmpty {
                     Text("No dispatch chat threads yet.")
                         .font(.subheadline)
@@ -706,6 +745,11 @@ struct DispatcherPaymentsView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
+                Text("Payment tracking only. Sacred DISPATCH does not process cards, ACH, or real payments in this release.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.spTextSecondary)
+                    .listRowBackground(Color.spCardBg)
                 if dispatch.payments.isEmpty {
                     Text("No dispatcher payment records yet.")
                         .font(.subheadline)
@@ -753,7 +797,7 @@ struct DispatcherPaymentsView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle("Dispatcher Payments")
+        .navigationTitle("Payment Tracking")
         .task { await dispatch.reload(supabase: supabase) }
         .refreshable { await dispatch.reload(supabase: supabase) }
     }
@@ -793,6 +837,7 @@ struct DispatcherInvoiceSummaryView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 Picker("Cadence", selection: $cadence) {
                     ForEach(DispatchInvoiceCadence.allCases) { item in
                         Text(item.displayName).tag(item)
@@ -846,6 +891,7 @@ struct DispatcherDirectoryView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 Section {
                     TextField("Search dispatchers", text: $searchText)
                     Picker("Equipment", selection: $equipment) {
@@ -885,14 +931,16 @@ struct DispatcherDirectoryView: View {
         }
         .navigationTitle("Directory")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showingEditor = true
-                } label: {
-                    Image(systemName: "person.crop.circle.badge.plus")
-                        .foregroundStyle(Color.spGold)
+            if dispatch.activeRole == .dispatcher {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingEditor = true
+                    } label: {
+                        Image(systemName: "person.crop.circle.badge.plus")
+                            .foregroundStyle(Color.spGold)
+                    }
+                    .accessibilityLabel("Create Dispatcher Profile")
                 }
-                .accessibilityLabel("Create Dispatcher Profile")
             }
         }
         .sheet(isPresented: $showingEditor) {
@@ -932,29 +980,31 @@ struct DispatcherProfileDetailView: View {
                         DispatchInfoRow("Contact", value: profile.contactInfo ?? profile.email ?? profile.phone)
                     }
 
-                    DispatchDetailCard(title: "Request Service") {
-                        TextEditor(text: $notes)
-                            .frame(minHeight: 110)
-                            .scrollContentBackground(.hidden)
-                            .padding(8)
-                            .background(Color.spBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    if dispatch.activeRole != .dispatcher {
+                        DispatchDetailCard(title: "Request Service") {
+                            TextEditor(text: $notes)
+                                .frame(minHeight: 110)
+                                .scrollContentBackground(.hidden)
+                                .padding(8)
+                                .background(Color.spBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                        if let errorMessage {
-                            Text(errorMessage)
-                                .font(.caption)
-                                .foregroundStyle(Color.spDanger)
-                        }
+                            if let errorMessage {
+                                Text(errorMessage)
+                                    .font(.caption)
+                                    .foregroundStyle(Color.spDanger)
+                            }
 
-                        Button {
-                            Task { await submitRequest() }
-                        } label: {
-                            Label(isRequesting ? "Sending..." : "Send Service Request", systemImage: "paperplane.fill")
-                                .frame(maxWidth: .infinity)
+                            Button {
+                                Task { await submitRequest() }
+                            } label: {
+                                Label(isRequesting ? "Sending..." : "Send Service Request", systemImage: "paperplane.fill")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(Color.spGold)
+                            .disabled(isRequesting)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Color.spGold)
-                        .disabled(isRequesting)
                     }
                 }
                 .padding()
@@ -1122,6 +1172,7 @@ struct DispatchServiceRequestsView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 if dispatch.serviceRequests.isEmpty {
                     Text("No service requests yet.")
                         .foregroundStyle(Color.spTextSecondary)
@@ -1142,7 +1193,7 @@ struct DispatchServiceRequestsView: View {
                                 Spacer()
                                 DispatchTextPill(text: request.status.displayName, color: request.status == .accepted ? Color.spSuccess : Color.spGold)
                             }
-                            if request.status != .accepted {
+                            if request.status != .accepted && dispatch.activeRole == .dispatcher {
                                 Button {
                                     requestForAgreement = request
                                 } label: {
@@ -1188,17 +1239,16 @@ struct DispatchAgreementEditorView: View {
         Form {
             Section("Agreement") {
                 Picker("Fee Type", selection: $feeType) {
-                    Text("Percentage of Gross").tag(DispatchFeeType.percentageGross)
-                    Text("Flat Fee Per Load").tag(DispatchFeeType.flatPerLoad)
-                    Text("Weekly Fixed Fee").tag(DispatchFeeType.weeklyFixed)
-                    Text("Monthly Fixed Fee").tag(DispatchFeeType.monthlyFixed)
+                    ForEach(DispatchFeeType.agreementCases) { type in
+                        Text(type.displayName).tag(type)
+                    }
                 }
                 TextField("Fee Percentage", text: $feePercentage)
                     .keyboardType(.decimalPad)
-                    .disabled(feeType != .percentageGross)
+                    .disabled(!feeType.usesPercentage)
                 TextField("Fee Amount", text: $feeAmount)
                     .keyboardType(.decimalPad)
-                    .disabled(feeType == .percentageGross)
+                    .disabled(feeType.usesPercentage)
                 TextField("Notes", text: $notes, axis: .vertical)
             }
             if let errorMessage {
@@ -1229,8 +1279,8 @@ struct DispatchAgreementEditorView: View {
             _ = try await dispatch.createAgreement(
                 from: request,
                 feeType: feeType,
-                feePercentage: feeType == .percentageGross ? DispatchFormatters.number(feePercentage) : nil,
-                feeAmount: feeType == .percentageGross ? nil : DispatchFormatters.number(feeAmount),
+                feePercentage: feeType.usesPercentage ? DispatchFormatters.number(feePercentage) : nil,
+                feeAmount: feeType.requiresAmount ? DispatchFormatters.number(feeAmount) : nil,
                 notes: notes,
                 supabase: supabase
             )
@@ -1250,6 +1300,7 @@ struct DispatchAgreementsView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 if dispatch.agreements.isEmpty {
                     Text("No dispatch agreements yet.")
                         .foregroundStyle(Color.spTextSecondary)
@@ -1295,6 +1346,7 @@ struct DispatcherRevenueProtectionView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 let summary = dispatch.networkSummary()
                 Section {
                     HStack(spacing: 10) {
@@ -1448,6 +1500,7 @@ struct DispatcherNetworkInvoicesView: View {
         ZStack {
             Color.spBackground.ignoresSafeArea()
             List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
                 if dispatch.invoices.isEmpty {
                     Text("No dispatcher invoices yet.")
                         .foregroundStyle(Color.spTextSecondary)
@@ -1655,6 +1708,20 @@ private struct DispatchTextPill: View {
             .background(color.opacity(0.2))
             .foregroundStyle(color)
             .clipShape(Capsule())
+    }
+}
+
+private struct DispatchErrorBanner: View {
+    let message: String?
+
+    var body: some View {
+        if let message, !message.isEmpty {
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(Color.spDanger)
+                .padding(.vertical, 4)
+                .listRowBackground(Color.spCardBg)
+        }
     }
 }
 

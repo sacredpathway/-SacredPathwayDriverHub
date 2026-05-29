@@ -6,6 +6,7 @@ final class LocalDispatchRepository: ObservableObject {
 
     private let threadsFile = "dispatch_threads.json"
     private let messagesFile = "dispatch_messages.json"
+    private let participantsFile = "dispatch_participants.json"
     private let offersFile = "dispatch_load_offers.json"
     private let paymentsFile = "dispatcher_payment_records.json"
     private let profilesFile = "dispatcher_profiles.json"
@@ -17,6 +18,7 @@ final class LocalDispatchRepository: ObservableObject {
 
     @Published private(set) var threads: [DispatchThread] = []
     @Published private(set) var messages: [DispatchMessage] = []
+    @Published private(set) var participants: [DispatchParticipant] = []
     @Published private(set) var offers: [DispatchLoadOffer] = []
     @Published private(set) var payments: [DispatcherPaymentRecord] = []
     @Published private(set) var profiles: [DispatcherProfile] = []
@@ -33,6 +35,7 @@ final class LocalDispatchRepository: ObservableObject {
     func reload() {
         threads = newestThreads(LocalStore.loadArray(DispatchThread.self, fileName: threadsFile))
         messages = oldestMessages(LocalStore.loadArray(DispatchMessage.self, fileName: messagesFile))
+        participants = newestParticipants(LocalStore.loadArray(DispatchParticipant.self, fileName: participantsFile))
         offers = newestOffers(LocalStore.loadArray(DispatchLoadOffer.self, fileName: offersFile))
         payments = newestPayments(LocalStore.loadArray(DispatcherPaymentRecord.self, fileName: paymentsFile))
         profiles = newestProfiles(LocalStore.loadArray(DispatcherProfile.self, fileName: profilesFile))
@@ -45,6 +48,7 @@ final class LocalDispatchRepository: ObservableObject {
 
     func fetchThreads() -> [DispatchThread] { threads }
     func fetchMessages() -> [DispatchMessage] { messages }
+    func fetchParticipants() -> [DispatchParticipant] { participants }
     func fetchOffers() -> [DispatchLoadOffer] { offers }
     func fetchPayments() -> [DispatcherPaymentRecord] { payments }
     func fetchProfiles() -> [DispatcherProfile] { profiles }
@@ -98,6 +102,31 @@ final class LocalDispatchRepository: ObservableObject {
     }
 
     @discardableResult
+    func upsertParticipant(_ participant: DispatchParticipant) -> DispatchParticipant {
+        var copy = participant
+        if copy.id == nil { copy.id = UUID() }
+        if copy.createdAt == nil { copy.createdAt = Date() }
+        copy.updatedAt = Date()
+        if let id = copy.id, let index = participants.firstIndex(where: { $0.id == id }) {
+            participants[index] = copy
+        } else if let index = participants.firstIndex(where: {
+            $0.companyId == copy.companyId &&
+            $0.profileId == copy.profileId &&
+            $0.threadId == copy.threadId &&
+            $0.role == copy.role
+        }) {
+            copy.id = participants[index].id ?? copy.id
+            copy.createdAt = participants[index].createdAt ?? copy.createdAt
+            participants[index] = copy
+        } else {
+            participants.append(copy)
+        }
+        participants = newestParticipants(participants)
+        flushParticipants()
+        return copy
+    }
+
+    @discardableResult
     func upsertPayment(_ payment: DispatcherPaymentRecord) -> DispatcherPaymentRecord {
         var copy = payment
         if copy.id == nil { copy.id = UUID() }
@@ -135,6 +164,33 @@ final class LocalDispatchRepository: ObservableObject {
     func messages(for threadId: UUID) -> [DispatchMessage] {
         messages.filter { $0.threadId == threadId }
     }
+
+#if DEBUG
+    func deleteRecords(containing tag: String) {
+        threads.removeAll { [$0.subject, $0.loadNumber, $0.dispatcherCompany].containsTag(tag) }
+        messages.removeAll { [$0.body, $0.senderName].containsTag(tag) }
+        participants.removeAll { [$0.displayName].containsTag(tag) }
+        offers.removeAll { [$0.loadNumber, $0.dispatcherCompany, $0.notes].containsTag(tag) }
+        payments.removeAll { [$0.loadNumber, $0.dispatcherCompany, $0.notes].containsTag(tag) }
+        profiles.removeAll { [$0.displayName, $0.companyName, $0.contactInfo].containsTag(tag) }
+        reviews.removeAll { [$0.comment].containsTag(tag) }
+        serviceRequests.removeAll { [$0.carrierName, $0.serviceNotes].containsTag(tag) }
+        agreements.removeAll { [$0.carrierName, $0.dispatcherCompany, $0.notes].containsTag(tag) }
+        feeRecords.removeAll { [$0.loadNumber, $0.brokerName, $0.notes, $0.sourceType].containsTag(tag) }
+        invoices.removeAll { [$0.invoiceNumber, $0.notes].containsTag(tag) }
+        flushThreads()
+        flushMessages()
+        flushParticipants()
+        flushOffers()
+        flushPayments()
+        flushProfiles()
+        flushReviews()
+        flushServiceRequests()
+        flushAgreements()
+        flushFeeRecords()
+        flushInvoices()
+    }
+#endif
 
     @discardableResult
     func upsertProfile(_ profile: DispatcherProfile) -> DispatcherProfile {
@@ -248,6 +304,10 @@ final class LocalDispatchRepository: ObservableObject {
         LocalStore.saveArray(messages, fileName: messagesFile)
     }
 
+    private func flushParticipants() {
+        LocalStore.saveArray(participants, fileName: participantsFile)
+    }
+
     private func flushOffers() {
         LocalStore.saveArray(offers, fileName: offersFile)
     }
@@ -291,6 +351,10 @@ final class LocalDispatchRepository: ObservableObject {
         values.sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
     }
 
+    private func newestParticipants(_ values: [DispatchParticipant]) -> [DispatchParticipant] {
+        values.sorted { ($0.updatedAt ?? $0.createdAt ?? .distantPast) > ($1.updatedAt ?? $1.createdAt ?? .distantPast) }
+    }
+
     private func newestOffers(_ values: [DispatchLoadOffer]) -> [DispatchLoadOffer] {
         values.sorted { ($0.createdAt ?? $0.updatedAt ?? .distantPast) > ($1.createdAt ?? $1.updatedAt ?? .distantPast) }
     }
@@ -323,3 +387,11 @@ final class LocalDispatchRepository: ObservableObject {
         values.sorted { ($0.periodStart ?? $0.createdAt ?? .distantPast) > ($1.periodStart ?? $1.createdAt ?? .distantPast) }
     }
 }
+
+#if DEBUG
+private extension Array where Element == String? {
+    func containsTag(_ tag: String) -> Bool {
+        contains { $0?.contains(tag) == true }
+    }
+}
+#endif

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    private let roleOverride: AccountRole?
+
     @EnvironmentObject var supabase: SupabaseService
     @ObservedObject private var appearance = AppearanceService.shared
     // Observed so the "Current: <tier>" label and any other gated copy
@@ -18,6 +20,28 @@ struct SettingsView: View {
     @State private var seedAlertTitle: String = ""
     @State private var seedAlertBody: String = ""
     @State private var showSeedAlert: Bool = false
+
+    init(roleOverride: AccountRole? = nil) {
+        self.roleOverride = roleOverride
+    }
+
+    private var accountRole: AccountRole {
+        if let roleOverride {
+            return roleOverride
+        }
+        if appMode.isLocal || ScreenshotMode.isActive {
+            return .ownerOperator
+        }
+        return supabase.currentProfile?.accountRole ?? .ownerOperator
+    }
+
+    private var canUseDriverHubFinancials: Bool {
+        accountRole != .dispatcher
+    }
+
+    private var canUseCarrierCompanyTools: Bool {
+        accountRole == .carrier || accountRole == .ownerOperator
+    }
 
     var body: some View {
         ZStack {
@@ -195,132 +219,124 @@ struct SettingsView: View {
                         .listRowBackground(Color.spCardBg)
                         .headerProminence(.increased)
 
-                        Section("Financial") {
-                            NavigationLink {
-                                ExpensesListView()
-                                    .environmentObject(supabase)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "receipt")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Expenses")
-                                            .foregroundStyle(Color.spTextPrimary)
-                                        Text("Track fuel, lumper, toll, repair costs")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
-                                    }
-                                }
-                            }
-
-                            // CPA Ready Tax Package — added 2026-05.
-                            // Generates accountant-grade PDF + CSV exports
-                            // for tax season, audits, and quarterly filings.
-                            //
-                            // Pro-gated 2026-05 via SubscriptionService.Feature.cpaTaxPackage.
-                            // Entitled users get the normal NavigationLink → CPAReadyExportView.
-                            // Free-tier users see the same row decorated with a lock; tapping
-                            // opens the existing PaywallView sheet instead of the export
-                            // screen. No change to the CPA export feature itself.
-                            if subscriptions.isEntitled(.cpaTaxPackage) {
+                        if canUseDriverHubFinancials {
+                            Section("Financial") {
                                 NavigationLink {
-                                    CPAReadyExportView()
+                                    ExpensesListView()
                                         .environmentObject(supabase)
                                 } label: {
-                                    cpaTaxPackageRowLabel(locked: false)
+                                    HStack {
+                                        Image(systemName: "receipt")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Expenses")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Track fuel, lumper, toll, repair costs")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                    }
                                 }
-                            } else {
-                                Button {
-                                    showPaywall = true
+
+                                // CPA Ready Tax Package — added 2026-05.
+                                // Generates accountant-grade PDF + CSV exports
+                                // for tax season, audits, and quarterly filings.
+                                //
+                                // Pro-gated 2026-05 via SubscriptionService.Feature.cpaTaxPackage.
+                                // Entitled users get the normal NavigationLink → CPAReadyExportView.
+                                // Free-tier users see the same row decorated with a lock; tapping
+                                // opens the existing PaywallView sheet instead of the export
+                                // screen. No change to the CPA export feature itself.
+                                if subscriptions.isEntitled(.cpaTaxPackage) {
+                                    NavigationLink {
+                                        CPAReadyExportView()
+                                            .environmentObject(supabase)
+                                    } label: {
+                                        cpaTaxPackageRowLabel(locked: false)
+                                    }
+                                } else {
+                                    Button {
+                                        showPaywall = true
+                                    } label: {
+                                        cpaTaxPackageRowLabel(locked: true)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
+                        }
+
+                        if canUseDriverHubFinancials {
+                            Section("Pay Week") {
+                                NavigationLink {
+                                    PayWeekSettingsView()
                                 } label: {
-                                    cpaTaxPackageRowLabel(locked: true)
+                                    HStack {
+                                        Image(systemName: "calendar.badge.clock")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Pay Week Start Day")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Starts \(PayWeekService.shared.displayName) — used for every weekly total")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                    }
                                 }
-                                .buttonStyle(.plain)
                             }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
                         }
-                        .listRowBackground(Color.spCardBg)
-                        .headerProminence(.increased)
 
-                        Section("Pay Week") {
-                            NavigationLink {
-                                PayWeekSettingsView()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "calendar.badge.clock")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Pay Week Start Day")
+                        if canUseCarrierCompanyTools {
+                            Section("Fees & Deductions") {
+                                NavigationLink {
+                                    FeeSettingsView()
+                                        .environmentObject(supabase)
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "percent")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Fee Percentages")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Driver pay, dispatcher, factoring, reserves")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
+                                    }
+                                }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
+                        }
+
+                        if canUseCarrierCompanyTools {
+                            Section("Branding") {
+                                NavigationLink {
+                                    BrandingSettingsView()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "paintpalette.fill")
+                                            .foregroundStyle(Color.spGold)
+                                        Text("Logo & Color Scheme")
                                             .foregroundStyle(Color.spTextPrimary)
-                                        Text("Starts \(PayWeekService.shared.displayName) — used for every weekly total")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
+                                        Spacer()
+                                        if BrandingService.shared.hasCustomBranding {
+                                            Text("Custom")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spSuccess)
+                                        }
                                     }
                                 }
                             }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
                         }
-                        .listRowBackground(Color.spCardBg)
-                        .headerProminence(.increased)
 
-                        Section("Fees & Deductions") {
-                            NavigationLink {
-                                FeeSettingsView()
-                                    .environmentObject(supabase)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "percent")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Fee Percentages")
-                                            .foregroundStyle(Color.spTextPrimary)
-                                        Text("Driver pay, dispatcher, factoring, reserves")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
-                                    }
-                                }
-                            }
-                        }
-                        .listRowBackground(Color.spCardBg)
-                        .headerProminence(.increased)
-
-                        Section("Branding") {
-                            NavigationLink {
-                                BrandingSettingsView()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "paintpalette.fill")
-                                        .foregroundStyle(Color.spGold)
-                                    Text("Logo & Color Scheme")
-                                        .foregroundStyle(Color.spTextPrimary)
-                                    Spacer()
-                                    if BrandingService.shared.hasCustomBranding {
-                                        Text("Custom")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spSuccess)
-                                    }
-                                }
-                            }
-                        }
-                        .listRowBackground(Color.spCardBg)
-                        .headerProminence(.increased)
-
-                        Section("Operations") {
-                            NavigationLink {
-                                SacredDispatchDashboardView()
-                                    .environmentObject(supabase)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "point.3.connected.trianglepath.dotted")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Sacred DISPATCH")
-                                            .foregroundStyle(Color.spTextPrimary)
-                                        Text("Offers, chat, dispatch fees, invoices")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
-                                    }
-                                }
-                            }
-
+                        if canUseDriverHubFinancials {
+                            Section("Operations") {
                             NavigationLink {
                                 BrokerContactsListView()
                                     .environmentObject(supabase)
@@ -358,19 +374,21 @@ struct SettingsView: View {
                                 }
                             }
 
-                            NavigationLink {
-                                DriversListView()
-                                    .environmentObject(supabase)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "person.3.fill")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Drivers")
-                                            .foregroundStyle(Color.spTextPrimary)
-                                        Text("Manage drivers, pay rates, assignments")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
+                            if canUseCarrierCompanyTools {
+                                NavigationLink {
+                                    DriversListView()
+                                        .environmentObject(supabase)
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "person.3.fill")
+                                            .foregroundStyle(Color.spGold)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Drivers")
+                                                .foregroundStyle(Color.spTextPrimary)
+                                            Text("Manage drivers, pay rates, assignments")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.spTextSecondary)
+                                        }
                                     }
                                 }
                             }
@@ -468,9 +486,10 @@ struct SettingsView: View {
                                     }
                                 }
                             }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
                         }
-                        .listRowBackground(Color.spCardBg)
-                        .headerProminence(.increased)
 
                         Section("Security") {
                             NavigationLink {

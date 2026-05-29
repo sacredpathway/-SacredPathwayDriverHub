@@ -47,6 +47,7 @@ struct LoginView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var passwordVisible: Bool = false
+    @State private var selectedSignupRole: AccountRole?
     @State private var infoMessage: String?
     @FocusState private var focusedField: EmailField?
 
@@ -189,6 +190,9 @@ struct LoginView: View {
                 if emailMode != .forgotPassword {
                     passwordField
                 }
+                if emailMode == .signUp {
+                    signupRoleSection
+                }
 
                 Button(action: { Task { await runEmailAction() } }) {
                     HStack {
@@ -218,6 +222,7 @@ struct LoginView: View {
                         showEmailForm = false
                         email = ""
                         password = ""
+                        selectedSignupRole = nil
                         errorMessage = nil
                         infoMessage = nil
                     }
@@ -235,6 +240,9 @@ struct LoginView: View {
             emailMode = mode
             errorMessage = nil
             infoMessage = nil
+            if mode != .signUp {
+                selectedSignupRole = nil
+            }
         } label: {
             Text(label)
                 .font(.caption.weight(.semibold))
@@ -268,6 +276,53 @@ struct LoginView: View {
         .padding(12)
         .background(Color.spCardBg)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var signupRoleSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Choose your account role")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.spTextSecondary)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(AccountRole.allCases) { role in
+                    signupRoleButton(role)
+                }
+            }
+        }
+    }
+
+    private func signupRoleButton(_ role: AccountRole) -> some View {
+        let isSelected = selectedSignupRole == role
+        return Button {
+            selectedSignupRole = role
+        } label: {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Image(systemName: accountRoleIcon(role))
+                        .font(.caption.weight(.semibold))
+                    Spacer()
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                    }
+                }
+                Text(role.displayName)
+                    .font(.caption.weight(.bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(isSelected ? Color.spBlack : Color.spTextPrimary)
+            .padding(10)
+            .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
+            .background(isSelected ? Color.spGold : Color.spCardBg)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.spGold : Color.spTextSecondary.opacity(0.25), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var passwordField: some View {
@@ -313,8 +368,10 @@ struct LoginView: View {
         switch emailMode {
         case .forgotPassword:
             return emailOk
-        case .signIn, .signUp:
+        case .signIn:
             return emailOk && password.count >= 8
+        case .signUp:
+            return emailOk && password.count >= 8 && selectedSignupRole != nil
         }
     }
 
@@ -353,18 +410,19 @@ struct LoginView: View {
             isLoading = false
 
         case .signUp:
-            guard isValidEmail(trimmedEmail), pwd.count >= 8 else {
-                errorMessage = "Enter a valid email and a password (8+ characters)."
+            guard isValidEmail(trimmedEmail), pwd.count >= 8, let selectedSignupRole else {
+                errorMessage = "Enter a valid email, password, and account role."
                 return
             }
             isLoading = true
             do {
-                try await supabase.signUp(email: trimmedEmail, password: pwd)
+                try await supabase.signUp(email: trimmedEmail, password: pwd, accountRole: selectedSignupRole)
                 // Supabase may require email confirmation depending on the
                 // project's "Confirm email" setting. We surface a friendly
                 // message either way.
                 infoMessage = "Account created. Check your inbox if confirmation is required, then sign in."
                 emailMode = .signIn
+                self.selectedSignupRole = nil
             } catch {
                 errorMessage = friendlyAuthError(
                     error,
@@ -412,6 +470,15 @@ struct LoginView: View {
             return "Too many attempts. Wait a minute and try again."
         }
         return fallback
+    }
+
+    private func accountRoleIcon(_ role: AccountRole) -> String {
+        switch role {
+        case .dispatcher: return "point.3.connected.trianglepath.dotted"
+        case .carrier: return "building.2.fill"
+        case .driver: return "steeringwheel"
+        case .ownerOperator: return "truck.box.fill"
+        }
     }
 
     // MARK: - Apple Sign In

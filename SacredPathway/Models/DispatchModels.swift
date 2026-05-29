@@ -46,6 +46,24 @@ enum DispatchFeeType: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    static let productionCases: [DispatchFeeType] = [
+        .percentageGross,
+        .flatPerLoad,
+        .weeklyFixed,
+        .monthlyFixed
+    ]
+
+    static let loadOfferCases: [DispatchFeeType] = productionCases
+    static let agreementCases: [DispatchFeeType] = productionCases
+
+    var usesPercentage: Bool {
+        self == .percentage || self == .percentageGross
+    }
+
+    var requiresAmount: Bool {
+        !usesPercentage
+    }
+
     var displayName: String {
         switch self {
         case .flat: return "Flat"
@@ -232,6 +250,7 @@ struct DispatchThread: Codable, Identifiable {
     var companyId: UUID
     var loadOfferId: UUID?
     var acceptedLoadId: UUID?
+    var agreementId: UUID?
     var loadNumber: String?
     var driverProfileId: UUID?
     var dispatcherUserId: UUID?
@@ -251,6 +270,7 @@ struct DispatchThread: Codable, Identifiable {
         case companyId = "company_id"
         case loadOfferId = "load_offer_id"
         case acceptedLoadId = "accepted_load_id"
+        case agreementId = "agreement_id"
         case loadNumber = "load_number"
         case driverProfileId = "driver_profile_id"
         case dispatcherUserId = "dispatcher_user_id"
@@ -310,6 +330,7 @@ struct DispatchLoadOffer: Codable, Identifiable {
     var dispatcherUserId: UUID?
     var driverProfileId: UUID?
     var driverId: UUID?
+    var agreementId: UUID?
     var dispatcherName: String?
     var dispatcherCompany: String?
     var loadNumber: String?
@@ -347,6 +368,7 @@ struct DispatchLoadOffer: Codable, Identifiable {
         case dispatcherUserId = "dispatcher_user_id"
         case driverProfileId = "driver_profile_id"
         case driverId = "driver_id"
+        case agreementId = "agreement_id"
         case dispatcherName = "dispatcher_name"
         case dispatcherCompany = "dispatcher_company"
         case loadNumber = "load_number"
@@ -667,6 +689,15 @@ struct DispatchNetworkDashboardSummary {
     var activeAgreementCount: Int
 }
 
+struct DispatchOfferRecipient: Identifiable {
+    let profileId: UUID
+    let role: DispatchParticipantRole
+    let displayName: String
+    let agreementId: UUID?
+
+    var id: UUID { profileId }
+}
+
 struct DispatchInvoiceSummary: Identifiable {
     let id: String
     let cadence: DispatchInvoiceCadence
@@ -787,6 +818,7 @@ extension DispatchThread {
         companyId = try c.decode(UUID.self, forKey: .companyId)
         loadOfferId = try c.decodeIfPresent(UUID.self, forKey: .loadOfferId)
         acceptedLoadId = try c.decodeIfPresent(UUID.self, forKey: .acceptedLoadId)
+        agreementId = try c.decodeIfPresent(UUID.self, forKey: .agreementId)
         loadNumber = try c.decodeIfPresent(String.self, forKey: .loadNumber)
         driverProfileId = try c.decodeIfPresent(UUID.self, forKey: .driverProfileId)
         dispatcherUserId = try c.decodeIfPresent(UUID.self, forKey: .dispatcherUserId)
@@ -808,6 +840,7 @@ extension DispatchThread {
         try c.encode(companyId, forKey: .companyId)
         try c.encodeIfPresent(loadOfferId, forKey: .loadOfferId)
         try c.encodeIfPresent(acceptedLoadId, forKey: .acceptedLoadId)
+        try c.encodeIfPresent(agreementId, forKey: .agreementId)
         try c.encodeIfPresent(loadNumber, forKey: .loadNumber)
         try c.encodeIfPresent(driverProfileId, forKey: .driverProfileId)
         try c.encodeIfPresent(dispatcherUserId, forKey: .dispatcherUserId)
@@ -866,6 +899,7 @@ extension DispatchLoadOffer {
         dispatcherUserId = try c.decodeIfPresent(UUID.self, forKey: .dispatcherUserId)
         driverProfileId = try c.decodeIfPresent(UUID.self, forKey: .driverProfileId)
         driverId = try c.decodeIfPresent(UUID.self, forKey: .driverId)
+        agreementId = try c.decodeIfPresent(UUID.self, forKey: .agreementId)
         dispatcherName = try c.decodeIfPresent(String.self, forKey: .dispatcherName)
         dispatcherCompany = try c.decodeIfPresent(String.self, forKey: .dispatcherCompany)
         loadNumber = try c.decodeIfPresent(String.self, forKey: .loadNumber)
@@ -905,6 +939,7 @@ extension DispatchLoadOffer {
         try c.encodeIfPresent(dispatcherUserId, forKey: .dispatcherUserId)
         try c.encodeIfPresent(driverProfileId, forKey: .driverProfileId)
         try c.encodeIfPresent(driverId, forKey: .driverId)
+        try c.encodeIfPresent(agreementId, forKey: .agreementId)
         try c.encodeIfPresent(dispatcherName, forKey: .dispatcherName)
         try c.encodeIfPresent(dispatcherCompany, forKey: .dispatcherCompany)
         try c.encodeIfPresent(loadNumber, forKey: .loadNumber)

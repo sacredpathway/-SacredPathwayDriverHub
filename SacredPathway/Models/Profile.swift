@@ -1,7 +1,50 @@
 import Foundation
 
+enum AccountRole: String, Codable, CaseIterable, Identifiable {
+    case dispatcher
+    case carrier
+    case driver
+    case ownerOperator = "owner_operator"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .dispatcher: return "Dispatcher"
+        case .carrier: return "Carrier"
+        case .driver: return "Driver"
+        case .ownerOperator: return "Owner Operator"
+        }
+    }
+
+    var onboardingDescription: String {
+        switch self {
+        case .dispatcher:
+            return "Manage dispatcher profiles, service requests, agreements, offers, invoices, and payment tracking."
+        case .carrier:
+            return "Manage company loads, dispatch relationships, settlements, expenses, and reports."
+        case .driver:
+            return "Manage assigned loads, expenses, pay documents, and dispatch communication."
+        case .ownerOperator:
+            return "Manage your own trucking operation, loads, expenses, paystubs, and dispatch relationships."
+        }
+    }
+
+    var dispatchParticipantRole: DispatchParticipantRole {
+        switch self {
+        case .dispatcher:
+            return .dispatcher
+        case .driver:
+            return .driver
+        case .carrier, .ownerOperator:
+            return .carrier
+        }
+    }
+}
+
 struct Profile: Codable, Identifiable {
     let id: UUID
+    var accountRole: AccountRole?
     var companyName: String?
     var mcNumber: String?
     var dotNumber: String?
@@ -21,6 +64,7 @@ struct Profile: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case id
+        case accountRole = "account_role"
         case companyName = "company_name"
         case mcNumber = "mc_number"
         case dotNumber = "dot_number"

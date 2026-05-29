@@ -7,6 +7,7 @@ final class DispatchService: ObservableObject {
 
     @Published private(set) var threads: [DispatchThread] = []
     @Published private(set) var messages: [DispatchMessage] = []
+    @Published private(set) var participants: [DispatchParticipant] = []
     @Published private(set) var offers: [DispatchLoadOffer] = []
     @Published private(set) var payments: [DispatcherPaymentRecord] = []
     @Published private(set) var dispatcherProfiles: [DispatcherProfile] = []
@@ -15,6 +16,7 @@ final class DispatchService: ObservableObject {
     @Published private(set) var agreements: [DispatchAgreement] = []
     @Published private(set) var feeRecords: [DispatcherFeeRecord] = []
     @Published private(set) var invoices: [DispatcherInvoice] = []
+    @Published private(set) var lastErrorMessage: String?
     @Published var activeRole: DispatchParticipantRole = .driver
 
     private let local = LocalDispatchRepository.shared
@@ -25,6 +27,7 @@ final class DispatchService: ObservableObject {
         if AppMode.shared.isLocal {
             local.reload()
             publishLocal()
+            lastErrorMessage = nil
             return
         }
 
@@ -37,6 +40,11 @@ final class DispatchService: ObservableObject {
             let fetchedMessages: [DispatchMessage] = try await supabase.client.from("dispatch_messages")
                 .select()
                 .order("created_at", ascending: true)
+                .execute()
+                .value
+            let fetchedParticipants: [DispatchParticipant] = try await supabase.client.from("dispatch_participants")
+                .select()
+                .order("updated_at", ascending: false)
                 .execute()
                 .value
             let fetchedOffers: [DispatchLoadOffer] = try await supabase.client.from("dispatch_load_offers")
@@ -82,6 +90,7 @@ final class DispatchService: ObservableObject {
 
             threads = fetchedThreads
             messages = fetchedMessages
+            participants = fetchedParticipants
             offers = fetchedOffers
             payments = fetchedPayments
             dispatcherProfiles = fetchedProfiles
@@ -90,7 +99,9 @@ final class DispatchService: ObservableObject {
             agreements = fetchedAgreements
             feeRecords = fetchedFeeRecords
             invoices = fetchedInvoices
+            lastErrorMessage = nil
         } catch {
+            lastErrorMessage = "Sacred DISPATCH could not refresh: \(error.localizedDescription)"
             #if DEBUG
             print("[SacredDispatch] reload failed: \(error)")
             #endif
@@ -103,14 +114,18 @@ final class DispatchService: ObservableObject {
         let now = Date()
         let offerId = draft.id ?? UUID()
         let threadId = draft.threadId ?? UUID()
+        let dispatcherProfile = currentDispatcherProfile(userId: userId)
+        let recipient = try resolveOfferRecipient(from: draft, supabase: supabase)
         let dispatcherName = clean(draft.dispatcherName) ?? supabase.currentProfile?.companyName ?? "Dispatcher"
         let dispatcherCompany = clean(draft.dispatcherCompany) ?? supabase.currentProfile?.companyName
 
         var offer = draft
         offer.id = offerId
         offer.threadId = threadId
+        offer.dispatcherProfileId = offer.dispatcherProfileId ?? dispatcherProfile?.id
         offer.dispatcherUserId = offer.dispatcherUserId ?? userId
-        offer.driverProfileId = offer.driverProfileId ?? userId
+        offer.driverProfileId = recipient.profileId
+        offer.agreementId = offer.agreementId ?? recipient.agreementId
         offer.dispatcherName = dispatcherName
         offer.dispatcherCompany = dispatcherCompany
         offer.loadGrossAmount = offer.grossAmountForCalculations
@@ -119,11 +134,13 @@ final class DispatchService: ObservableObject {
         offer.updatedAt = now
 
         let subject = "Load \(offer.loadNumber?.isEmpty == false ? "#\(offer.loadNumber!)" : "Offer")"
+        let unread = initialUnreadCounts(senderRole: activeRole, recipientRole: recipient.role)
         var thread = DispatchThread(
             id: threadId,
             companyId: offer.companyId,
             loadOfferId: offerId,
             acceptedLoadId: nil,
+            agreementId: offer.agreementId,
             loadNumber: offer.loadNumber,
             driverProfileId: offer.driverProfileId,
             dispatcherUserId: offer.dispatcherUserId,
@@ -131,9 +148,9 @@ final class DispatchService: ObservableObject {
             dispatcherCompany: dispatcherCompany,
             subject: subject,
             lastMessagePreview: "Load offer sent",
-            driverUnreadCount: activeRole == .driver ? 0 : 1,
-            dispatcherUnreadCount: activeRole == .dispatcher ? 0 : 1,
-            carrierUnreadCount: activeRole == .carrier || activeRole == .admin ? 0 : 1,
+            driverUnreadCount: unread.driver,
+            dispatcherUnreadCount: unread.dispatcher,
+            carrierUnreadCount: unread.carrier,
             lastMessageAt: now,
             createdAt: now,
             updatedAt: now
@@ -152,10 +169,26 @@ final class DispatchService: ObservableObject {
             readAt: nil,
             createdAt: now
         )
+        let dispatcherParticipant = participantRecord(
+            companyId: offer.companyId,
+            threadId: threadId,
+            profileId: userId,
+            role: .dispatcher,
+            displayName: dispatcherCompany ?? dispatcherName
+        )
+        let recipientParticipant = participantRecord(
+            companyId: offer.companyId,
+            threadId: threadId,
+            profileId: recipient.profileId,
+            role: recipient.role,
+            displayName: recipient.displayName
+        )
 
         if AppMode.shared.isLocal {
             offer = local.upsertOffer(offer)
             thread = local.upsertThread(thread)
+            _ = local.upsertParticipant(dispatcherParticipant)
+            _ = local.upsertParticipant(recipientParticipant)
             _ = local.appendMessage(message)
             publishLocal()
         } else {
@@ -177,6 +210,8 @@ final class DispatchService: ObservableObject {
                 .single()
                 .execute()
                 .value
+            try? await upsertCloudParticipant(dispatcherParticipant, supabase: supabase)
+            try? await upsertCloudParticipant(recipientParticipant, supabase: supabase)
             await reload(supabase: supabase)
         }
 
@@ -409,9 +444,17 @@ final class DispatchService: ObservableObject {
         copy.isActive = copy.isActive ?? true
         copy.createdAt = copy.createdAt ?? Date()
         copy.updatedAt = Date()
+        let participant = participantRecord(
+            companyId: copy.companyId ?? companyId,
+            threadId: nil,
+            profileId: copy.userId ?? userId,
+            role: .dispatcher,
+            displayName: copy.companyName ?? copy.displayName ?? "Dispatcher"
+        )
 
         if AppMode.shared.isLocal {
             let saved = local.upsertProfile(copy)
+            _ = local.upsertParticipant(participant)
             publishLocal()
             return saved
         }
@@ -421,6 +464,7 @@ final class DispatchService: ObservableObject {
                 .update(copy)
                 .eq("id", value: id)
                 .execute()
+            try await upsertCloudParticipant(participant, supabase: supabase)
             await reload(supabase: supabase)
             return copy
         }
@@ -431,6 +475,7 @@ final class DispatchService: ObservableObject {
             .single()
             .execute()
             .value
+        try await upsertCloudParticipant(participant, supabase: supabase)
         await reload(supabase: supabase)
         return saved
     }
@@ -452,9 +497,29 @@ final class DispatchService: ObservableObject {
             createdAt: now,
             updatedAt: now
         )
+        let carrierParticipant = participantRecord(
+            companyId: companyId,
+            threadId: nil,
+            profileId: profileId,
+            role: .carrier,
+            displayName: request.carrierName ?? "Carrier"
+        )
+        let dispatcherParticipant = dispatcher.userId.map {
+            participantRecord(
+                companyId: companyId,
+                threadId: nil,
+                profileId: $0,
+                role: .dispatcher,
+                displayName: dispatcher.companyName ?? dispatcher.displayName ?? "Dispatcher"
+            )
+        }
 
         if AppMode.shared.isLocal {
             request = local.upsertServiceRequest(request)
+            _ = local.upsertParticipant(carrierParticipant)
+            if let dispatcherParticipant {
+                _ = local.upsertParticipant(dispatcherParticipant)
+            }
             publishLocal()
         } else {
             request = try await supabase.client.from("dispatch_service_requests")
@@ -463,6 +528,10 @@ final class DispatchService: ObservableObject {
                 .single()
                 .execute()
                 .value
+            try? await upsertCloudParticipant(carrierParticipant, supabase: supabase)
+            if let dispatcherParticipant {
+                try? await upsertCloudParticipant(dispatcherParticipant, supabase: supabase)
+            }
             await reload(supabase: supabase)
         }
 
@@ -510,9 +579,29 @@ final class DispatchService: ObservableObject {
         var updatedRequest = request
         updatedRequest.status = .accepted
         updatedRequest.updatedAt = now
+        let carrierParticipant = participantRecord(
+            companyId: companyId,
+            threadId: nil,
+            profileId: carrierId,
+            role: .carrier,
+            displayName: request.carrierName ?? "Carrier"
+        )
+        let dispatcherParticipant = agreement.dispatcherUserId.map {
+            participantRecord(
+                companyId: companyId,
+                threadId: nil,
+                profileId: $0,
+                role: .dispatcher,
+                displayName: agreement.dispatcherCompany ?? agreement.dispatcherName ?? "Dispatcher"
+            )
+        }
 
         if AppMode.shared.isLocal {
             _ = local.upsertServiceRequest(updatedRequest)
+            _ = local.upsertParticipant(carrierParticipant)
+            if let dispatcherParticipant {
+                _ = local.upsertParticipant(dispatcherParticipant)
+            }
             agreement = local.upsertAgreement(agreement)
             publishLocal()
         } else {
@@ -528,6 +617,10 @@ final class DispatchService: ObservableObject {
                 .single()
                 .execute()
                 .value
+            try? await upsertCloudParticipant(carrierParticipant, supabase: supabase)
+            if let dispatcherParticipant {
+                try? await upsertCloudParticipant(dispatcherParticipant, supabase: supabase)
+            }
             await reload(supabase: supabase)
         }
 
@@ -587,12 +680,7 @@ final class DispatchService: ObservableObject {
             record = local.upsertFeeRecord(record)
             publishLocal()
         } else {
-            record = try await supabase.client.from("dispatcher_fee_records")
-                .insert(record, returning: .representation)
-                .select()
-                .single()
-                .execute()
-                .value
+            record = try await upsertCloudFeeRecord(record, supabase: supabase)
             let invoice = try await upsertCloudInvoice(for: agreement, including: record, supabase: supabase)
             record.invoiceId = invoice.id
             if let recordId = record.id {
@@ -801,6 +889,64 @@ final class DispatchService: ObservableObject {
         agreements.filter { $0.status == .active }
     }
 
+    func offerRecipients(supabase: SupabaseService) -> [DispatchOfferRecipient] {
+        let userId = AppMode.shared.isLocal
+            ? Optional(AppMode.shared.localInstallId)
+            : (supabase.currentProfile?.id ?? supabase.client.auth.currentUser?.id)
+        var recipients: [DispatchOfferRecipient] = []
+
+        for participant in participants where participant.isActive {
+            guard participant.role == .driver || participant.role == .carrier else { continue }
+            if participant.profileId == userId && activeRole == .dispatcher { continue }
+            appendRecipient(
+                DispatchOfferRecipient(
+                    profileId: participant.profileId,
+                    role: participant.role,
+                    displayName: participant.displayName ?? participant.role.displayName,
+                    agreementId: nil
+                ),
+                to: &recipients
+            )
+        }
+
+        for request in serviceRequests where request.status == .accepted || request.status == .pending {
+            appendRecipient(
+                DispatchOfferRecipient(
+                    profileId: request.requestedByProfileId,
+                    role: .carrier,
+                    displayName: request.carrierName ?? "Carrier",
+                    agreementId: nil
+                ),
+                to: &recipients
+            )
+        }
+
+        for agreement in activeAgreements() {
+            appendRecipient(
+                DispatchOfferRecipient(
+                    profileId: agreement.carrierProfileId,
+                    role: .carrier,
+                    displayName: agreement.carrierName ?? "Carrier",
+                    agreementId: agreement.id
+                ),
+                to: &recipients
+            )
+        }
+
+        if recipients.isEmpty, activeRole != .dispatcher, let userId {
+            recipients.append(
+                DispatchOfferRecipient(
+                    profileId: userId,
+                    role: activeRole == .driver ? .driver : .carrier,
+                    displayName: senderName(supabase: supabase),
+                    agreementId: nil
+                )
+            )
+        }
+
+        return recipients.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+    }
+
     func networkSummary(referenceDate: Date = Date()) -> DispatchNetworkDashboardSummary {
         let active = activeAgreements()
         let activeAgreementIds = Set(active.compactMap(\.id))
@@ -831,9 +977,20 @@ final class DispatchService: ObservableObject {
         )
     }
 
+    private func appendRecipient(_ recipient: DispatchOfferRecipient, to recipients: inout [DispatchOfferRecipient]) {
+        if let index = recipients.firstIndex(where: { $0.profileId == recipient.profileId }) {
+            if recipients[index].agreementId == nil, recipient.agreementId != nil {
+                recipients[index] = recipient
+            }
+        } else {
+            recipients.append(recipient)
+        }
+    }
+
     private func publishLocal() {
         threads = local.fetchThreads()
         messages = local.fetchMessages()
+        participants = local.fetchParticipants()
         offers = local.fetchOffers()
         payments = local.fetchPayments()
         dispatcherProfiles = local.fetchProfiles()
@@ -842,6 +999,94 @@ final class DispatchService: ObservableObject {
         agreements = local.fetchAgreements()
         feeRecords = local.fetchFeeRecords()
         invoices = local.fetchInvoices()
+        lastErrorMessage = nil
+    }
+
+    private func resolveOfferRecipient(from draft: DispatchLoadOffer, supabase: SupabaseService) throws -> DispatchOfferRecipient {
+        if let profileId = draft.driverProfileId {
+            let participant = participants.first { $0.profileId == profileId }
+            let agreement = draft.agreementId.flatMap { id in agreements.first { $0.id == id } }
+            return DispatchOfferRecipient(
+                profileId: profileId,
+                role: participant?.role ?? .carrier,
+                displayName: participant?.displayName ?? agreement?.carrierName ?? "Carrier",
+                agreementId: draft.agreementId
+            )
+        }
+
+        if let recipient = offerRecipients(supabase: supabase).first {
+            return recipient
+        }
+
+        throw DispatchServiceError.missingOfferRecipient
+    }
+
+    private func currentDispatcherProfile(userId: UUID) -> DispatcherProfile? {
+        dispatcherProfiles.first { $0.userId == userId }
+    }
+
+    private func participantRecord(
+        companyId: UUID,
+        threadId: UUID?,
+        profileId: UUID,
+        role: DispatchParticipantRole,
+        displayName: String?
+    ) -> DispatchParticipant {
+        DispatchParticipant(
+            id: nil,
+            companyId: companyId,
+            threadId: threadId,
+            profileId: profileId,
+            role: role,
+            displayName: clean(displayName) ?? role.displayName,
+            isActive: true,
+            createdAt: nil,
+            updatedAt: Date()
+        )
+    }
+
+    private func upsertCloudParticipant(_ participant: DispatchParticipant, supabase: SupabaseService) async throws {
+        let existing: [DispatchParticipant] = try await supabase.client.from("dispatch_participants")
+            .select()
+            .eq("company_id", value: participant.companyId)
+            .eq("profile_id", value: participant.profileId)
+            .eq("role", value: participant.role.rawValue)
+            .execute()
+            .value
+        if let match = existing.first(where: { $0.threadId == participant.threadId || ($0.threadId == nil && participant.threadId == nil) }),
+           let id = match.id {
+            var updated = participant
+            updated.id = id
+            updated.createdAt = match.createdAt ?? participant.createdAt
+            try await supabase.client.from("dispatch_participants")
+                .update(updated)
+                .eq("id", value: id)
+                .execute()
+        } else {
+            let _: DispatchParticipant = try await supabase.client.from("dispatch_participants")
+                .insert(participant, returning: .representation)
+                .select()
+                .single()
+                .execute()
+                .value
+        }
+    }
+
+    private func initialUnreadCounts(
+        senderRole: DispatchParticipantRole,
+        recipientRole: DispatchParticipantRole
+    ) -> (driver: Int, dispatcher: Int, carrier: Int) {
+        var counts = (driver: 0, dispatcher: 0, carrier: 0)
+        guard senderRole != recipientRole else { return counts }
+        switch recipientRole {
+        case .driver:
+            counts.driver = 1
+        case .dispatcher:
+            counts.dispatcher = 1
+        case .carrier, .admin:
+            counts.carrier = 1
+        }
+        return counts
     }
 
     private func upsertCloudPayment(_ payment: DispatcherPaymentRecord, supabase: SupabaseService) async throws -> DispatcherPaymentRecord {
@@ -866,13 +1111,59 @@ final class DispatchService: ObservableObject {
             .value
     }
 
+    private func upsertCloudFeeRecord(_ record: DispatcherFeeRecord, supabase: SupabaseService) async throws -> DispatcherFeeRecord {
+        if let id = record.id {
+            try await supabase.client.from("dispatcher_fee_records")
+                .update(record)
+                .eq("id", value: id)
+                .execute()
+            return record
+        }
+
+        if let existing = existingFeeRecord(for: record), let existingId = existing.id {
+            var updated = record
+            updated.id = existingId
+            updated.createdAt = existing.createdAt ?? record.createdAt
+            try await supabase.client.from("dispatcher_fee_records")
+                .update(updated)
+                .eq("id", value: existingId)
+                .execute()
+            return updated
+        }
+
+        do {
+            return try await supabase.client.from("dispatcher_fee_records")
+                .insert(record, returning: .representation)
+                .select()
+                .single()
+                .execute()
+                .value
+        } catch {
+            if isUniqueViolation(error),
+               let existing = try await fetchCloudFeeRecord(for: record, supabase: supabase),
+               let existingId = existing.id {
+                var updated = record
+                updated.id = existingId
+                updated.createdAt = existing.createdAt ?? record.createdAt
+                try await supabase.client.from("dispatcher_fee_records")
+                    .update(updated)
+                    .eq("id", value: existingId)
+                    .execute()
+                return updated
+            }
+            throw error
+        }
+    }
+
     private func upsertCloudInvoice(
         for agreement: DispatchAgreement,
         including record: DispatcherFeeRecord,
         supabase: SupabaseService
     ) async throws -> DispatcherInvoice {
-        let invoice = invoice(for: agreement, including: record)
-        if let existingId = invoice.id {
+        var invoice = invoice(for: agreement, including: record)
+        if let existing = existingInvoice(for: invoice), let existingId = existing.id {
+            invoice.id = existingId
+            invoice.createdAt = existing.createdAt ?? invoice.createdAt
             try await supabase.client.from("dispatcher_invoices")
                 .update(invoice)
                 .eq("id", value: existingId)
@@ -880,12 +1171,92 @@ final class DispatchService: ObservableObject {
             return invoice
         }
 
-        return try await supabase.client.from("dispatcher_invoices")
-            .insert(invoice, returning: .representation)
+        do {
+            return try await supabase.client.from("dispatcher_invoices")
+                .insert(invoice, returning: .representation)
+                .select()
+                .single()
+                .execute()
+                .value
+        } catch {
+            if isUniqueViolation(error),
+               let existing = try await fetchCloudInvoice(for: invoice, supabase: supabase),
+               let existingId = existing.id {
+                invoice.id = existingId
+                invoice.createdAt = existing.createdAt ?? invoice.createdAt
+                try await supabase.client.from("dispatcher_invoices")
+                    .update(invoice)
+                    .eq("id", value: existingId)
+                    .execute()
+                return invoice
+            }
+            throw error
+        }
+    }
+
+    private func existingFeeRecord(for record: DispatcherFeeRecord) -> DispatcherFeeRecord? {
+        guard let agreementId = record.agreementId,
+              let loadNumber = clean(record.loadNumber) else { return nil }
+        return feeRecords.first {
+            $0.agreementId == agreementId &&
+            clean($0.loadNumber)?.caseInsensitiveCompare(loadNumber) == .orderedSame
+        }
+    }
+
+    private func fetchCloudFeeRecord(for record: DispatcherFeeRecord, supabase: SupabaseService) async throws -> DispatcherFeeRecord? {
+        guard let agreementId = record.agreementId,
+              let loadNumber = clean(record.loadNumber) else { return nil }
+        let matches: [DispatcherFeeRecord] = try await supabase.client.from("dispatcher_fee_records")
             .select()
-            .single()
+            .eq("agreement_id", value: agreementId)
+            .eq("load_number", value: loadNumber)
+            .limit(1)
             .execute()
             .value
+        return matches.first
+    }
+
+    private func existingInvoice(for invoice: DispatcherInvoice) -> DispatcherInvoice? {
+        guard let agreementId = invoice.agreementId,
+              let periodStart = invoice.periodStart,
+              let periodEnd = invoice.periodEnd else { return nil }
+        return invoices.first {
+            $0.agreementId == agreementId &&
+            sameDate($0.periodStart, periodStart) &&
+            sameDate($0.periodEnd, periodEnd)
+        }
+    }
+
+    private func fetchCloudInvoice(for invoice: DispatcherInvoice, supabase: SupabaseService) async throws -> DispatcherInvoice? {
+        guard let agreementId = invoice.agreementId,
+              let periodStart = invoice.periodStart,
+              let periodEnd = invoice.periodEnd else { return nil }
+        let matches: [DispatcherInvoice] = try await supabase.client.from("dispatcher_invoices")
+            .select()
+            .eq("agreement_id", value: agreementId)
+            .eq("period_start", value: sqlDateString(periodStart))
+            .eq("period_end", value: sqlDateString(periodEnd))
+            .limit(1)
+            .execute()
+            .value
+        return matches.first
+    }
+
+    private func sameDate(_ lhs: Date?, _ rhs: Date) -> Bool {
+        guard let lhs else { return false }
+        return sqlDateString(lhs) == sqlDateString(rhs)
+    }
+
+    private func sqlDateString(_ date: Date) -> String {
+        SPDate.dateOnly.string(from: date)
+    }
+
+    private func isUniqueViolation(_ error: Error) -> Bool {
+        let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
+        return raw.contains("23505") ||
+               raw.contains("duplicate key") ||
+               raw.contains("unique constraint") ||
+               raw.contains("violates unique")
     }
 
     private func invoice(for agreement: DispatchAgreement, including record: DispatcherFeeRecord) -> DispatcherInvoice {
@@ -1068,6 +1439,7 @@ final class DispatchService: ObservableObject {
 enum DispatchServiceError: LocalizedError {
     case missingAuthenticatedUser
     case missingOfferId
+    case missingOfferRecipient
     case missingPaymentId
     case missingDispatcherProfile
     case missingFeeRecordId
@@ -1079,6 +1451,8 @@ enum DispatchServiceError: LocalizedError {
             return "Sign in or switch to Free Local Mode before using Sacred DISPATCH."
         case .missingOfferId:
             return "The dispatch offer is missing its saved ID. Refresh Sacred DISPATCH and try again."
+        case .missingOfferRecipient:
+            return "Select a carrier or driver before sending this dispatch load offer."
         case .missingPaymentId:
             return "The dispatcher payment record is missing its saved ID. Refresh Sacred DISPATCH and try again."
         case .missingDispatcherProfile:
