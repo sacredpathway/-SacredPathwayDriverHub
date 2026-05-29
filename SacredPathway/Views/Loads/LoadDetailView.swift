@@ -56,6 +56,11 @@ struct LoadDetailView: View {
                                     .font(.caption)
                                     .foregroundStyle(Color.spTextSecondary)
                             }
+                            if let weight = load.weightDisplay {
+                                Text("Weight: \(weight)")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.spTextSecondary)
+                            }
                         }
                     }
 
@@ -319,6 +324,9 @@ struct LoadDetailView: View {
         }
         if let miles = load.totalMiles, miles > 0 {
             lines.append("Total miles: \(Int(miles))")
+        }
+        if let weight = load.weightDisplay {
+            lines.append("Weight: \(weight)")
         }
 
         lines.append("")

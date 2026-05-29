@@ -592,6 +592,13 @@ struct LoadRowView: View {
                     Spacer()
                 }
             }
+            if let weight = load.weightDisplay {
+                HStack {
+                    Image(systemName: "shippingbox.fill").font(.caption).foregroundStyle(Color.spGoldLight)
+                    Text("Weight: \(weight)").font(.caption).foregroundStyle(Color.spTextSecondary)
+                    Spacer()
+                }
+            }
             Divider().background(Color.spTextSecondary.opacity(0.2))
             HStack {
                 if let rev = load.totalRevenue {

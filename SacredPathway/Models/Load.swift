@@ -41,6 +41,8 @@ struct Load: Codable, Identifiable {
     var fuelSurcharge: Double?
     var accessorialCharges: Double?
     var totalRevenue: Double?
+    var weightValue: Double?
+    var weightUnit: String?
     var status: String?
     var createdAt: Date?          // Postgres TIMESTAMPTZ
     var updatedAt: Date?          // Postgres TIMESTAMPTZ
@@ -71,6 +73,8 @@ struct Load: Codable, Identifiable {
         case fuelSurcharge = "fuel_surcharge"
         case accessorialCharges = "accessorial_charges"
         case totalRevenue = "total_revenue"
+        case weightValue = "weight_value"
+        case weightUnit = "weight_unit"
         case status
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -88,6 +92,16 @@ struct Load: Codable, Identifiable {
     var ratePerMile: Double {
         guard let miles = totalMiles, miles > 0, let rev = totalRevenue else { return 0 }
         return rev / miles
+    }
+
+    var weightDisplay: String? {
+        guard let value = weightValue, value > 0 else { return nil }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = value.rounded() == value ? 0 : 1
+        let formatted = formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+        let unit = weightUnit == "kg" ? "kg" : "lbs"
+        return "\(formatted) \(unit)"
     }
 
     /// Decoded LoadStatus, defaulting based on driver assignment when the
@@ -121,6 +135,8 @@ struct Load: Codable, Identifiable {
         fuelSurcharge: Double? = nil,
         accessorialCharges: Double? = nil,
         totalRevenue: Double? = nil,
+        weightValue: Double? = nil,
+        weightUnit: String? = nil,
         status: String? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
@@ -146,6 +162,8 @@ struct Load: Codable, Identifiable {
         self.fuelSurcharge = fuelSurcharge
         self.accessorialCharges = accessorialCharges
         self.totalRevenue = totalRevenue
+        self.weightValue = weightValue
+        self.weightUnit = weightUnit
         self.status = status
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -174,6 +192,8 @@ struct Load: Codable, Identifiable {
         fuelSurcharge         = try c.decodeIfPresent(Double.self, forKey: .fuelSurcharge)
         accessorialCharges    = try c.decodeIfPresent(Double.self, forKey: .accessorialCharges)
         totalRevenue          = try c.decodeIfPresent(Double.self, forKey: .totalRevenue)
+        weightValue           = try c.decodeIfPresent(Double.self, forKey: .weightValue)
+        weightUnit            = try c.decodeIfPresent(String.self, forKey: .weightUnit)
         status                = try c.decodeIfPresent(String.self, forKey: .status)
         brokerId              = try c.decodeIfPresent(UUID.self,   forKey: .brokerId)
         brokerContactId       = try c.decodeIfPresent(UUID.self,   forKey: .brokerContactId)
@@ -202,6 +222,8 @@ struct Load: Codable, Identifiable {
         try c.encodeIfPresent(fuelSurcharge,        forKey: .fuelSurcharge)
         try c.encodeIfPresent(accessorialCharges,   forKey: .accessorialCharges)
         try c.encodeIfPresent(totalRevenue,         forKey: .totalRevenue)
+        try c.encodeIfPresent(weightValue,          forKey: .weightValue)
+        try c.encodeIfPresent(weightUnit,           forKey: .weightUnit)
         try c.encodeIfPresent(status,               forKey: .status)
         try c.encodeIfPresent(brokerId,             forKey: .brokerId)
         try c.encodeIfPresent(brokerContactId,      forKey: .brokerContactId)

@@ -187,12 +187,14 @@ enum LocalDocumentParser {
         // must be on the same line. Without this a column-header label
         // would grab the next column header as the value (e.g.
         // "Load Number     Reference" → "Reference").
-        if let m = firstRegex(joined, pattern: #"(?i)\b(?:load|order|trip|pro|shipment)[ \t]*(?:number|no\.?|num\.?|id|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{3,20})"#) {
-            let v = m.cleanID
+        let loadNumberPattern = #"(?i)\b(?:load|order|trip|pro|shipment)[ \t]*(?:number|no\.?|num\.?|id|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{3,20})"#
+        for raw in allMatches(joined, pattern: loadNumberPattern) {
+            let v = raw.cleanID
             // Reject column-header words — real IDs contain a digit.
             if v.contains(where: { $0.isNumber }) {
                 out.loadNumber = v
                 out.confidence["loadNumber"] = 0.85
+                break
             }
         }
 
@@ -257,12 +259,16 @@ enum LocalDocumentParser {
         if let m = firstRegex(joined, pattern: #"(?im)^\s*(?:broker|brokered\s*by|carrier\s*broker|booked\s*by)\s*[:\-]\s*(.+?)\s*$"#) {
             out.brokerName = m.trimmedCompanySuffix
             out.confidence["brokerName"] = 0.85
+        } else if let headerBroker = pickHeaderBroker(lines: lines) {
+            out.brokerName = headerBroker
+            out.confidence["brokerName"] = 0.72
         } else {
             // Heuristic: first non-empty line that looks like a company
             // (contains LLC / Inc / Logistics / Transport / Freight /
             // Brokerage) and isn't obviously the carrier's own name.
             for line in lines.prefix(15) {
                 let l = line.lowercased()
+                if l.hasPrefix("carrier:") || l.hasPrefix("carrier ") { continue }
                 if l.contains("logistics") || l.contains("freight") ||
                    l.contains("brokerage") || l.contains(" inc") ||
                    l.contains(" llc") || l.contains("transport") {
@@ -377,19 +383,26 @@ enum LocalDocumentParser {
         let pickupHits = anchorHits(lines: lines, regexes: pickupAnchorRegexes)
         let deliveryHits = anchorHits(lines: lines, regexes: deliveryAnchorRegexes)
 
-        // Best pickup block (highest score).
-        let pickupBlock = pickupHits
-            .map { ($0, blockAt(lines: lines, startIndex: $0)) }
-            .max(by: { score($0.1) < score($1.1) })
+        let routeBlocks: (pickup: AddrBlock?, delivery: AddrBlock?)
+        if let paired = pairedStopBlocks(lines: lines, pickupHits: pickupHits, deliveryHits: deliveryHits) {
+            routeBlocks = (paired.pickup, paired.delivery)
+        } else {
+            // Best pickup block (highest score).
+            let pickupBlock = pickupHits
+                .map { ($0, blockAt(lines: lines, startIndex: $0)) }
+                .max(by: { score($0.1) < score($1.1) })
 
-        // Best delivery block, but EXCLUDE the line index pickup chose so
-        // we never tag the same address twice.
-        let deliveryBlock: (Int, AddrBlock)? = deliveryHits
-            .filter { $0 != pickupBlock?.0 }
-            .map { ($0, blockAt(lines: lines, startIndex: $0)) }
-            .max(by: { score($0.1) < score($1.1) })
+            // Best delivery block, but EXCLUDE the line index pickup chose so
+            // we never tag the same address twice.
+            let deliveryBlock: (Int, AddrBlock)? = deliveryHits
+                .filter { $0 != pickupBlock?.0 }
+                .map { ($0, blockAt(lines: lines, startIndex: $0)) }
+                .max(by: { score($0.1) < score($1.1) })
 
-        if let (_, block) = pickupBlock {
+            routeBlocks = (pickupBlock?.1, deliveryBlock?.1)
+        }
+
+        if let block = routeBlocks.pickup {
             out.pickupAddress = block.address
             out.pickupCityState = block.cityState
             out.shipperName = block.companyName
@@ -407,7 +420,7 @@ enum LocalDocumentParser {
             }
         }
 
-        if let (_, block) = deliveryBlock {
+        if let block = routeBlocks.delivery {
             out.deliveryAddress = block.address
             out.deliveryCityState = block.cityState
             out.receiverName = block.companyName
@@ -458,13 +471,17 @@ enum LocalDocumentParser {
             out.confidence["rate"] = p.confidence
         }
 
-        // ---- Weight ----
-        if let m = firstRegex(joined, pattern: #"(?i)\b(?:weight|wt\.?)[:\s]+([0-9]{1,3}(?:,[0-9]{3})*)\s*(?:lbs?|pounds?|kg|kilos?)?"#) {
-            out.weight = m + " lbs"
-            out.confidence["weight"] = 0.8
-        } else if let m = firstRegex(joined, pattern: #"\b([0-9]{2,3}(?:,[0-9]{3})|[0-9]{4,5})\s*(?:lbs?|pounds?)\b"#) {
-            out.weight = m + " lbs"
-            out.confidence["weight"] = 0.6
+        // ---- Weight (scored multi-candidate, 2026-05-28 rewrite) ----
+        //
+        // Strategy: collect explicit weight-label hits ("Gross Weight: 45,000"),
+        // table-style hits where "Weight:" is printed above the value, and
+        // unit-bearing hits ("45,000 lbs"). Reject candidates whose source
+        // context looks like mileage, money, load IDs, MC numbers, phone
+        // numbers, PO/reference IDs, dates, or equipment IDs. If nothing clears
+        // the confidence bar, leave the editable field blank.
+        if let pickedWeight = pickWeight(lines: lines) {
+            out.weight = pickedWeight.displayValue
+            out.confidence["weight"] = pickedWeight.confidence
         }
 
         // ---- Commodity ----
@@ -654,6 +671,7 @@ enum LocalDocumentParser {
         let tag = "SP_DEBUG_RATECON"
         print("[\(tag)] documentType=\(out.documentType.rawValue) vendor=\(out.sourceVendor ?? "-")")
         print("[\(tag)] FINAL loadNumber=\(out.loadNumber ?? "<nil>") rate=\(out.rate.map { String($0) } ?? "<nil>")")
+        print("[\(tag)] FINAL weight=\(out.weight ?? "<nil>") confidence=\(out.confidence["weight"].map { String(format: "%.2f", $0) } ?? "<nil>")")
         print("[\(tag)] FINAL referenceNumber=\(out.referenceNumber ?? "<nil>") poNumber=\(out.poNumber ?? "<nil>")")
 
         // Show OCR context around the detected load number (±2 lines).
@@ -707,6 +725,34 @@ enum LocalDocumentParser {
             print("[\(tag)] rate=<nil> — no rate label matched. Dumping any $ lines:")
             for (i, line) in lines.enumerated() where line.contains("$") {
                 print("[\(tag)]    \(i): \(line)")
+            }
+        }
+
+        if let weight = out.weight {
+            let digits = weight.filter(\.isNumber)
+            if let idx = lines.firstIndex(where: {
+                let compact = $0.filter { $0.isNumber || $0.isLetter }
+                return $0.contains(weight) || (!digits.isEmpty && compact.contains(digits))
+            }) {
+                let lo = max(0, idx - 3)
+                let hi = min(lines.count - 1, idx + 3)
+                print("[\(tag)] weight OCR context [\(lo)…\(hi)]:")
+                for i in lo...hi {
+                    let marker = (i == idx) ? "  > " : "    "
+                    print("[\(tag)]\(marker)\(i): \(lines[i])")
+                }
+            } else {
+                print("[\(tag)] weight=\(weight) but NOT found verbatim in any OCR line.")
+            }
+        } else {
+            print("[\(tag)] weight=<nil> — no confident weight candidate. Weight-like OCR lines:")
+            for (i, line) in lines.enumerated() {
+                let lower = line.lowercased()
+                if lower.contains("weight") || lower.contains("wt") ||
+                    lower.contains("lb") || lower.contains("pound") ||
+                    lower.contains("kg") || lower.contains("kilo") {
+                    print("[\(tag)]    \(i): \(line)")
+                }
             }
         }
     }
@@ -801,11 +847,283 @@ enum LocalDocumentParser {
         var confidence: Double { Double(priority) / 100.0 }
     }
 
+    /// One candidate for the shipment weight field, including the exact OCR
+    /// source text used to select or reject it.
+    struct WeightCandidate {
+        let value: Int
+        let unit: String
+        let lineIndex: Int
+        let sourceText: String
+        let confidence: Double
+        let reason: String
+        var rejectionReason: String?
+
+        var displayValue: String {
+            let fmt = NumberFormatter()
+            fmt.numberStyle = .decimal
+            fmt.locale = Locale(identifier: "en_US")
+            let formatted = fmt.string(from: NSNumber(value: value)) ?? String(value)
+            return "\(formatted) \(unit)"
+        }
+    }
+
+    /// Pick the most likely freight weight from OCR text without confusing it
+    /// with rate, mileage, load-number, MC-number, or PO/reference values.
+    static func pickWeight(lines: [String]) -> WeightCandidate? {
+        var candidates: [WeightCandidate] = []
+
+        let sameLinePattern = #"(?i)\b(?:(gross|shipment|cargo|total|actual|net)\s+)?(?:weight|wt\.?)\b(?:\s*\((lbs?|lb|pounds?|kg|kgs|kilograms?|kilos?)\))?\s*[:#\-]?\s*([0-9]{1,3}(?:[,\s][0-9]{3})+|[0-9]{4,6})(?:\s*(lbs?|lb|pounds?|kg|kgs|kilograms?|kilos?))?\b"#
+        let valueWithOptionalUnitPattern = #"(?i)\b([0-9]{1,3}(?:[,\s][0-9]{3})+|[0-9]{4,6})(?:\s*(lbs?|lb|pounds?|kg|kgs|kilograms?|kilos?))?\b"#
+        let valueWithUnitPattern = #"(?i)\b([0-9]{1,3}(?:[,\s][0-9]{3})+|[0-9]{4,6})\s*(lbs?|lb|pounds?|kg|kgs|kilograms?|kilos?)\b"#
+
+        func addCandidate(numberRaw: String,
+                          unitRaw: String?,
+                          lineIndex: Int,
+                          sourceText: String,
+                          context: String,
+                          baseConfidence: Double,
+                          reason: String,
+                          hasWeightLabel: Bool,
+                          hasExplicitUnit: Bool) {
+            guard let value = parseWeightNumber(numberRaw) else { return }
+            let unit = normalizeWeightUnit(unitRaw) ?? inferWeightUnit(from: sourceText) ?? "lbs"
+            let boundedConfidence = min(0.98, max(0.0, baseConfidence))
+            var candidate = WeightCandidate(
+                value: value,
+                unit: unit,
+                lineIndex: lineIndex,
+                sourceText: sourceText,
+                confidence: boundedConfidence,
+                reason: reason,
+                rejectionReason: nil
+            )
+            candidate.rejectionReason = weightRejectionReason(
+                value: value,
+                unit: unit,
+                context: context,
+                hasWeightLabel: hasWeightLabel,
+                hasExplicitUnit: hasExplicitUnit
+            )
+            candidates.append(candidate)
+        }
+
+        for (idx, line) in lines.enumerated() {
+            let broadContext = weightContext(lines: lines, around: idx, radius: 4)
+            let lineHasLabel = containsWeightLabel(line)
+
+            // 1) Explicit same-line labels:
+            //    "Gross Weight: 45,000", "Weight (LBS): 45000".
+            for groups in regexCaptureMatches(line, pattern: sameLinePattern) {
+                guard let numberRaw = capture(groups, 3) else { continue }
+                let labelPrefix = capture(groups, 1)?.lowercased()
+                let unitRaw = capture(groups, 4) ?? capture(groups, 2)
+                let isSpecificLabel = labelPrefix != nil
+                let hasUnit = unitRaw != nil
+                addCandidate(
+                    numberRaw: numberRaw,
+                    unitRaw: unitRaw,
+                    lineIndex: idx,
+                    sourceText: line,
+                    context: line,
+                    baseConfidence: (isSpecificLabel ? 0.93 : 0.88) + (hasUnit ? 0.03 : 0.0),
+                    reason: "same-line weight label",
+                    hasWeightLabel: true,
+                    hasExplicitUnit: hasUnit || capture(groups, 2) != nil
+                )
+            }
+
+            // 2) Table-style rate cons often OCR a label column first and
+            //    values several lines later:
+            //
+            //      Weight:
+            //      Equipment:
+            //      Pieces:
+            //      42,000 lbs
+            if lineHasLabel {
+                for offset in 1...8 {
+                    let valueIndex = idx + offset
+                    guard valueIndex < lines.count else { break }
+                    let valueLine = lines[valueIndex]
+                    let context = "\(line) \(valueLine)"
+                    for groups in regexCaptureMatches(valueLine, pattern: valueWithOptionalUnitPattern) {
+                        guard let numberRaw = capture(groups, 1) else { continue }
+                        let unitRaw = capture(groups, 2) ?? inferWeightUnit(from: line)
+                        let hasUnit = unitRaw != nil
+                        addCandidate(
+                            numberRaw: numberRaw,
+                            unitRaw: unitRaw,
+                            lineIndex: valueIndex,
+                            sourceText: "\(line) -> \(valueLine)",
+                            context: context,
+                            baseConfidence: hasUnit ? 0.88 : 0.76,
+                            reason: "near preceding weight label",
+                            hasWeightLabel: true,
+                            hasExplicitUnit: hasUnit
+                        )
+                    }
+                }
+            }
+
+            // 3) Unit-bearing lines inside shipment/cargo context are valid even
+            //    when the table label is not nearby.
+            for groups in regexCaptureMatches(line, pattern: valueWithUnitPattern) {
+                guard let numberRaw = capture(groups, 1),
+                      let unitRaw = capture(groups, 2)
+                else { continue }
+
+                let supported = containsWeightLabel(broadContext) || hasShipmentWeightContext(broadContext)
+                addCandidate(
+                    numberRaw: numberRaw,
+                    unitRaw: unitRaw,
+                    lineIndex: idx,
+                    sourceText: line,
+                    context: line,
+                    baseConfidence: supported ? 0.74 : 0.66,
+                    reason: supported ? "unit-bearing shipment context" : "unit-bearing fallback",
+                    hasWeightLabel: containsWeightLabel(broadContext),
+                    hasExplicitUnit: true
+                )
+            }
+        }
+
+        let winner = candidates
+            .filter { $0.rejectionReason == nil && $0.confidence >= 0.72 }
+            .sorted {
+                if abs($0.confidence - $1.confidence) > 0.001 {
+                    return $0.confidence > $1.confidence
+                }
+                return $0.lineIndex < $1.lineIndex
+            }
+            .first
+
+        #if DEBUG
+        logWeightCandidates(candidates, winner: winner)
+        #endif
+
+        return winner
+    }
+
+    private static func parseWeightNumber(_ raw: String) -> Int? {
+        let cleaned = raw
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: " ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return nil }
+        return Int(cleaned)
+    }
+
+    private static func normalizeWeightUnit(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let lower = raw.lowercased()
+        if lower.contains("kg") || lower.contains("kilo") { return "kg" }
+        if lower.contains("lb") || lower.contains("pound") { return "lbs" }
+        return nil
+    }
+
+    private static func inferWeightUnit(from text: String) -> String? {
+        normalizeWeightUnit(text)
+    }
+
+    private static func containsWeightLabel(_ text: String) -> Bool {
+        matchesRegex(text, pattern: #"(?i)\b(?:(?:gross|shipment|cargo|total|actual|net)\s+)?(?:weight|wt\.?)\b"#)
+    }
+
+    private static func hasShipmentWeightContext(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        let signals = [
+            "shipment", "commodity", "cargo", "freight", "equipment",
+            "truckload", "palletized", "hazmat", "dry van", "reefer", "flatbed"
+        ]
+        return signals.contains { lower.contains($0) }
+    }
+
+    private static func weightContext(lines: [String], around index: Int, radius: Int) -> String {
+        guard !lines.isEmpty else { return "" }
+        let lo = max(0, index - radius)
+        let hi = min(lines.count - 1, index + radius)
+        return lines[lo...hi].joined(separator: " ")
+    }
+
+    private static func weightRejectionReason(value: Int,
+                                              unit: String,
+                                              context: String,
+                                              hasWeightLabel: Bool,
+                                              hasExplicitUnit: Bool) -> String? {
+        if unit == "kg" {
+            guard (250...60_000).contains(value) else {
+                return "outside plausible kg range"
+            }
+        } else {
+            guard (500...120_000).contains(value) else {
+                return "outside plausible lbs range"
+            }
+        }
+
+        let lower = context.lowercased()
+        if lower.contains("$") || lower.contains(" usd") || lower.contains("dollars") {
+            return "money/rate context"
+        }
+        if matchesRegex(lower, pattern: #"\b(?:miles?|mi)\b"#) {
+            return "mileage context"
+        }
+
+        let identifierSignals = [
+            "load #", "load no", "load number", "load id", "order #",
+            "mc#", "mc #", "motor carrier", "dot#", "dot #", "usdot",
+            "phone", "tel", "fax", "email",
+            "po #", "po#", "p.o.", "purchase order",
+            "reference", "ref #", "ref#", "pickup number", "delivery number",
+            "bol #", "bol#", "trailer", "tractor", "date", "time"
+        ]
+        if identifierSignals.contains(where: { lower.contains($0) }) {
+            return "identifier/date/equipment context"
+        }
+
+        if !hasWeightLabel {
+            let nonWeightSignals = [
+                "rate", "pay", "charge", "amount", "revenue", "line haul",
+                "fuel", "surcharge", "detention", "lumper", "deadhead",
+                "loaded miles", "empty miles"
+            ]
+            if nonWeightSignals.contains(where: { lower.contains($0) }) {
+                return "non-weight amount context"
+            }
+        }
+
+        if !hasWeightLabel && !hasExplicitUnit {
+            return "no weight label or unit"
+        }
+
+        return nil
+    }
+
+    #if DEBUG
+    private static func logWeightCandidates(_ candidates: [WeightCandidate], winner: WeightCandidate?) {
+        let tag = "SP_DEBUG_RATECON"
+        if candidates.isEmpty {
+            print("[\(tag)] WEIGHT no candidates")
+            return
+        }
+
+        print("[\(tag)] WEIGHT candidates=\(candidates.count)")
+        for c in candidates.sorted(by: { $0.confidence > $1.confidence }).prefix(12) {
+            let status = c.rejectionReason.map { "REJECT \($0)" } ?? "KEEP"
+            print("[\(tag)] WEIGHT \(status) conf=\(String(format: "%.2f", c.confidence)) value=\(c.displayValue) line=\(c.lineIndex) reason=\(c.reason) source=\"\(c.sourceText)\"")
+        }
+
+        if let winner {
+            print("[\(tag)] WEIGHT PICKED value=\(winner.displayValue) conf=\(String(format: "%.2f", winner.confidence)) source=\"\(winner.sourceText)\"")
+        } else {
+            print("[\(tag)] WEIGHT no confident candidate picked; editable field left blank")
+        }
+    }
+    #endif
+
     /// Pick the most-likely "true carrier pay" amount from the OCR text.
     ///
     /// Scoring priority (lower = better; higher score wins):
     ///   100  carrier pay, carrier rate, all-in rate, all-in
-    ///    95  agreed rate, agreed amount, rate confirmation
+    ///    95  agreed rate, agreed amount
     ///    90  total rate, total amount, total pay, gross pay, driver pay,
     ///        truck pay, flat rate
     ///    85  line haul, linehaul, freight charge
@@ -839,10 +1157,12 @@ enum LocalDocumentParser {
         let barePat = #"\b([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[1-9][0-9]{2,4}(?:\.[0-9]{1,2})?)\b"#
 
         for (idx, rawLine) in lines.enumerated() {
-            // Same-line context: this line + the previous line (label often
-            // sits above the dollar cell in a table OCR).
-            let prev = idx > 0 ? lines[idx - 1] : ""
-            let ctx = (prev + " " + rawLine).lowercased()
+            // Nearby context: this line plus the closest preceding OCR labels.
+            // Rate cons often OCR table labels ("TOTAL RATE") one or two cells
+            // before the dollar value. Keep the window tight so unrelated line
+            // items like fuel surcharge do not poison the true total.
+            let lo = max(0, idx - 2)
+            let ctx = (lines[lo...idx].joined(separator: " ")).lowercased()
 
             // $-prefixed amounts on this line.
             let dollarMatches = allMatches(rawLine, pattern: dollarPat)
@@ -886,7 +1206,7 @@ enum LocalDocumentParser {
         // --- 2) Score every candidate. ---
         let labelTiers: [(score: Int, regex: String)] = [
             (100, #"\bcarrier\s*pay\b|\bcarrier\s*rate\b|\ball[\s\-]?in(?:\s*rate)?\b"#),
-            (95,  #"\bagreed\s*(?:rate|amount)\b|\brate\s*conf(?:irmation)?\b"#),
+            (95,  #"\bagreed\s*(?:rate|amount)\b"#),
             (90,  #"\btotal\s*(?:rate|amount|pay)\b|\bgross\s*pay\b|\bdriver\s*pay\b|\btruck\s*pay\b|\bflat\s*rate\b|\btotal\b"#),
             (85,  #"\bline\s*haul\b|\blinehaul\b|\bfreight\s*charge\b"#),
             (80,  #"\bload\s*(?:pay|rate|amount)\b"#),
@@ -925,13 +1245,6 @@ enum LocalDocumentParser {
         for i in candidates.indices {
             let ctx = candidates[i].labelContext
 
-            // Negative check first — reject keywords short-circuit.
-            for bad in rejectKeywords where ctx.contains(bad) {
-                candidates[i].rejectionReason = "context contains '\(bad)'"
-                break
-            }
-            if candidates[i].rejectionReason != nil { continue }
-
             // Positive scoring — pick the highest tier that matches.
             for (score, pat) in labelTiers {
                 if firstRegex(ctx, pattern: pat) != nil {
@@ -948,6 +1261,34 @@ enum LocalDocumentParser {
                candidates[i].hadDollarPrefix,
                candidates[i].lineIndex < max(1, lines.count / 2) {
                 candidates[i].priority = 30
+            }
+
+            if candidates[i].priority == 0,
+               isImplicitChargesTotal(
+                candidate: candidates[i],
+                candidates: candidates,
+                lines: lines,
+                docType: docType
+               ) {
+                candidates[i].priority = 88
+            }
+
+            // Negative context usually wins, but real rate cons often print
+            // "Accessorial" or "Fuel surcharge" rows immediately before a
+            // clearly labeled "TOTAL RATE" row. Preserve those strong total
+            // labels while still rejecting the line-item amounts themselves.
+            for bad in rejectKeywords where ctx.contains(bad) {
+                if preservesStrongRateContext(ctx, priority: candidates[i].priority) ||
+                    isImplicitChargesTotal(
+                        candidate: candidates[i],
+                        candidates: candidates,
+                        lines: lines,
+                        docType: docType
+                    ) {
+                    continue
+                }
+                candidates[i].rejectionReason = "context contains '\(bad)'"
+                break
             }
         }
 
@@ -988,12 +1329,74 @@ enum LocalDocumentParser {
         return winner
     }
 
+    private static func preservesStrongRateContext(_ ctx: String, priority: Int) -> Bool {
+        guard priority >= 90 else { return false }
+        return firstRegex(
+            ctx,
+            pattern: #"(?i)\btotal\s*rate\b|\bcarrier\s*(?:pay|rate)\b|\ball[\s\-]?in(?:\s*rate)?\b|\bagreed\s*(?:rate|amount)\b|\bgross\s*pay\b|\bdriver\s*pay\b|\btruck\s*pay\b|\bflat\s*rate\b"#
+        ) != nil
+    }
+
+    private static func isImplicitChargesTotal(candidate: RateCandidate,
+                                               candidates: [RateCandidate],
+                                               lines: [String],
+                                               docType: DocumentType) -> Bool {
+        guard docType == .rateCon || docType == .unknown else { return false }
+        guard candidate.hadDollarPrefix, candidate.value >= 500 else { return false }
+        guard !lines.isEmpty, candidate.lineIndex < lines.count else { return false }
+
+        let sectionStart = max(0, candidate.lineIndex - 16)
+        let scanEnd = min(lines.count - 1, candidate.lineIndex + 8)
+        var sectionEnd = scanEnd
+        if candidate.lineIndex < lines.count {
+            for i in candidate.lineIndex...scanEnd {
+                let lower = lines[i].lowercased()
+                if lower.contains("special instructions") ||
+                    lower.contains("acceptance:") ||
+                    lower.contains("terms") ||
+                    lower.contains("detention:") ||
+                    lower.contains("lumper") {
+                    sectionEnd = max(candidate.lineIndex, i - 1)
+                    break
+                }
+            }
+        }
+
+        let sectionText = lines[sectionStart...sectionEnd].joined(separator: " ").lowercased()
+        let hasChargesTable = sectionText.contains("charges") ||
+            sectionText.contains("linehaul") ||
+            sectionText.contains("line haul") ||
+            sectionText.contains("freight charge")
+        let hasLineItems = sectionText.contains("fsc") ||
+            sectionText.contains("fuel surcharge") ||
+            sectionText.contains("accessorial") ||
+            sectionText.contains("linehaul") ||
+            sectionText.contains("line haul")
+        guard hasChargesTable && hasLineItems else { return false }
+
+        let sectionAmounts = candidates.filter {
+            $0.hadDollarPrefix &&
+            $0.lineIndex >= sectionStart &&
+            $0.lineIndex <= sectionEnd &&
+            $0.value >= 200
+        }
+        guard let maxValue = sectionAmounts.map(\.value).max(),
+              abs(candidate.value - maxValue) < 0.01
+        else { return false }
+
+        return sectionAmounts.contains {
+            $0.lineIndex < candidate.lineIndex &&
+            $0.value < candidate.value
+        }
+    }
+
     /// Short, human-readable reason a candidate scored its tier (DEBUG only).
     private static func winReason(for c: RateCandidate) -> String {
         switch c.priority {
         case 100: return "carrier pay / carrier rate / all-in"
-        case 95:  return "agreed rate / rate confirmation"
+        case 95:  return "agreed rate / agreed amount"
         case 90:  return "total rate / total pay / flat rate"
+        case 88:  return "implicit total from charges table"
         case 85:  return "line haul / linehaul / freight charge"
         case 80:  return "load pay / load rate / load amount"
         case 70:  return "tender / booked / trip pay"
@@ -1008,6 +1411,52 @@ enum LocalDocumentParser {
     /// a Double. Strips commas; returns nil on malformed input.
     private static func parseMoney(_ s: String) -> Double? {
         Double(s.replacingOccurrences(of: ",", with: ""))
+    }
+
+    private static func pickHeaderBroker(lines: [String]) -> String? {
+        var parts: [String] = []
+
+        for raw in lines.prefix(8) {
+            let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !line.isEmpty else { continue }
+
+            let lower = line.lowercased()
+            if lower.contains("rate confirmation") {
+                if !parts.isEmpty { break }
+                continue
+            }
+            if lower.hasPrefix("load") ||
+                lower.hasPrefix("issued") ||
+                lower.hasPrefix("carrier") ||
+                lower.hasPrefix("pickup") ||
+                lower.hasPrefix("delivery") {
+                continue
+            }
+            if lower.contains("mc#") ||
+                lower.contains("mc #") ||
+                lower.contains("dot#") ||
+                lower.contains("dot #") ||
+                lower.contains("usdot") {
+                continue
+            }
+            if line.contains(":") { continue }
+            if matchesRegex(line, pattern: #"^\d{1,6}\s"#) { continue }
+            if matchesRegex(lower, pattern: #"\b(?:road|rd|street|st|avenue|ave|boulevard|blvd|drive|dr|lane|ln|suite|ste)\b"#) {
+                continue
+            }
+
+            let letterCount = line.filter(\.isLetter).count
+            guard letterCount >= 2 else { continue }
+            parts.append(line)
+            if parts.count == 3 { break }
+        }
+
+        let combined = parts.joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        guard combined.count >= 3, combined.count <= 80 else { return nil }
+        guard !matchesRegex(combined.lowercased(), pattern: #"\b(?:date|time|pickup|delivery|shipment|charges)\b"#) else {
+            return nil
+        }
+        return combined.trimmedCompanySuffix
     }
 
     // MARK: - Scored broker-email picker (2026-05-18)
@@ -1783,7 +2232,7 @@ enum LocalDocumentParser {
                 ]
                 for label in labels {
                     let pat = #"(?i)\b"# + label + #"[ \t]*(?:number|no\.?|num\.?|id|#)?[ \t]*[:#\-]?[ \t]*([A-Z0-9][A-Z0-9\-]{3,20})"#
-                    if let raw = firstRegex(joined, pattern: pat) {
+                    for raw in allMatches(joined, pattern: pat) {
                         let v = raw.cleanID
                         guard v.contains(where: { $0.isNumber }) else { continue }
                         // Skip if value is just a label word (e.g. "Number",
@@ -1800,6 +2249,7 @@ enum LocalDocumentParser {
                         out.confidence["loadNumber"] = 0.9
                         break
                     }
+                    if out.loadNumber != nil { break }
                 }
             }
 
@@ -1925,11 +2375,117 @@ enum LocalDocumentParser {
         return s
     }
 
+    private enum StopKind {
+        case pickup
+        case delivery
+    }
+
+    private static func pairedStopBlocks(lines: [String],
+                                         pickupHits: [Int],
+                                         deliveryHits: [Int]) -> (pickup: AddrBlock, delivery: AddrBlock)? {
+        guard let pickupIdx = pickupHits.first,
+              let deliveryIdx = deliveryHits.first,
+              abs(pickupIdx - deliveryIdx) <= 2
+        else { return nil }
+
+        let orderedStops: [StopKind] = pickupIdx < deliveryIdx
+            ? [.pickup, .delivery]
+            : [.delivery, .pickup]
+        let start = max(pickupIdx, deliveryIdx) + 1
+        guard start < lines.count else { return nil }
+
+        let maxEnd = min(lines.count, start + 24)
+        var end = maxEnd
+        for i in start..<maxEnd {
+            let lower = lines[i].lowercased()
+            if lower.contains("shipment") ||
+                lower.contains("charges") ||
+                lower.contains("commodity") ||
+                lower.contains("weight") {
+                end = i
+                break
+            }
+        }
+
+        let body = lines[start..<end]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        var companyRows: [String] = []
+        var addressRows: [String] = []
+        var cityRows: [String] = []
+        var dateRows: [String] = []
+
+        for line in body {
+            let lower = line.lowercased()
+            if firstRegex(
+                line,
+                pattern: #"^([A-Za-z][A-Za-z\.\s\-']{1,40}?,\s*[A-Z]{2})(?:\s+\d{5})?$"#
+            ) != nil {
+                cityRows.append(line)
+            } else if firstDate(in: line) != nil {
+                dateRows.append(line)
+            } else if line.range(of: #"^\s*\d{1,6}\s+[A-Za-z]"#, options: .regularExpression) != nil ||
+                        lower.hasPrefix("po box") {
+                addressRows.append(line)
+            } else if !lower.hasPrefix("ref") &&
+                        !lower.hasPrefix("contact") &&
+                        !lower.hasPrefix("phone") {
+                companyRows.append(line)
+            }
+        }
+
+        var pickupLines = [lines[pickupIdx]]
+        var deliveryLines = [lines[deliveryIdx]]
+
+        func append(_ values: [String], order: [StopKind]) {
+            for (idx, value) in values.prefix(2).enumerated() {
+                switch order[idx % order.count] {
+                case .pickup:
+                    pickupLines.append(value)
+                case .delivery:
+                    deliveryLines.append(value)
+                }
+            }
+        }
+
+        // OCR often reads the wide company/address columns according to the
+        // header order it detected, but reads compact city/date rows in stop
+        // order. Keep those assignments separate for two-column rate cons.
+        append(companyRows, order: orderedStops)
+        append(addressRows, order: orderedStops)
+        append(cityRows, order: [.pickup, .delivery])
+        append(dateRows, order: [.pickup, .delivery])
+
+        if pickupLines.count == 1 || deliveryLines.count == 1 {
+            var alternatingIndex = 0
+            for line in body {
+                switch orderedStops[alternatingIndex % orderedStops.count] {
+                case .pickup:
+                    pickupLines.append(line)
+                case .delivery:
+                    deliveryLines.append(line)
+                }
+                alternatingIndex += 1
+            }
+        }
+
+        let pickup = addrBlock(from: pickupLines)
+        let delivery = addrBlock(from: deliveryLines)
+        guard score(pickup) >= 3, score(delivery) >= 3 else { return nil }
+        guard pickup.address != delivery.address || pickup.cityState != delivery.cityState else { return nil }
+        return (pickup, delivery)
+    }
+
     /// Build an `AddrBlock` from the 6 lines after a given anchor index.
     /// Looks for: a company-name line, a street-address line, and a
     /// "City, ST" line.
     private static func blockAt(lines: [String], startIndex idx: Int) -> AddrBlock {
         let slice = Array(lines[idx..<min(idx + 6, lines.count)])
+        return addrBlock(from: slice)
+    }
+
+    private static func addrBlock(from slice: [String]) -> AddrBlock {
         let blob = slice.joined(separator: "\n")
 
         // First street-line that looks like "123 Foo St" / "PO Box 9".
@@ -2152,6 +2708,31 @@ enum LocalDocumentParser {
             if r.location != NSNotFound { return ns.substring(with: r) }
         }
         return ns.substring(with: match.range)
+    }
+
+    private static func matchesRegex(_ text: String, pattern: String) -> Bool {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return false }
+        let ns = text as NSString
+        let range = NSRange(location: 0, length: ns.length)
+        return regex.firstMatch(in: text, range: range) != nil
+    }
+
+    private static func regexCaptureMatches(_ text: String, pattern: String) -> [[String?]] {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let ns = text as NSString
+        let range = NSRange(location: 0, length: ns.length)
+        return regex.matches(in: text, range: range).map { match in
+            (0..<match.numberOfRanges).map { idx in
+                let r = match.range(at: idx)
+                guard r.location != NSNotFound else { return nil }
+                return ns.substring(with: r)
+            }
+        }
+    }
+
+    private static func capture(_ groups: [String?], _ index: Int) -> String? {
+        guard groups.indices.contains(index) else { return nil }
+        return groups[index]
     }
 
     private static func allMatches(_ text: String, pattern: String) -> [String] {

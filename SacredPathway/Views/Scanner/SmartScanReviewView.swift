@@ -86,6 +86,8 @@ struct SmartScanReviewView: View {
     @State private var showRawOCR = false
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var showSaveErrorAlert = false
+    @State private var activeSaveAttemptID: UUID?
 
     @State private var showAddBrokerPrompt = false
     @State private var pendingLoadIdAfterSave: UUID?
@@ -107,10 +109,9 @@ struct SmartScanReviewView: View {
     @State private var dryRunOnly: Bool = ScanSafety.defaultDryRun
     @State private var showDryRunReceipt: Bool = false
 
-    /// BISECT-F — adds Pickup, Delivery, Money & Cargo, Trailer & BOL,
-    /// Special Notes, saveButton (without the alerts). milesSection,
-    /// rawOCRDisclosure, Pay Breakdown, Driver Notes, debug banner, and
-    /// alerts still excluded.
+    /// Current production review form. Keep the original field layout, but
+    /// the save state/error/success surfaces must stay attached so the user
+    /// never gets trapped behind a silent spinner.
     var body: some View {
         if true {
             NavigationStack {
@@ -198,6 +199,20 @@ struct SmartScanReviewView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
 
+                        #if DEBUG
+                        if ScanSafety.isSimulator {
+                            dryRunBanner
+                        }
+                        #endif
+
+                        if let err = errorMessage {
+                            Text(err)
+                                .font(.caption)
+                                .foregroundStyle(Color.spDanger)
+                                .padding(.horizontal)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
                         saveButton
                             .padding(.horizontal)
                             .padding(.bottom, 32)
@@ -217,6 +232,23 @@ struct SmartScanReviewView: View {
                 }
                 .onAppear(perform: prefillFromParsed)
                 .task { await loadBrokers() }
+                .alert("Load Saved", isPresented: $showSavedAlert) {
+                    Button("OK") { dismiss() }
+                } message: {
+                    Text("Load \(loadNumber.isEmpty ? "" : loadNumber + " ")added to your loads.")
+                }
+                .alert("Couldn't Save Load", isPresented: $showSaveErrorAlert) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text(errorMessage ?? "Something went wrong while saving this load.")
+                }
+                #if DEBUG
+                .alert("Dry-run save complete", isPresented: $showDryRunReceipt) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text("Test mode is ON. The load was NOT written to your Supabase production account. Check the Xcode console for the payload.")
+                }
+                #endif
             }
         } else {
         NavigationStack {
@@ -676,23 +708,22 @@ struct SmartScanReviewView: View {
     // MARK: - DEBUG safety banner
 
     /// Visible only in DEBUG simulator builds. Lets the developer keep saves
-    /// LOCAL ONLY (dry-run) so test scans never touch the user's production
-    /// Supabase account. Off by default in DEBUG too — must be opted in.
+    /// in dry-run mode so test scans never touch the user's production
+    /// Supabase account or local store. On by default in DEBUG simulator
+    /// builds; hidden everywhere else.
     private var dryRunBanner: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Image(systemName: dryRunOnly ? "shield.lefthalf.filled" : "shield")
                     .foregroundStyle(dryRunOnly ? Color.spWarning : Color.spTextSecondary)
                 Toggle(isOn: $dryRunOnly) {
-                    Text(dryRunOnly ? "Test mode — save will NOT hit Supabase" : "Production save (will hit Supabase)")
+                    Text(dryRunOnly ? dryRunEnabledLabel : dryRunDisabledLabel)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color.spTextPrimary)
                 }
                 .tint(Color.spWarning)
             }
-            Text("This banner only appears on simulator DEBUG builds. " +
-                 "Use Test mode when testing scans so the production account " +
-                 "stays clean.")
+            Text(dryRunHelpText)
                 .font(.caption2)
                 .foregroundStyle(Color.spTextSecondary)
         }
@@ -704,6 +735,24 @@ struct SmartScanReviewView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
+    }
+
+    private var dryRunEnabledLabel: String {
+        AppMode.shared.isLocal
+            ? "Test mode — save will NOT write local data"
+            : "Test mode — save will NOT hit Supabase"
+    }
+
+    private var dryRunDisabledLabel: String {
+        AppMode.shared.isLocal
+            ? "Save to this device"
+            : "Production save (will hit Supabase)"
+    }
+
+    private var dryRunHelpText: String {
+        AppMode.shared.isLocal
+            ? "This banner only appears on simulator DEBUG builds. Use Test mode when testing scans so local test data stays clean."
+            : "This banner only appears on simulator DEBUG builds. Use Test mode when testing scans so the production account stays clean."
     }
 
     private var saveButton: some View {
@@ -938,6 +987,8 @@ struct SmartScanReviewView: View {
     // MARK: - Save
 
     private func save() async {
+        guard !isSaving else { return }
+
         // Resolve profileId.  Free Local Mode uses the per-install UUID
         // so we don't depend on Supabase auth at all.
         let profileId: UUID
@@ -945,91 +996,123 @@ struct SmartScanReviewView: View {
             profileId = AppMode.shared.localInstallId
         } else {
             guard let cloudId = supabase.client.auth.currentUser?.id else {
-                errorMessage = "Not signed in"; return
+                presentSaveFailure(SmartScanSaveError.notSignedIn, context: "auth guard")
+                return
             }
             profileId = cloudId
         }
+
         updateMatchedBroker()
         isSaving = true
         errorMessage = nil
+        showSaveErrorAlert = false
 
-        let rateD = Double(rate.replacingOccurrences(of: ",", with: ""))
-        let totalRev = (rateD ?? 0) > 0 ? rateD : nil
+        let attemptID = UUID()
+        activeSaveAttemptID = attemptID
+        startSaveWatchdog(for: attemptID)
 
-        // Compose readable origin / destination.
-        let origin = composedRoute(cityState: pickupCityState, address: pickupAddress)
-        let destination = composedRoute(cityState: deliveryCityState, address: deliveryAddress)
-
-        #if DEBUG
-        if dryRunOnly && ScanSafety.isSimulator {
-            // Dry-run: print the payload that WOULD have been sent and bail
-            // out without touching Supabase. Production data stays clean.
-            print("""
-            [SmartScanReview] 🛡 DRY-RUN — not saving to Supabase.
-              loadNumber=\(loadNumber)
-              broker=\(brokerName) (mc=\(brokerMcNumber))
-              origin=\(origin)
-              destination=\(destination)
-              rate=\(rate)
-              loadedMiles=\(loadedMiles)  deadhead=\(deadheadMiles)
-            """)
-            isSaving = false
-            showDryRunReceipt = true
-            return
-        }
-        #endif
-
-        // Total miles = loaded + deadhead. Empty inputs are treated as 0.
-        let loadedD = Double(loadedMiles) ?? 0
-        let deadheadD = Double(deadheadMiles) ?? 0
-        let totalMilesD: Double? = (loadedD + deadheadD) > 0 ? (loadedD + deadheadD) : nil
-
-        let load = Load(
-            profileId: profileId,
-            loadNumber: loadNumber.isEmpty ? nil : loadNumber,
-            brokerName: brokerName.isEmpty ? nil : brokerName,
-            brokerMcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
-            pickupDate: pickupDateSet ? pickupDate : nil,
-            deliveryDate: deliveryDateSet ? deliveryDate : nil,
-            origin: origin.isEmpty ? nil : origin,
-            destination: destination.isEmpty ? nil : destination,
-            totalMiles: totalMilesD,
-            lineHaulRate: rateD,
-            totalRevenue: totalRev,
-            status: nil
-        )
-        let savedLoad: Load
-        if AppMode.shared.isLocal {
-            // ── Free Local Mode ──
-            // Persist to LocalLoadsRepository. Broker + contact attribution
-            // also runs against the local repos. Document vault upload
-            // stays cloud-only (handled by persistScannedDocument's
-            // own guard below).
-            savedLoad = LocalLoadsRepository.shared.create(load)
-            let (resolvedBrokerId, resolvedContactId) =
-                await autoAddBrokerContactLocal(profileId: profileId)
-            await patchLoadWithBrokerAttributionLocal(
-                load: savedLoad,
-                brokerId: resolvedBrokerId,
-                contactId: resolvedContactId
-            )
-            isSaving = false
-            finishSave()
-            return
+        defer {
+            completeSaveAttemptIfCurrent(attemptID)
         }
 
         do {
-            savedLoad = try await supabase.createLoad(load)
-        } catch {
-            errorMessage = "Failed to save: \(error.localizedDescription)"
-            isSaving = false
-            return
-        }
+            let rateD = try parseOptionalDecimalText(rate, fieldName: "Rate")
+            let totalRev = (rateD ?? 0) > 0 ? rateD : nil
 
+            // Compose readable origin / destination.
+            let origin = composedRoute(cityState: pickupCityState, address: pickupAddress)
+            let destination = composedRoute(cityState: deliveryCityState, address: deliveryAddress)
+
+            // Total miles = loaded + deadhead. Empty inputs are treated as 0.
+            let loadedD = try parseOptionalDecimalText(loadedMiles, fieldName: "Loaded miles") ?? 0
+            let deadheadD = try parseOptionalDecimalText(deadheadMiles, fieldName: "Deadhead miles") ?? 0
+            let totalMilesD: Double? = (loadedD + deadheadD) > 0 ? (loadedD + deadheadD) : nil
+            let loadWeight = parsedWeightForSave()
+
+            let load = Load(
+                profileId: profileId,
+                loadNumber: loadNumber.emptyToNil,
+                brokerName: brokerName.emptyToNil,
+                brokerMcNumber: brokerMcNumber.emptyToNil,
+                pickupDate: pickupDateSet ? pickupDate : nil,
+                deliveryDate: deliveryDateSet ? deliveryDate : nil,
+                origin: origin.emptyToNil,
+                destination: destination.emptyToNil,
+                totalMiles: totalMilesD,
+                lineHaulRate: rateD,
+                totalRevenue: totalRev,
+                weightValue: loadWeight?.value,
+                weightUnit: loadWeight?.unit,
+                status: nil
+            )
+
+            debugLogSaveStart(
+                load: load,
+                tableName: "loads",
+                profileId: profileId,
+                attemptID: attemptID
+            )
+
+        #if DEBUG
+            if dryRunOnly && ScanSafety.isSimulator {
+                print("[SmartScanReview.save] DRY-RUN success path attempt=\(attemptID); no Supabase write performed")
+                showDryRunReceipt = true
+                return
+            }
+        #endif
+
+            let savedLoad: Load
+            if AppMode.shared.isLocal {
+                // ── Free Local Mode ──
+                // Persist to LocalLoadsRepository. Broker + contact attribution
+                // also runs against the local repos. Document vault upload
+                // stays cloud-only (handled by persistScannedDocument's
+                // own guard below).
+                savedLoad = LocalLoadsRepository.shared.create(load)
+                let (resolvedBrokerId, resolvedContactId) =
+                    await autoAddBrokerContactLocal(profileId: profileId)
+                await patchLoadWithBrokerAttributionLocal(
+                    load: savedLoad,
+                    brokerId: resolvedBrokerId,
+                    contactId: resolvedContactId
+                )
+                debugLogSaveSuccess(savedLoad, tableName: "local.loads", attemptID: attemptID)
+                finishSave()
+                return
+            }
+
+            savedLoad = try await supabase.createLoad(load)
+            guard isCurrentSaveAttempt(attemptID) else {
+                debugLogStaleSaveCompletion(savedLoad, attemptID: attemptID)
+                return
+            }
+            debugLogSaveSuccess(savedLoad, tableName: "loads", attemptID: attemptID)
+
+            // The row is saved once createLoad returns. Keep non-critical
+            // broker/contact/document work off the spinner path so a slow
+            // storage upload can never make "Save Load" appear hung.
+            Task {
+                await finishPostSaveWork(profileId: profileId, savedLoad: savedLoad)
+            }
+            finishSave()
+        } catch {
+            guard isCurrentSaveAttempt(attemptID) else {
+                debugLogSaveFailure(error, context: "stale completion after timeout", attemptID: attemptID)
+                return
+            }
+            presentSaveFailure(error, context: "save attempt \(attemptID)")
+        }
+    }
+
+    private func finishPostSaveWork(profileId: UUID, savedLoad: Load) async {
         // Auto-add broker + contact silently. Dedupe priority:
         //   1. MC number, 2. email/phone, 3. normalized broker name.
         // Then patch the load with per-load broker attribution + snapshot.
         // Failures are non-fatal — the load is already saved.
+        #if DEBUG
+        print("[SmartScanReview.save] post-save side effects started load_id=\(savedLoad.id?.uuidString ?? "<nil>")")
+        #endif
+
         let (resolvedBrokerId, resolvedContactId) =
             await autoAddBrokerContact(profileId: profileId)
         await patchLoadWithBrokerAttribution(
@@ -1042,8 +1125,241 @@ struct SmartScanReviewView: View {
         // can find, reopen, and link the original rate-con file later.
         await persistScannedDocument(profileId: profileId, loadId: savedLoad.id)
 
+        #if DEBUG
+        print("[SmartScanReview.save] post-save side effects finished load_id=\(savedLoad.id?.uuidString ?? "<nil>")")
+        #endif
+    }
+
+    private func parseOptionalDecimalText(_ text: String, fieldName: String) throws -> Double? {
+        let cleaned = text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: ",", with: "")
+        guard !cleaned.isEmpty else { return nil }
+        guard let value = Double(cleaned) else {
+            throw SmartScanSaveError.invalidNumber(fieldName: fieldName, value: text)
+        }
+        return value
+    }
+
+    private struct LoadWeightForSave {
+        let value: Double
+        let unit: String
+        let sourceText: String
+        let confidence: Double?
+    }
+
+    private func parsedWeightForSave() -> LoadWeightForSave? {
+        let source = weight.trimmingCharacters(in: .whitespacesAndNewlines)
+        let confidence = parsed.confidence["weight"]
+        guard !source.isEmpty else {
+            debugLogWeightSaveDecision(
+                source: "<blank>",
+                confidence: confidence,
+                action: "skip",
+                reason: "blank weight field"
+            )
+            return nil
+        }
+
+        let pattern = #"(?i)([0-9]{1,3}(?:[,\s][0-9]{3})+|[0-9]{4,6}(?:\.[0-9]+)?)(?:\s*(lbs?|lb|pounds?|kg|kgs|kilograms?|kilos?))?"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(
+                in: source,
+                range: NSRange(source.startIndex..<source.endIndex, in: source)
+              ),
+              let valueRange = Range(match.range(at: 1), in: source)
+        else {
+            debugLogWeightSaveDecision(
+                source: source,
+                confidence: confidence,
+                action: "skip",
+                reason: "no parseable weight number"
+            )
+            return nil
+        }
+
+        let rawValue = String(source[valueRange])
+        let numericText = rawValue.replacingOccurrences(
+            of: #"[\s,]"#,
+            with: "",
+            options: .regularExpression
+        )
+        guard let value = Double(numericText), (1_000...150_000).contains(value) else {
+            debugLogWeightSaveDecision(
+                source: source,
+                confidence: confidence,
+                action: "skip",
+                reason: "weight outside expected freight range"
+            )
+            return nil
+        }
+
+        let unitRange = match.range(at: 2)
+        let rawUnit: String? = {
+            guard unitRange.location != NSNotFound,
+                  let range = Range(unitRange, in: source)
+            else { return nil }
+            return String(source[range])
+        }()
+
+        let isAutoExtractedValue = parsed.weight.map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines) == source
+        } ?? false
+        if rawUnit == nil, isAutoExtractedValue, let confidence, confidence < 0.75 {
+            debugLogWeightSaveDecision(
+                source: source,
+                confidence: confidence,
+                action: "skip",
+                reason: "unit missing and OCR confidence below save threshold"
+            )
+            return nil
+        }
+
+        let normalizedUnit: String
+        if let rawUnit {
+            let lower = rawUnit.lowercased()
+            normalizedUnit = lower.contains("kg") || lower.contains("kilo") ? "kg" : "lbs"
+        } else {
+            normalizedUnit = "lbs"
+        }
+
+        debugLogWeightSaveDecision(
+            source: source,
+            confidence: confidence,
+            action: "save",
+            reason: String(format: "value=%.1f unit=%@", value, normalizedUnit)
+        )
+        return LoadWeightForSave(
+            value: value,
+            unit: normalizedUnit,
+            sourceText: source,
+            confidence: confidence
+        )
+    }
+
+    private func startSaveWatchdog(for attemptID: UUID) {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: ScanSafety.saveTimeoutNanoseconds)
+            guard activeSaveAttemptID == attemptID else { return }
+            debugLogSaveFailure(
+                SmartScanSaveError.timedOut(seconds: ScanSafety.saveTimeoutSeconds),
+                context: "watchdog",
+                attemptID: attemptID
+            )
+            activeSaveAttemptID = nil
+            isSaving = false
+            presentSaveFailure(
+                SmartScanSaveError.timedOut(seconds: ScanSafety.saveTimeoutSeconds),
+                context: "watchdog"
+            )
+        }
+    }
+
+    private func isCurrentSaveAttempt(_ attemptID: UUID) -> Bool {
+        activeSaveAttemptID == attemptID
+    }
+
+    private func completeSaveAttemptIfCurrent(_ attemptID: UUID) {
+        guard activeSaveAttemptID == attemptID else { return }
+        activeSaveAttemptID = nil
         isSaving = false
-        finishSave()
+    }
+
+    private func presentSaveFailure(_ error: Error, context: String) {
+        let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        errorMessage = message.isEmpty ? "Failed to save this load." : message
+        showSaveErrorAlert = true
+        debugLogSaveFailure(error, context: context, attemptID: activeSaveAttemptID)
+    }
+
+    private func debugLogSaveStart(
+        load: Load,
+        tableName: String,
+        profileId: UUID,
+        attemptID: UUID
+    ) {
+        #if DEBUG
+        let authUserId = supabase.client.auth.currentUser?.id.uuidString ?? "<nil>"
+        print("""
+        [SmartScanReview.save] START attempt=\(attemptID)
+          table=\(tableName)
+          mode=\(AppMode.shared.mode.rawValue)
+          auth_user_id=\(authUserId)
+          profile_id=\(profileId.uuidString)
+          pickup_date_set=\(pickupDateSet)
+          delivery_date_set=\(deliveryDateSet)
+          scan_weight_field=\(weight.isEmpty ? "<blank>" : weight)
+          scan_weight_confidence=\(parsed.confidence["weight"].map { String(format: "%.2f", $0) } ?? "<nil>")
+          payload:
+        \(debugJSONString(load))
+        """)
+        #endif
+    }
+
+    private func debugLogSaveSuccess(_ load: Load, tableName: String, attemptID: UUID) {
+        #if DEBUG
+        print("""
+        [SmartScanReview.save] SUCCESS attempt=\(attemptID)
+          table=\(tableName)
+          saved_load_id=\(load.id?.uuidString ?? "<nil>")
+          payload:
+        \(debugJSONString(load))
+        """)
+        #endif
+    }
+
+    private func debugLogSaveFailure(_ error: Error, context: String, attemptID: UUID?) {
+        #if DEBUG
+        print("""
+        [SmartScanReview.save] FAILURE attempt=\(attemptID?.uuidString ?? "<nil>")
+          context=\(context)
+          auth_user_id=\(supabase.client.auth.currentUser?.id.uuidString ?? "<nil>")
+          table=loads
+          error=\(String(describing: error))
+        """)
+        #endif
+    }
+
+    private func debugLogWeightSaveDecision(
+        source: String,
+        confidence: Double?,
+        action: String,
+        reason: String
+    ) {
+        #if DEBUG
+        print("""
+        [SmartScanReview.save] WEIGHT
+          source=\(source)
+          confidence=\(confidence.map { String(format: "%.2f", $0) } ?? "<nil>")
+          action=\(action)
+          reason=\(reason)
+        """)
+        #endif
+    }
+
+    private func debugLogStaleSaveCompletion(_ load: Load, attemptID: UUID) {
+        #if DEBUG
+        print("""
+        [SmartScanReview.save] STALE completion ignored attempt=\(attemptID)
+          saved_load_id=\(load.id?.uuidString ?? "<nil>")
+          reason=watchdog already ended this attempt
+        """)
+        #endif
+    }
+
+    private func debugJSONString<T: Encodable>(_ value: T) -> String {
+        #if DEBUG
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(value),
+              let string = String(data: data, encoding: .utf8)
+        else { return "<failed to encode>" }
+        return string
+        #else
+        return ""
+        #endif
     }
 
     // MARK: - Local-mode broker/contact auto-add
@@ -1314,6 +1630,7 @@ struct SmartScanReviewView: View {
             extracted.loadNumber = loadNumber.isEmpty ? nil : loadNumber
             extracted.origin = pickupCityState.isEmpty ? nil : pickupCityState
             extracted.destination = deliveryCityState.isEmpty ? nil : deliveryCityState
+            extracted.weight = weight.emptyToNil
             extracted.lineHaulRate = Double(rate.replacingOccurrences(of: ",", with: ""))
             extracted.totalRevenue = extracted.lineHaulRate
             // Re-use notes for the human-readable title (DocumentVaultView
@@ -1413,6 +1730,9 @@ struct SmartScanReviewView: View {
 // in DEBUG simulator builds so test scans CANNOT pollute real load history.
 // =============================================================================
 fileprivate enum ScanSafety {
+    static let saveTimeoutSeconds: UInt64 = 25
+    static let saveTimeoutNanoseconds = saveTimeoutSeconds * 1_000_000_000
+
     /// True when this build is running on a simulator. Detected at compile
     /// time via the `targetEnvironment` directive — no runtime checks.
     static let isSimulator: Bool = {
@@ -1437,4 +1757,28 @@ fileprivate enum ScanSafety {
         return false
         #endif
     }()
+}
+
+fileprivate enum SmartScanSaveError: LocalizedError {
+    case notSignedIn
+    case invalidNumber(fieldName: String, value: String)
+    case timedOut(seconds: UInt64)
+
+    var errorDescription: String? {
+        switch self {
+        case .notSignedIn:
+            return "You're not signed in. Sign in again, then save the load."
+        case .invalidNumber(let fieldName, let value):
+            return "\(fieldName) must be a valid number. Check “\(value)” and try again."
+        case .timedOut(let seconds):
+            return "Saving took longer than \(seconds) seconds. Check your connection and try again."
+        }
+    }
+}
+
+fileprivate extension String {
+    var emptyToNil: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
 }

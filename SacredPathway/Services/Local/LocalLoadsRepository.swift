@@ -38,14 +38,15 @@ final class LocalLoadsRepository: ObservableObject {
     func reload() {
         let raw = LocalStore.loadArray(Load.self, fileName: fileName)
         let deduped = WeeklyStatsService.dedupe(raw)
+        let ordered = newestFirst(deduped)
         if deduped.count != raw.count {
             // Persist the cleaned list so the dupes don't reappear next launch.
-            LocalStore.saveArray(deduped, fileName: fileName)
+            LocalStore.saveArray(ordered, fileName: fileName)
             #if DEBUG
             print("[SP_DEBUG_LOCAL] LocalLoadsRepository dropped \(raw.count - deduped.count) duplicate load(s) on reload")
             #endif
         }
-        loads = deduped
+        loads = ordered
         #if DEBUG
         print("[SP_DEBUG_LOCAL] LocalLoadsRepository loaded \(loads.count) loads from disk")
         #endif
@@ -92,8 +93,9 @@ final class LocalLoadsRepository: ObservableObject {
             print("[SP_DEBUG_LOCAL] LocalLoadsRepository.create() received an existing id \(id); routed to update")
             #endif
         } else {
-            loads.append(copy)
+            loads.insert(copy, at: 0)
         }
+        loads = newestFirst(loads)
         flush()
         return copy
     }
@@ -104,6 +106,7 @@ final class LocalLoadsRepository: ObservableObject {
         var copy = load
         copy.updatedAt = Date()
         loads[idx] = copy
+        loads = newestFirst(loads)
         flush()
     }
 
@@ -123,7 +126,7 @@ final class LocalLoadsRepository: ObservableObject {
 
     /// Replace the entire list (used by the future Import Backup flow).
     func replaceAll(with newLoads: [Load]) {
-        loads = newLoads
+        loads = newestFirst(newLoads)
         flush()
     }
 
@@ -131,5 +134,16 @@ final class LocalLoadsRepository: ObservableObject {
 
     private func flush() {
         LocalStore.saveArray(loads, fileName: fileName)
+    }
+
+    private func newestFirst(_ values: [Load]) -> [Load] {
+        values.sorted { lhs, rhs in
+            let leftDate = lhs.createdAt ?? lhs.updatedAt ?? lhs.pickupDate ?? .distantPast
+            let rightDate = rhs.createdAt ?? rhs.updatedAt ?? rhs.pickupDate ?? .distantPast
+            if leftDate != rightDate {
+                return leftDate > rightDate
+            }
+            return (lhs.loadNumber ?? "") < (rhs.loadNumber ?? "")
+        }
     }
 }

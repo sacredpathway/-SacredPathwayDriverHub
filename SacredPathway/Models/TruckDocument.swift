@@ -61,6 +61,7 @@ struct ExtractedData: Codable, Equatable {
     var deliveryDate: String?
     var origin: String?
     var destination: String?
+    var weight: String?
     var totalMiles: Double?
     var lineHaulRate: Double?
     var fuelSurcharge: Double?
@@ -81,7 +82,7 @@ struct ExtractedData: Codable, Equatable {
         case loadNumber = "load_number"
         case pickupDate = "pickup_date"
         case deliveryDate = "delivery_date"
-        case origin, destination
+        case origin, destination, weight
         case totalMiles = "total_miles"
         case lineHaulRate = "line_haul_rate"
         case fuelSurcharge = "fuel_surcharge"

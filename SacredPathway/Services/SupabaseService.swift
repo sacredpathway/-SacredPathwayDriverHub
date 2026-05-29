@@ -231,23 +231,165 @@ class SupabaseService: ObservableObject {
     }
 
     func createLoad(_ load: Load) async throws -> Load {
-        let created: Load = try await client.from("loads")
-            .insert(load)
-            .select()
-            .single()
-            .execute()
-            .value
-        NotificationCenter.default.post(name: .loadsDidChange, object: nil)
-        return created
+        #if DEBUG
+        print("""
+        [createLoad] START
+          table=loads
+          auth_user_id=\(client.auth.currentUser?.id.uuidString ?? "<nil>")
+          payload:
+        \(debugJSONString(load))
+        """)
+        #endif
+
+        do {
+            let created = try await insertLoad(load, writePath: "primary")
+            NotificationCenter.default.post(name: .loadsDidChange, object: created)
+            return created
+        } catch {
+            if loadIncludesWeight(load), isMissingLoadWeightColumnError(error) {
+                let fallback = loadDroppingWeight(load)
+                #if DEBUG
+                print("""
+                [createLoad] LEGACY_SCHEMA_FALLBACK
+                  table=loads
+                  missing_weight_columns=true
+                  action=retry_without_weight_columns
+                  original_error=\(String(describing: error))
+                  fallback_payload:
+                \(debugJSONString(fallback))
+                """)
+                #endif
+                do {
+                    let created = try await insertLoad(fallback, writePath: "fallback_without_weight")
+                    NotificationCenter.default.post(name: .loadsDidChange, object: created)
+                    return created
+                } catch {
+                    #if DEBUG
+                    print("""
+                    [createLoad] FAILURE
+                      table=loads
+                      auth_user_id=\(client.auth.currentUser?.id.uuidString ?? "<nil>")
+                      write_path=fallback_without_weight
+                      error=\(String(describing: error))
+                    """)
+                    #endif
+                    throw error
+                }
+            }
+            #if DEBUG
+            print("""
+            [createLoad] FAILURE
+              table=loads
+              auth_user_id=\(client.auth.currentUser?.id.uuidString ?? "<nil>")
+              error=\(String(describing: error))
+            """)
+            #endif
+            throw error
+        }
     }
 
     func updateLoad(_ load: Load) async throws {
         guard let loadId = load.id else { return }
+        do {
+            try await updateLoadPayload(load, loadId: loadId, writePath: "primary")
+            NotificationCenter.default.post(name: .loadsDidChange, object: load)
+        } catch {
+            if loadIncludesWeight(load), isMissingLoadWeightColumnError(error) {
+                let fallback = loadDroppingWeight(load)
+                #if DEBUG
+                print("""
+                [updateLoad] LEGACY_SCHEMA_FALLBACK
+                  table=loads
+                  load_id=\(loadId.uuidString)
+                  missing_weight_columns=true
+                  action=retry_without_weight_columns
+                  original_error=\(String(describing: error))
+                  fallback_payload:
+                \(debugJSONString(fallback))
+                """)
+                #endif
+                try await updateLoadPayload(fallback, loadId: loadId, writePath: "fallback_without_weight")
+                NotificationCenter.default.post(name: .loadsDidChange, object: fallback)
+                return
+            }
+            throw error
+        }
+    }
+
+    private func insertLoad(_ load: Load, writePath: String) async throws -> Load {
+        let raw = try await client.from("loads")
+            .insert(load, returning: .representation)
+            .select()
+            .single()
+            .execute()
+
+        #if DEBUG
+        let responseBody = String(data: raw.data, encoding: .utf8) ?? "<bad utf8>"
+        print("""
+        [createLoad] RESPONSE
+          table=loads
+          auth_user_id=\(client.auth.currentUser?.id.uuidString ?? "<nil>")
+          write_path=\(writePath)
+          bytes=\(raw.data.count)
+          body:
+        \(responseBody)
+        """)
+        #endif
+
+        do {
+            let created = try JSONDecoder().decode(Load.self, from: raw.data)
+            #if DEBUG
+            print("""
+            [createLoad] SUCCESS
+              table=loads
+              write_path=\(writePath)
+              id=\(created.id?.uuidString ?? "<nil>")
+              weight=\(created.weightDisplay ?? "<nil>")
+            """)
+            #endif
+            return created
+        } catch {
+            #if DEBUG
+            print("[createLoad] DECODE FAILURE table=loads write_path=\(writePath) error=\(error)")
+            #endif
+            throw error
+        }
+    }
+
+    private func updateLoadPayload(_ load: Load, loadId: UUID, writePath: String) async throws {
         try await client.from("loads")
             .update(load)
             .eq("id", value: loadId)
             .execute()
-        NotificationCenter.default.post(name: .loadsDidChange, object: nil)
+        #if DEBUG
+        print("""
+        [updateLoad] SUCCESS
+          table=loads
+          write_path=\(writePath)
+          load_id=\(loadId.uuidString)
+          weight=\(load.weightDisplay ?? "<nil>")
+        """)
+        #endif
+    }
+
+    private func loadIncludesWeight(_ load: Load) -> Bool {
+        load.weightValue != nil || load.weightUnit != nil
+    }
+
+    private func loadDroppingWeight(_ load: Load) -> Load {
+        var copy = load
+        copy.weightValue = nil
+        copy.weightUnit = nil
+        return copy
+    }
+
+    private func isMissingLoadWeightColumnError(_ error: Error) -> Bool {
+        let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
+        guard raw.contains("weight_value") || raw.contains("weight_unit") else { return false }
+        return raw.contains("could not find") ||
+               raw.contains("schema cache") ||
+               raw.contains("column") ||
+               raw.contains("pgrst204")
     }
 
     /// Mark a batch of loads as `settled` after a paystub is generated.
@@ -1028,6 +1170,20 @@ class SupabaseService: ObservableObject {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(Response.self, from: data)
+    }
+
+    private func debugJSONString<T: Encodable>(_ value: T) -> String {
+        #if DEBUG
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(value),
+              let string = String(data: data, encoding: .utf8)
+        else { return "<failed to encode>" }
+        return string
+        #else
+        return ""
+        #endif
     }
 }
 

@@ -127,9 +127,9 @@ final class LoadsSyncService: ObservableObject {
             forName: .loadsDidChange,
             object: nil,
             queue: nil
-        ) { [weak self] _ in
+        ) { [weak self] notification in
             Task { [weak self] in
-                await self?.handleLoadsChangedFromNotification()
+                await self?.handleLoadsChangedFromNotification(notification)
             }
         }
 
@@ -153,7 +153,11 @@ final class LoadsSyncService: ObservableObject {
     /// shape — a `Task { await self?.method() }` — and lets the
     /// compiler verify the actor hop without any `@MainActor` closure
     /// attributes or `MainActor.run { … }` wrappers.
-    private func handleLoadsChangedFromNotification() {
+    private func handleLoadsChangedFromNotification(_ notification: Notification? = nil) {
+        if AppMode.shared.isCloud, let changedLoad = notification?.object as? Load {
+            upsertCloudCache(changedLoad)
+            return
+        }
         recompute()
     }
 
@@ -233,9 +237,36 @@ final class LoadsSyncService: ObservableObject {
     private func recompute() {
         let raw = rawBackingLoads
         let deduped = WeeklyStatsService.dedupe(raw)
-        loads = deduped.filter { l in
+        let visible = deduped.filter { l in
             guard let id = l.id else { return true }
             return !tombstones.contains(id)
+        }
+        loads = newestFirst(visible)
+    }
+
+    /// Merge a just-created/updated cloud row into the cache immediately.
+    /// Without this, `.loadsDidChange` only recomputed the old cache and
+    /// Dashboard totals stayed stale until a separate fetch happened.
+    private func upsertCloudCache(_ load: Load) {
+        if let id = load.id,
+           let idx = cloudCache.firstIndex(where: { $0.id == id }) {
+            cloudCache[idx] = load
+        } else {
+            cloudCache.insert(load, at: 0)
+        }
+        lastSyncError = nil
+        lastSyncAt = Date()
+        recompute()
+    }
+
+    private func newestFirst(_ values: [Load]) -> [Load] {
+        values.sorted { lhs, rhs in
+            let leftDate = lhs.createdAt ?? lhs.updatedAt ?? lhs.pickupDate ?? .distantPast
+            let rightDate = rhs.createdAt ?? rhs.updatedAt ?? rhs.pickupDate ?? .distantPast
+            if leftDate != rightDate {
+                return leftDate > rightDate
+            }
+            return (lhs.loadNumber ?? "") < (rhs.loadNumber ?? "")
         }
     }
 
