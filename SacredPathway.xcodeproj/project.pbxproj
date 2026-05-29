@@ -125,6 +125,10 @@
 		EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004C /* LocalExpensesRepository.swift */; };
 		EA000000000000000000004D /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004E /* BackupService.swift */; };
 		EA000000000000000000004F /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000050 /* BackupRestoreView.swift */; };
+		D10000000000000000000001 /* DispatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* DispatchModels.swift */; };
+		D10000000000000000000003 /* DispatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000004 /* DispatchService.swift */; };
+		D10000000000000000000005 /* LocalDispatchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000006 /* LocalDispatchRepository.swift */; };
+		D10000000000000000000007 /* SacredDispatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000008 /* SacredDispatchView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -248,6 +252,10 @@
 		EA000000000000000000004C /* LocalExpensesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalExpensesRepository.swift; sourceTree = "<group>"; };
 		EA000000000000000000004E /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
 		EA0000000000000000000050 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
+		D10000000000000000000002 /* DispatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000004 /* DispatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchService.swift; sourceTree = "<group>"; };
+		D10000000000000000000006 /* LocalDispatchRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDispatchRepository.swift; sourceTree = "<group>"; };
+		D10000000000000000000008 /* SacredDispatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredDispatchView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -297,6 +305,7 @@
 			children = (
 				EE0000000000000000000002 /* Broker.swift */,
 				EE0000000000000000000004 /* BrokerContact.swift */,
+				D10000000000000000000002 /* DispatchModels.swift */,
 				001A1A110E4A5B1C2D3E4F5D /* Driver.swift */,
 				001A1A130E4A5B1C2D3E4F5E /* Expense.swift */,
 				001A1A150E4A5B1C2D3E4F5F /* Load.swift */,
@@ -326,6 +335,7 @@
 				EE0000000000000000000006 /* BrokerIntelligenceService.swift */,
 				FF0000000000000000000004 /* DraftStorageService.swift */,
 				FF0000000000000000000008 /* CustomFeeService.swift */,
+				D10000000000000000000004 /* DispatchService.swift */,
 				110000000000000000000002 /* PinLockService.swift */,
 				110000000000000000000004 /* SubscriptionService.swift */,
 				AA0000000000000000000002 /* AppearanceService.swift */,
@@ -370,6 +380,7 @@
 				001A1A520E4A5B1C2D3E4F76 /* Dashboard */,
 				DD0000000000000000000040 /* Documents */,
 				DD0000000000000000000030 /* Drivers */,
+				D10000000000000000000009 /* Dispatch */,
 				CC0000000000000000000010 /* Expenses */,
 				DD0000000000000000000050 /* Insights */,
 				001A1A540E4A5B1C2D3E4F77 /* Loads */,
@@ -477,6 +488,14 @@
 			path = Expenses;
 			sourceTree = "<group>";
 		};
+		D10000000000000000000009 /* Dispatch */ = {
+			isa = PBXGroup;
+			children = (
+				D10000000000000000000008 /* SacredDispatchView.swift */,
+			);
+			path = Dispatch;
+			sourceTree = "<group>";
+		};
 		DB0000000000000000001000 /* Compliance */ = {
 			isa = PBXGroup;
 			children = (
@@ -568,6 +587,7 @@
 				EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */,
 				EA000000000000000000004A /* LocalSmokeTest.swift */,
 				EA000000000000000000004C /* LocalExpensesRepository.swift */,
+				D10000000000000000000006 /* LocalDispatchRepository.swift */,
 				EA000000000000000000004E /* BackupService.swift */,
 			);
 			path = Local;
@@ -673,6 +693,7 @@
 				001A1A100E4A5B1C2D3E4F5D /* Driver.swift in Sources */,
 				001A1A120E4A5B1C2D3E4F5E /* Expense.swift in Sources */,
 				001A1A140E4A5B1C2D3E4F5F /* Load.swift in Sources */,
+				D10000000000000000000001 /* DispatchModels.swift in Sources */,
 				001A1A160E4A5B1C2D3E4F60 /* Profile.swift in Sources */,
 				001A1A180E4A5B1C2D3E4F61 /* Settlement.swift in Sources */,
 				001A1A1A0E4A5B1C2D3E4F62 /* TruckDocument.swift in Sources */,
@@ -687,6 +708,7 @@
 				001A1A2A0E4A5B1C2D3E4F6A /* LoadsListView.swift in Sources */,
 				001A1A2C0E4A5B1C2D3E4F6B /* ScanUploadView.swift in Sources */,
 				001A1A2E0E4A5B1C2D3E4F6C /* SettingsView.swift in Sources */,
+				D10000000000000000000007 /* SacredDispatchView.swift in Sources */,
 				AB0000000000000000000001 /* DocumentExtractionService.swift in Sources */,
 				AB0000000000000000000003 /* InsightsService.swift in Sources */,
 				AA0000000000000000000003 /* DocumentScannerCoordinator.swift in Sources */,
@@ -713,6 +735,7 @@
 				FF0000000000000000000005 /* PaystubDraftsListView.swift in Sources */,
 				FF0000000000000000000007 /* CustomFeeService.swift in Sources */,
 				FF0000000000000000000009 /* EditCompanyView.swift in Sources */,
+				D10000000000000000000003 /* DispatchService.swift in Sources */,
 				110000000000000000000001 /* PinLockService.swift in Sources */,
 				110000000000000000000003 /* SubscriptionService.swift in Sources */,
 				AA0000000000000000000001 /* AppearanceService.swift in Sources */,
@@ -779,6 +802,7 @@
 				EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */,
 				EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */,
 				EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */,
+				D10000000000000000000005 /* LocalDispatchRepository.swift in Sources */,
 				EA000000000000000000004D /* BackupService.swift in Sources */,
 				EA000000000000000000004F /* BackupRestoreView.swift in Sources */,
 			);

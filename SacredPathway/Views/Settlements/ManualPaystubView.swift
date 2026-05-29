@@ -653,6 +653,10 @@ struct ManualPaystubView: View {
                 calcRow("Factoring Fee", "-\(calc.factoringFeeAmount.asCurrency)", color: .spDanger)
                 calcRow("Authority Fee", "-\(calc.authorityFee.asCurrency)", color: .spDanger)
                 calcRow("Maint. Reserve", "-\(calc.maintenanceReserve.asCurrency)", color: .spDanger)
+                ForEach(calc.customDeductions) { deduction in
+                    calcRow(deduction.name, "-\(deduction.amount.asCurrency)", color: .spDanger)
+                }
+                calcRow("Total Deductions", "-\(calc.totalDeductions.asCurrency)", bold: true, color: .spDanger)
                 Divider().background(Color.spGold)
                 calcRow("NET PAY", calc.carrierNetPay.asCurrency, bold: true, color: calc.carrierNetPay >= 0 ? .spSuccess : .spDanger)
             }
@@ -892,8 +896,16 @@ struct ManualPaystubView: View {
 
         // Maintenance reserve: % on revenue, or flat $
         let maintReserveAmount = feeAmount(value: maintenanceReserve, mode: maintenanceReserveMode, base: totalRevenue)
+        let customDeductions = CustomFeeService.shared.activeCustomDeductions(grossPay: totalRevenue)
+        let customDeductionsTotal = customDeductions.reduce(0) { $0 + $1.amount }
 
-        let carrierNetPay = grossProfit - driverPayAmount - dispatcherFeeAmount - factoringFeeAmount - authFeeAmount - maintReserveAmount
+        let carrierNetPay = grossProfit
+            - driverPayAmount
+            - dispatcherFeeAmount
+            - factoringFeeAmount
+            - authFeeAmount
+            - maintReserveAmount
+            - customDeductionsTotal
 
         calculation = SettlementCalculation(
             totalRevenue: totalRevenue,
@@ -907,6 +919,7 @@ struct ManualPaystubView: View {
             factoringFeeAmount: factoringFeeAmount,
             authorityFee: authFeeAmount,
             maintenanceReserve: maintReserveAmount,
+            customDeductions: customDeductions,
             carrierNetPay: carrierNetPay
         )
     }

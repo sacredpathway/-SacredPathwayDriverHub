@@ -18,6 +18,15 @@ struct FeeItem: Codable, Identifiable {
     }
 }
 
+/// A concrete deduction line after a custom fee has been applied to a
+/// specific paystub's gross pay.
+struct SettlementCustomDeduction: Codable, Identifiable, Equatable {
+    var id: UUID
+    var name: String
+    var amount: Double
+    var basis: String?
+}
+
 /// Persists custom fees and mode overrides locally so users can add/rename/toggle fees.
 class CustomFeeService {
     static let shared = CustomFeeService()
@@ -79,5 +88,32 @@ class CustomFeeService {
     func saveNameOverrides(_ overrides: [String: String]) {
         guard let data = try? encoder.encode(overrides) else { return }
         try? data.write(to: nameOverridesURL)
+    }
+
+    func activeCustomDeductions(grossPay: Double) -> [SettlementCustomDeduction] {
+        loadCustomFees()
+            .sorted { $0.sortOrder < $1.sortOrder }
+            .compactMap { fee in
+                let rawValue = fee.value
+                guard rawValue > 0 else { return nil }
+                let amount = fee.mode == .percent
+                    ? grossPay * rawValue / 100.0
+                    : rawValue
+                guard amount > 0 else { return nil }
+
+                let basis: String?
+                if fee.mode == .percent {
+                    basis = String(format: "%.2f%% of gross pay", rawValue)
+                } else {
+                    basis = "Custom deduction"
+                }
+
+                return SettlementCustomDeduction(
+                    id: fee.id,
+                    name: fee.name,
+                    amount: amount,
+                    basis: basis
+                )
+            }
     }
 }

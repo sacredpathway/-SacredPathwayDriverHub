@@ -599,6 +599,13 @@ struct LoadRowView: View {
                     Spacer()
                 }
             }
+            if let dispatchLabel = dispatchDisplay {
+                HStack {
+                    Image(systemName: "point.3.connected.trianglepath.dotted").font(.caption).foregroundStyle(Color.spGoldLight)
+                    Text("Dispatch: \(dispatchLabel)").font(.caption).foregroundStyle(Color.spTextSecondary)
+                    Spacer()
+                }
+            }
             Divider().background(Color.spTextSecondary.opacity(0.2))
             HStack {
                 if let rev = load.totalRevenue {
@@ -624,6 +631,15 @@ struct LoadRowView: View {
         case "settled": return Color.spGreenAccent
         default: return Color.spGoldLight
         }
+    }
+
+    private var dispatchDisplay: String? {
+        let parts = [load.dispatcherName, load.dispatcherCompany]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !parts.isEmpty else { return nil }
+        var seen = Set<String>()
+        return parts.filter { seen.insert($0).inserted }.joined(separator: " / ")
     }
 }
 

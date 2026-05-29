@@ -611,7 +611,10 @@ class PaystubPDFService {
         calculation: SettlementCalculation,
         shortDate: DateFormatter
     ) throws -> Double {
-        guard !expenses.isEmpty else { return calculation.totalExpenses }
+        let customDeductions = calculation.customDeductions
+        guard !expenses.isEmpty || !customDeductions.isEmpty else {
+            return calculation.totalExpenses
+        }
 
         try addSectionTitleBar(document: document, theme: theme, title: "EXPENSES & DEDUCTIONS")
         document.add(space: 4)
@@ -630,8 +633,19 @@ class PaystubPDFService {
             ])
             sum += exp.amount
         }
-        let displayTotal = calculation.totalExpenses > 0 ? calculation.totalExpenses : sum
-        rows.append(["", "", "", "TOTAL EXPENSES", "(\(displayTotal.asCurrency))"])
+        for deduction in customDeductions {
+            rows.append([
+                deduction.name,
+                "—",
+                "—",
+                deduction.basis ?? "Custom",
+                "(\(deduction.amount.asCurrency))"
+            ])
+            sum += deduction.amount
+        }
+        let displayTotal = sum
+        let totalLabel = customDeductions.isEmpty ? "TOTAL EXPENSES" : "TOTAL DEDUCTIONS"
+        rows.append(["", "", "", totalLabel, "(\(displayTotal.asCurrency))"])
 
         let table = PDFTable(rows: rows.count, columns: 5)
         table.widths = [0.28, 0.24, 0.10, 0.18, 0.20]

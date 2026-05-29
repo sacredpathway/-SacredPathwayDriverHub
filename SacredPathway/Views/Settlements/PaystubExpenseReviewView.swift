@@ -35,6 +35,7 @@ struct PaystubExpenseReviewView: View {
         var loads: [Load]
         var profile: Profile
         var driver: Driver
+        var customDeductions: [SettlementCustomDeduction] = []
     }
     var liveContext: LiveContext? = nil
 
@@ -194,7 +195,8 @@ struct PaystubExpenseReviewView: View {
                 loads: ctx.loads,
                 expenses: includedExpenses,
                 profile: ctx.profile,
-                driver: ctx.driver
+                driver: ctx.driver,
+                customDeductions: ctx.customDeductions
             )
             VStack(spacing: 6) {
                 HStack {
@@ -215,6 +217,10 @@ struct PaystubExpenseReviewView: View {
                 previewRow("Factoring Fee",  "-\(calc.factoringFeeAmount.asCurrency)", color: .spDanger)
                 previewRow("Authority Fee",  "-\(calc.authorityFee.asCurrency)",       color: .spDanger)
                 previewRow("Maint. Reserve", "-\(calc.maintenanceReserve.asCurrency)", color: .spDanger)
+                ForEach(calc.customDeductions) { deduction in
+                    previewRow(deduction.name, "-\(deduction.amount.asCurrency)", color: .spDanger)
+                }
+                previewRow("Total Deductions", "-\(calc.totalDeductions.asCurrency)", bold: true, color: .spDanger)
                 Divider().background(Color.spGold)
                 previewRow(
                     "NET PAY",

@@ -8,6 +8,8 @@ struct EditCompanyView: View {
     @State private var mcNumber: String = ""
     @State private var dotNumber: String = ""
     @State private var phone: String = ""
+    @State private var truckNumber: String = ""
+    @State private var trailerNumber: String = ""
     @State private var isSaving = false
     @State private var savedMessage = false
     @State private var errorMessage: String?
@@ -64,6 +66,20 @@ struct EditCompanyView: View {
                             placeholder: "(555) 123-4567",
                             text: $phone,
                             keyboard: .phonePad
+                        )
+                        Divider().background(Color.spTextSecondary.opacity(0.2)).padding(.horizontal)
+                        editField(
+                            label: "Truck Number",
+                            icon: "truck.box.fill",
+                            placeholder: "101",
+                            text: $truckNumber
+                        )
+                        Divider().background(Color.spTextSecondary.opacity(0.2)).padding(.horizontal)
+                        editField(
+                            label: "Trailer Number",
+                            icon: "shippingbox.fill",
+                            placeholder: "TRL55",
+                            text: $trailerNumber
                         )
                     }
                     .background(Color.spCardBg)
@@ -130,17 +146,35 @@ struct EditCompanyView: View {
         mcNumber = profile?.mcNumber ?? ""
         dotNumber = profile?.dotNumber ?? ""
         phone = profile?.phone ?? ""
+        truckNumber = DriverEquipmentProfileStore.defaultTruckNumber(profile: profile)
+        trailerNumber = DriverEquipmentProfileStore.defaultTrailerNumber(profile: profile)
     }
 
     private func saveCompanyInfo() async {
         isSaving = true
         errorMessage = nil
 
+        DriverEquipmentProfileStore.saveLocal(
+            truckNumber: truckNumber,
+            trailerNumber: trailerNumber
+        )
+
+        if AppMode.shared.isLocal {
+            withAnimation { savedMessage = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation { savedMessage = false }
+            }
+            isSaving = false
+            return
+        }
+
         let updates: [String: AnyEncodable] = [
             "company_name": AnyEncodable(companyName.isEmpty ? nil as String? : companyName),
             "mc_number": AnyEncodable(mcNumber.isEmpty ? nil as String? : mcNumber),
             "dot_number": AnyEncodable(dotNumber.isEmpty ? nil as String? : dotNumber),
-            "phone": AnyEncodable(phone.isEmpty ? nil as String? : phone)
+            "phone": AnyEncodable(phone.isEmpty ? nil as String? : phone),
+            "truck_number": AnyEncodable(truckNumber.isEmpty ? nil as String? : truckNumber),
+            "trailer_number": AnyEncodable(trailerNumber.isEmpty ? nil as String? : trailerNumber)
         ]
 
         do {

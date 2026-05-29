@@ -195,7 +195,12 @@ final class SettlementHTMLPDFService {
             + calculation.dispatcherFeeAmount
             + calculation.authorityFee
             + calculation.maintenanceReserve
-        let deductionsRows = buildDeductionsRows(expenses: expenses, calculation: calculation)
+            + calculation.customDeductionsTotal
+        let deductionsRows = buildDeductionsRows(
+            expenses: expenses,
+            calculation: calculation,
+            customDeductions: calculation.customDeductions
+        )
 
         let verifyURL = "sacredpathway.app/v/\(payroll)"
         let qrB64 = generateQRBase64(payload: refId)
@@ -290,7 +295,8 @@ final class SettlementHTMLPDFService {
 
     private static func buildDeductionsRows(
         expenses: [Expense],
-        calculation: SettlementCalculation
+        calculation: SettlementCalculation,
+        customDeductions: [SettlementCustomDeduction]
     ) -> String {
         let f = DateFormatter(); f.dateFormat = "MM/dd/yy"
         var html = ""
@@ -319,6 +325,13 @@ final class SettlementHTMLPDFService {
         }
         if calculation.maintenanceReserve > 0 {
             html += deductionRow(label: "Maintenance Reserve", sub: nil, amount: calculation.maintenanceReserve)
+        }
+        for deduction in customDeductions {
+            html += deductionRow(
+                label: deduction.name,
+                sub: deduction.basis,
+                amount: deduction.amount
+            )
         }
         return html
     }
@@ -631,4 +644,3 @@ final class SettlementHTMLPDFService {
         }
     }
 }
-

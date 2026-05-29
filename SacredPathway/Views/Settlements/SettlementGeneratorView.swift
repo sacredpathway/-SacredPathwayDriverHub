@@ -198,7 +198,8 @@ struct SettlementGeneratorView: View {
                             loads: selectedLoads,
                             expenses: expenses,
                             profile: profile,
-                            driver: driver
+                            driver: driver,
+                            customDeductions: customDeductions(for: selectedLoads)
                         )
                     }
                 }
@@ -535,6 +536,10 @@ struct SettlementGeneratorView: View {
                 calcRow("Factoring Fee", "-\(calc.factoringFeeAmount.asCurrency)", color: .spDanger)
                 calcRow("Authority Fee", "-\(calc.authorityFee.asCurrency)", color: .spDanger)
                 calcRow("Maint. Reserve", "-\(calc.maintenanceReserve.asCurrency)", color: .spDanger)
+                ForEach(calc.customDeductions) { deduction in
+                    calcRow(deduction.name, "-\(deduction.amount.asCurrency)", color: .spDanger)
+                }
+                calcRow("Total Deductions", "-\(calc.totalDeductions.asCurrency)", bold: true, color: .spDanger)
                 Divider().background(Color.spGold)
                 calcRow("NET PAY", calc.carrierNetPay.asCurrency, bold: true, color: calc.carrierNetPay >= 0 ? .spSuccess : .spDanger)
             }
@@ -755,7 +760,8 @@ struct SettlementGeneratorView: View {
             loads: chosenLoads,
             expenses: expenses,
             profile: profile,
-            driver: driver
+            driver: driver,
+            customDeductions: customDeductions(for: chosenLoads)
         )
     }
 
@@ -796,8 +802,14 @@ struct SettlementGeneratorView: View {
         return PaystubExpenseReviewView.LiveContext(
             loads: chosen,
             profile: profile,
-            driver: driver
+            driver: driver,
+            customDeductions: customDeductions(for: chosen)
         )
+    }
+
+    private func customDeductions(for loads: [Load]) -> [SettlementCustomDeduction] {
+        let grossPay = loads.reduce(0.0) { $0 + ($1.totalRevenue ?? 0) }
+        return CustomFeeService.shared.activeCustomDeductions(grossPay: grossPay)
     }
 
     /// Deterministic fingerprint of the included expense set. Catches

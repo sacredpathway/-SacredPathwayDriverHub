@@ -305,6 +305,23 @@ struct SettingsView: View {
 
                         Section("Operations") {
                             NavigationLink {
+                                SacredDispatchDashboardView()
+                                    .environmentObject(supabase)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                                        .foregroundStyle(Color.spGold)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Sacred DISPATCH")
+                                            .foregroundStyle(Color.spTextPrimary)
+                                        Text("Offers, chat, dispatch fees, invoices")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.spTextSecondary)
+                                    }
+                                }
+                            }
+
+                            NavigationLink {
                                 BrokerContactsListView()
                                     .environmentObject(supabase)
                             } label: {

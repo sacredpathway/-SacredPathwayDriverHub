@@ -246,30 +246,29 @@ class SupabaseService: ObservableObject {
             NotificationCenter.default.post(name: .loadsDidChange, object: created)
             return created
         } catch {
-            if loadIncludesWeight(load), isMissingLoadWeightColumnError(error) {
-                let fallback = loadDroppingWeight(load)
-                #if DEBUG
-                print("""
-                [createLoad] LEGACY_SCHEMA_FALLBACK
-                  table=loads
-                  missing_weight_columns=true
-                  action=retry_without_weight_columns
-                  original_error=\(String(describing: error))
-                  fallback_payload:
-                \(debugJSONString(fallback))
-                """)
-                #endif
+            if let fallback = legacySchemaFallbackLoad(from: load, error: error) {
                 do {
-                    let created = try await insertLoad(fallback, writePath: "fallback_without_weight")
+                    let created = try await insertLoad(
+                        fallback.load,
+                        writePath: fallback.writePath
+                    )
                     NotificationCenter.default.post(name: .loadsDidChange, object: created)
                     return created
                 } catch {
+                    if let secondFallback = legacySchemaFallbackLoad(from: fallback.load, error: error) {
+                        let created = try await insertLoad(
+                            secondFallback.load,
+                            writePath: secondFallback.writePath
+                        )
+                        NotificationCenter.default.post(name: .loadsDidChange, object: created)
+                        return created
+                    }
                     #if DEBUG
                     print("""
                     [createLoad] FAILURE
                       table=loads
                       auth_user_id=\(client.auth.currentUser?.id.uuidString ?? "<nil>")
-                      write_path=fallback_without_weight
+                      write_path=\(fallback.writePath)
                       error=\(String(describing: error))
                     """)
                     #endif
@@ -294,22 +293,26 @@ class SupabaseService: ObservableObject {
             try await updateLoadPayload(load, loadId: loadId, writePath: "primary")
             NotificationCenter.default.post(name: .loadsDidChange, object: load)
         } catch {
-            if loadIncludesWeight(load), isMissingLoadWeightColumnError(error) {
-                let fallback = loadDroppingWeight(load)
-                #if DEBUG
-                print("""
-                [updateLoad] LEGACY_SCHEMA_FALLBACK
-                  table=loads
-                  load_id=\(loadId.uuidString)
-                  missing_weight_columns=true
-                  action=retry_without_weight_columns
-                  original_error=\(String(describing: error))
-                  fallback_payload:
-                \(debugJSONString(fallback))
-                """)
-                #endif
-                try await updateLoadPayload(fallback, loadId: loadId, writePath: "fallback_without_weight")
-                NotificationCenter.default.post(name: .loadsDidChange, object: fallback)
+            if let fallback = legacySchemaFallbackLoad(from: load, error: error) {
+                do {
+                    try await updateLoadPayload(
+                        fallback.load,
+                        loadId: loadId,
+                        writePath: fallback.writePath
+                    )
+                    NotificationCenter.default.post(name: .loadsDidChange, object: fallback.load)
+                } catch {
+                    if let secondFallback = legacySchemaFallbackLoad(from: fallback.load, error: error) {
+                        try await updateLoadPayload(
+                            secondFallback.load,
+                            loadId: loadId,
+                            writePath: secondFallback.writePath
+                        )
+                        NotificationCenter.default.post(name: .loadsDidChange, object: secondFallback.load)
+                        return
+                    }
+                    throw error
+                }
                 return
             }
             throw error
@@ -372,20 +375,93 @@ class SupabaseService: ObservableObject {
         #endif
     }
 
+    private struct LegacyLoadFallback {
+        let load: Load
+        let writePath: String
+    }
+
+    private func legacySchemaFallbackLoad(from load: Load, error: Error) -> LegacyLoadFallback? {
+        var fallback = load
+        var dropped: [String] = []
+
+        if loadIncludesWeight(fallback), isMissingLoadWeightColumnError(error) {
+            fallback.weightValue = nil
+            fallback.weightUnit = nil
+            dropped.append("weight")
+        }
+
+        if loadIncludesEquipment(fallback), isMissingLoadEquipmentColumnError(error) {
+            fallback.truckNumber = nil
+            fallback.trailerNumber = nil
+            dropped.append("equipment")
+        }
+
+        if loadIncludesDispatchMetadata(fallback), isMissingLoadDispatchColumnError(error) {
+            fallback.dispatchThreadId = nil
+            fallback.dispatchLoadOfferId = nil
+            fallback.dispatcherName = nil
+            fallback.dispatcherCompany = nil
+            dropped.append("dispatch")
+        }
+
+        guard !dropped.isEmpty else { return nil }
+
+        #if DEBUG
+        print("""
+        [loadWrite] LEGACY_SCHEMA_FALLBACK
+          table=loads
+          dropped_columns=\(dropped.joined(separator: ","))
+          original_error=\(String(describing: error))
+          fallback_payload:
+        \(debugJSONString(fallback))
+        """)
+        #endif
+
+        return LegacyLoadFallback(
+            load: fallback,
+            writePath: "fallback_without_\(dropped.joined(separator: "_and_"))"
+        )
+    }
+
     private func loadIncludesWeight(_ load: Load) -> Bool {
         load.weightValue != nil || load.weightUnit != nil
     }
 
-    private func loadDroppingWeight(_ load: Load) -> Load {
-        var copy = load
-        copy.weightValue = nil
-        copy.weightUnit = nil
-        return copy
+    private func loadIncludesEquipment(_ load: Load) -> Bool {
+        load.truckNumber != nil || load.trailerNumber != nil
+    }
+
+    private func loadIncludesDispatchMetadata(_ load: Load) -> Bool {
+        load.dispatchThreadId != nil ||
+        load.dispatchLoadOfferId != nil ||
+        load.dispatcherName != nil ||
+        load.dispatcherCompany != nil
     }
 
     private func isMissingLoadWeightColumnError(_ error: Error) -> Bool {
         let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
         guard raw.contains("weight_value") || raw.contains("weight_unit") else { return false }
+        return raw.contains("could not find") ||
+               raw.contains("schema cache") ||
+               raw.contains("column") ||
+               raw.contains("pgrst204")
+    }
+
+    private func isMissingLoadEquipmentColumnError(_ error: Error) -> Bool {
+        let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
+        guard raw.contains("truck_number") || raw.contains("trailer_number") else { return false }
+        return raw.contains("could not find") ||
+               raw.contains("schema cache") ||
+               raw.contains("column") ||
+               raw.contains("pgrst204")
+    }
+
+    private func isMissingLoadDispatchColumnError(_ error: Error) -> Bool {
+        let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
+        guard raw.contains("dispatch_thread_id") ||
+              raw.contains("dispatch_load_offer_id") ||
+              raw.contains("dispatcher_name") ||
+              raw.contains("dispatcher_company") else { return false }
         return raw.contains("could not find") ||
                raw.contains("schema cache") ||
                raw.contains("column") ||

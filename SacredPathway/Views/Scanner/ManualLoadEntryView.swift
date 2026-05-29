@@ -15,6 +15,8 @@ struct ManualLoadEntryView: View {
     @State private var loadNumber = ""
     @State private var brokerName = ""
     @State private var brokerMcNumber = ""
+    @State private var truckNumber = ""
+    @State private var trailerNumber = ""
     @State private var origin = ""
     @State private var destination = ""
     @State private var totalMiles = ""
@@ -83,6 +85,11 @@ struct ManualLoadEntryView: View {
                             formField("Origin", text: $origin, placeholder: "e.g. Atlanta, GA")
                             formField("Destination", text: $destination, placeholder: "e.g. Dallas, TX")
                             formField("Miles", text: $totalMiles, placeholder: "e.g. 780", keyboard: .decimalPad)
+                        }
+
+                        sectionCard("Equipment") {
+                            formField("Truck #", text: $truckNumber, placeholder: "e.g. 101")
+                            formField("Trailer #", text: $trailerNumber, placeholder: "e.g. TRL55")
                         }
 
                         // Revenue
@@ -300,11 +307,27 @@ struct ManualLoadEntryView: View {
     // MARK: - Prefill (edit mode)
 
     private func prefillIfNeeded() {
-        guard !didPrefill, let load = existingLoad else { return }
+        guard !didPrefill else { return }
         didPrefill = true
+
+        guard let load = existingLoad else {
+            truckNumber = DriverEquipmentProfileStore.defaultTruckNumber(profile: supabase.currentProfile)
+            trailerNumber = DriverEquipmentProfileStore.defaultTrailerNumber(profile: supabase.currentProfile)
+            return
+        }
+
+        let shouldUseCurrentEquipmentDefaults = load.id == nil
+        let defaultTruck = shouldUseCurrentEquipmentDefaults
+            ? DriverEquipmentProfileStore.defaultTruckNumber(profile: supabase.currentProfile)
+            : ""
+        let defaultTrailer = shouldUseCurrentEquipmentDefaults
+            ? DriverEquipmentProfileStore.defaultTrailerNumber(profile: supabase.currentProfile)
+            : ""
         loadNumber = load.loadNumber ?? ""
         brokerName = load.brokerName ?? ""
         brokerMcNumber = load.brokerMcNumber ?? ""
+        truckNumber = load.truckNumber ?? defaultTruck
+        trailerNumber = load.trailerNumber ?? defaultTrailer
         origin = load.origin ?? ""
         destination = load.destination ?? ""
         totalMiles = load.totalMiles.map { String(format: "%.0f", $0) } ?? ""
@@ -368,6 +391,8 @@ struct ManualLoadEntryView: View {
                 updated.loadNumber = loadNumber.isEmpty ? nil : loadNumber
                 updated.brokerName = brokerName.isEmpty ? nil : brokerName
                 updated.brokerMcNumber = brokerMcNumber.isEmpty ? nil : brokerMcNumber
+                updated.truckNumber = cleanedOrNil(truckNumber)
+                updated.trailerNumber = cleanedOrNil(trailerNumber)
                 updated.origin = origin.isEmpty ? nil : origin
                 updated.destination = destination.isEmpty ? nil : destination
                 updated.totalMiles = Double(totalMiles)
@@ -384,6 +409,8 @@ struct ManualLoadEntryView: View {
                     loadNumber: loadNumber.isEmpty ? nil : loadNumber,
                     brokerName: brokerName.isEmpty ? nil : brokerName,
                     brokerMcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                    truckNumber: cleanedOrNil(truckNumber),
+                    trailerNumber: cleanedOrNil(trailerNumber),
                     origin: origin.isEmpty ? nil : origin,
                     destination: destination.isEmpty ? nil : destination,
                     totalMiles: Double(totalMiles),
@@ -426,6 +453,8 @@ struct ManualLoadEntryView: View {
                     updated.loadNumber = loadNumber.isEmpty ? nil : loadNumber
                     updated.brokerName = brokerName.isEmpty ? nil : brokerName
                     updated.brokerMcNumber = brokerMcNumber.isEmpty ? nil : brokerMcNumber
+                    updated.truckNumber = cleanedOrNil(truckNumber)
+                    updated.trailerNumber = cleanedOrNil(trailerNumber)
                     updated.origin = origin.isEmpty ? nil : origin
                     updated.destination = destination.isEmpty ? nil : destination
                     updated.totalMiles = Double(totalMiles)
@@ -442,6 +471,8 @@ struct ManualLoadEntryView: View {
                         loadNumber: loadNumber.isEmpty ? nil : loadNumber,
                         brokerName: brokerName.isEmpty ? nil : brokerName,
                         brokerMcNumber: brokerMcNumber.isEmpty ? nil : brokerMcNumber,
+                        truckNumber: cleanedOrNil(truckNumber),
+                        trailerNumber: cleanedOrNil(trailerNumber),
                         origin: origin.isEmpty ? nil : origin,
                         destination: destination.isEmpty ? nil : destination,
                         totalMiles: Double(totalMiles),
@@ -467,5 +498,10 @@ struct ManualLoadEntryView: View {
             }
             isSaving = false
         }
+    }
+
+    private func cleanedOrNil(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

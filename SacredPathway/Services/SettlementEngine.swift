@@ -12,7 +12,24 @@ struct SettlementCalculation {
     let factoringFeeAmount: Double
     let authorityFee: Double
     let maintenanceReserve: Double
+    let customDeductions: [SettlementCustomDeduction]
     let carrierNetPay: Double
+
+    var customDeductionsTotal: Double {
+        customDeductions.reduce(0) { $0 + $1.amount }
+    }
+
+    var standardDeductionsTotal: Double {
+        totalExpenses
+            + dispatcherFeeAmount
+            + factoringFeeAmount
+            + authorityFee
+            + maintenanceReserve
+    }
+
+    var totalDeductions: Double {
+        standardDeductionsTotal + customDeductionsTotal
+    }
 }
 
 class SettlementEngine {
@@ -23,7 +40,8 @@ class SettlementEngine {
         expenses: [Expense],
         profile: Profile,
         driver: Driver,
-        payOnRevenue: Bool = false
+        payOnRevenue: Bool = false,
+        customDeductions: [SettlementCustomDeduction] = []
     ) -> SettlementCalculation {
 
         // Step 1: Total revenue from all loads
@@ -63,6 +81,7 @@ class SettlementEngine {
         // Step 7: Flat fees
         let authorityFee = profile.authorityFee ?? 0.0
         let maintenanceReserve = profile.maintenanceReserve ?? 0.0
+        let customDeductionsTotal = customDeductions.reduce(0) { $0 + $1.amount }
 
         // Step 8: Carrier net pay (what the company keeps)
         let carrierNetPay = grossProfit
@@ -71,6 +90,7 @@ class SettlementEngine {
             - factoringFeeAmount
             - authorityFee
             - maintenanceReserve
+            - customDeductionsTotal
 
         return SettlementCalculation(
             totalRevenue: totalRevenue,
@@ -84,6 +104,7 @@ class SettlementEngine {
             factoringFeeAmount: factoringFeeAmount,
             authorityFee: authorityFee,
             maintenanceReserve: maintenanceReserve,
+            customDeductions: customDeductions,
             carrierNetPay: carrierNetPay
         )
     }

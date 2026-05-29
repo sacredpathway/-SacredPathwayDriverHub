@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import UIKit
 @preconcurrency import Vision
 
@@ -99,6 +100,31 @@ enum DocumentType: String {
     case unknown
 }
 
+private extension CGImagePropertyOrientation {
+    init(_ orientation: UIImage.Orientation) {
+        switch orientation {
+        case .up:
+            self = .up
+        case .upMirrored:
+            self = .upMirrored
+        case .down:
+            self = .down
+        case .downMirrored:
+            self = .downMirrored
+        case .left:
+            self = .leftMirrored
+        case .leftMirrored:
+            self = .left
+        case .right:
+            self = .rightMirrored
+        case .rightMirrored:
+            self = .right
+        @unknown default:
+            self = .up
+        }
+    }
+}
+
 // MARK: - Service
 
 /// On-device-only parser. Uses Apple's Vision framework for OCR
@@ -134,6 +160,29 @@ enum LocalDocumentParser {
     /// approximate reading order.
     static func recognizeText(in image: UIImage) async -> [String] {
         guard let cg = image.cgImage else { return [] }
+        let primaryOrientation = CGImagePropertyOrientation(image.imageOrientation)
+        let primary = await recognizeText(in: cg, orientation: primaryOrientation)
+        var best = primary
+
+        if primary.score >= OCRCandidate.reliableScore {
+            return primary.lines
+        }
+
+        for orientation in fallbackOrientations(excluding: primaryOrientation) {
+            let candidate = await recognizeText(in: cg, orientation: orientation)
+            if candidate.score > best.score {
+                best = candidate
+            }
+            if candidate.score >= OCRCandidate.reliableScore {
+                break
+            }
+        }
+
+        return best.lines
+    }
+
+    private static func recognizeText(in cgImage: CGImage,
+                                      orientation: CGImagePropertyOrientation) async -> OCRCandidate {
         return await withCheckedContinuation { continuation in
             let request = VNRecognizeTextRequest { req, _ in
                 let observations = req.results as? [VNRecognizedTextObservation] ?? []
@@ -144,21 +193,65 @@ enum LocalDocumentParser {
                 let lines = sorted.compactMap { obs -> String? in
                     obs.topCandidates(1).first?.string
                 }
-                continuation.resume(returning: lines)
+                continuation.resume(returning: OCRCandidate(lines: lines))
             }
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
             // English first; Vision will still pick up numbers regardless.
             request.recognitionLanguages = ["en-US"]
 
-            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            let handler = VNImageRequestHandler(
+                cgImage: cgImage,
+                orientation: orientation,
+                options: [:]
+            )
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     try handler.perform([request])
                 } catch {
-                    continuation.resume(returning: [])
+                    continuation.resume(returning: OCRCandidate(lines: []))
                 }
             }
+        }
+    }
+
+    private static func fallbackOrientations(
+        excluding primary: CGImagePropertyOrientation
+    ) -> [CGImagePropertyOrientation] {
+        [.up, .right, .left, .down]
+            .filter { $0.rawValue != primary.rawValue }
+    }
+
+    private struct OCRCandidate {
+        static let reliableScore = 28
+
+        let lines: [String]
+
+        var score: Int {
+            let text = lines.joined(separator: "\n").lowercased()
+            var total = min(lines.count, 40)
+
+            for token in [
+                "load", "pickup", "pick up", "delivery", "deliver",
+                "broker", "carrier", "shipper", "receiver", "consignee",
+                "rate", "total", "weight", "miles", "commodity"
+            ] where text.contains(token) {
+                total += 6
+            }
+
+            if text.range(of: #"\$\s?\d"#, options: .regularExpression) != nil {
+                total += 8
+            }
+            if text.range(of: #"\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\b"#,
+                          options: .regularExpression) != nil {
+                total += 5
+            }
+            if text.range(of: #"\b\d{4,6}\s?(?:lb|lbs|pounds)\b"#,
+                          options: [.regularExpression, .caseInsensitive]) != nil {
+                total += 5
+            }
+
+            return total
         }
     }
 
@@ -256,10 +349,11 @@ enum LocalDocumentParser {
         // ---- Broker name ----
         // Best signal in real rate cons: line containing "Broker:" or
         // appearing right above an MC number.
-        if let m = firstRegex(joined, pattern: #"(?im)^\s*(?:broker|brokered\s*by|carrier\s*broker|booked\s*by)\s*[:\-]\s*(.+?)\s*$"#) {
-            out.brokerName = m.trimmedCompanySuffix
+        if let m = firstRegex(joined, pattern: #"(?im)^\s*(?:broker|brokered\s*by|carrier\s*broker|booked\s*by)\s*[:\-]\s*(.+?)\s*$"#),
+           let broker = cleanBrokerName(m, documentText: joined) {
+            out.brokerName = broker
             out.confidence["brokerName"] = 0.85
-        } else if let headerBroker = pickHeaderBroker(lines: lines) {
+        } else if let headerBroker = pickHeaderBroker(lines: lines, documentText: joined) {
             out.brokerName = headerBroker
             out.confidence["brokerName"] = 0.72
         } else {
@@ -272,9 +366,11 @@ enum LocalDocumentParser {
                 if l.contains("logistics") || l.contains("freight") ||
                    l.contains("brokerage") || l.contains(" inc") ||
                    l.contains(" llc") || l.contains("transport") {
-                    out.brokerName = line.trimmedCompanySuffix
-                    out.confidence["brokerName"] = 0.55
-                    break
+                    if let broker = cleanBrokerName(line, documentText: joined) {
+                        out.brokerName = broker
+                        out.confidence["brokerName"] = 0.55
+                        break
+                    }
                 }
             }
         }
@@ -1413,7 +1509,75 @@ enum LocalDocumentParser {
         Double(s.replacingOccurrences(of: ",", with: ""))
     }
 
-    private static func pickHeaderBroker(lines: [String]) -> String? {
+    private static func cleanBrokerName(_ raw: String, documentText: String) -> String? {
+        var candidate = raw
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if let cutIndex = firstBrokerPromoPhraseIndex(in: candidate) {
+            candidate = String(candidate[..<cutIndex])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        candidate = candidate
+            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+            .trimmedCompanySuffix
+
+        guard candidate.count >= 2, candidate.count <= 80 else { return nil }
+        guard !containsBrokerPromoPhrase(candidate) else { return nil }
+
+        if shouldNormalizeBrokerToTQL(candidate, documentText: documentText) {
+            return "TQL"
+        }
+
+        return candidate
+    }
+
+    private static func containsBrokerPromoPhrase(_ text: String) -> Bool {
+        firstBrokerPromoPhraseIndex(in: text) != nil
+    }
+
+    private static func firstBrokerPromoPhraseIndex(in text: String) -> String.Index? {
+        let patterns = [
+            #"\bFIND\s+YOUR\s+NEXT\s+LOAD\b"#,
+            #"\bVISITING\b"#,
+            #"\bWWW\b"#,
+            #"HTTPS?://"#,
+            #"\bHTTP\b"#,
+            #"\bCALL\b"#,
+            #"\bEMAIL\b"#
+        ]
+
+        var earliest: String.Index?
+        for pattern in patterns {
+            guard let range = text.range(
+                of: pattern,
+                options: [.regularExpression, .caseInsensitive]
+            ) else { continue }
+            if earliest == nil || range.lowerBound < earliest! {
+                earliest = range.lowerBound
+            }
+        }
+        return earliest
+    }
+
+    private static func shouldNormalizeBrokerToTQL(_ candidate: String,
+                                                   documentText: String) -> Bool {
+        let broker = candidate.lowercased()
+        if broker == "tql" ||
+            broker.contains("total quality logistics") ||
+            matchesRegex(candidate, pattern: #"(?i)\bTQL\b"#) {
+            return true
+        }
+
+        let document = documentText.lowercased()
+        return broker.contains("quality logistics") &&
+            (document.contains("total quality logistics") ||
+             matchesRegex(documentText, pattern: #"(?i)\bTQL\b"#))
+    }
+
+    private static func pickHeaderBroker(lines: [String],
+                                         documentText: String) -> String? {
         var parts: [String] = []
 
         for raw in lines.prefix(8) {
@@ -1421,6 +1585,19 @@ enum LocalDocumentParser {
             guard !line.isEmpty else { continue }
 
             let lower = line.lowercased()
+            if lower.contains("settlement") ||
+                lower.contains("reconciliation") ||
+                lower.contains("remittance") ||
+                lower.contains("paid amount") ||
+                lower.contains("amount paid") ||
+                lower.hasPrefix("ref") ||
+                lower.contains("$") {
+                continue
+            }
+            if containsBrokerPromoPhrase(line) {
+                if !parts.isEmpty { break }
+                continue
+            }
             if lower.contains("rate confirmation") {
                 if !parts.isEmpty { break }
                 continue
@@ -1453,10 +1630,87 @@ enum LocalDocumentParser {
 
         let combined = parts.joined(separator: " ").trimmingCharacters(in: .whitespaces)
         guard combined.count >= 3, combined.count <= 80 else { return nil }
-        guard !matchesRegex(combined.lowercased(), pattern: #"\b(?:date|time|pickup|delivery|shipment|charges)\b"#) else {
+        guard !matchesRegex(combined.lowercased(), pattern: #"\b(?:date|time|pickup|delivery|shipment|charges|settlement|reconciliation|remittance|paid|amount|ref)\b"#) else {
             return nil
         }
-        return combined.trimmedCompanySuffix
+        return cleanBrokerName(combined, documentText: documentText)
+    }
+
+    private static func isInvalidStopCompanyLine(_ raw: String) -> Bool {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return true }
+
+        let lower = text.lowercased()
+        let rejectPhrases = [
+            "appt", "appointment", "arrive", "pickup time",
+            "delivery time", "date/time", "date time"
+        ]
+        if rejectPhrases.contains(where: { lower.contains($0) }) {
+            return true
+        }
+
+        if lower.contains("$") ||
+            lower.contains("paid amount") ||
+            lower.contains("amount paid") ||
+            lower.contains("settlement") ||
+            lower.contains("remittance") {
+            return true
+        }
+        if firstDate(in: text) != nil { return true }
+        if matchesRegex(text, pattern: #"\b\d{1,2}:\d{2}\b"#) { return true }
+        if matchesRegex(text, pattern: #"(?i)\b\d{1,2}\s*(?:AM|PM)\b"#) { return true }
+        if matchesRegex(
+            text,
+            pattern: #"(?i)\b(?:pickup|delivery|arrival|arrive|ready|close|open)\s*(?:date|time|appt|appointment)\b"#
+        ) {
+            return true
+        }
+        if matchesRegex(
+            text,
+            pattern: #"(?i)^\s*(?:ref(?:erence)?|po|p\.o\.|pickup\s*(?:#|number|no\.?)|delivery\s*(?:#|number|no\.?)|appt\s*(?:#|number|no\.?)|appointment\s*(?:#|number|no\.?)|bol|load|order|confirmation)\b"#
+        ) {
+            return true
+        }
+        if matchesRegex(
+            text,
+            pattern: #"(?i)^\s*[A-Z]{0,5}[\s#:/-]*\d{3,}[A-Z0-9+\-/]*\s*$"#
+        ) {
+            return true
+        }
+
+        let letterCount = text.filter(\.isLetter).count
+        let digitCount = text.filter(\.isNumber).count
+        if digitCount >= 4 && letterCount <= 6 {
+            return true
+        }
+
+        return false
+    }
+
+    private static func stopCompanyScore(_ raw: String) -> Int {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = text.lowercased()
+        var score = 0
+
+        if matchesRegex(
+            lower,
+            pattern: #"\b(?:inc|llc|ltd|corp|corporation|company|co\.|foods?|logistics|warehouse|distribution|distributing|manufacturing|mfg|produce|farms?|plant|dc|center|centre|cold storage|packing|packaging)\b"#
+        ) {
+            score += 6
+        }
+        if lower.split(whereSeparator: { $0.isWhitespace }).count >= 2 {
+            score += 1
+        }
+        if text.filter(\.isLetter).count >= 4 {
+            score += 1
+        }
+        if text.filter(\.isNumber).count > 0 {
+            score -= 2
+        }
+        if text.contains("/") {
+            score -= 1
+        }
+        return score
     }
 
     // MARK: - Scored broker-email picker (2026-05-18)
@@ -2430,7 +2684,8 @@ enum LocalDocumentParser {
                 addressRows.append(line)
             } else if !lower.hasPrefix("ref") &&
                         !lower.hasPrefix("contact") &&
-                        !lower.hasPrefix("phone") {
+                        !lower.hasPrefix("phone") &&
+                        !isInvalidStopCompanyLine(line) {
                 companyRows.append(line)
             }
         }
@@ -2520,10 +2775,10 @@ enum LocalDocumentParser {
             cityState = m.trimmingCharacters(in: .whitespaces)
         }
 
-        // Company / shipper / receiver name — first non-anchor line that
-        // isn't the address or the city-state line, and isn't a date / time.
-        var companyName: String?
-        for line in slice.dropFirst() {
+        // Company / shipper / receiver name — prefer actual company-looking
+        // rows and reject appointment/reference/date-time fragments.
+        var companyCandidates: [(name: String, score: Int, order: Int)] = []
+        for (order, line) in slice.dropFirst().enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { continue }
             if trimmed == address { continue }
@@ -2531,17 +2786,30 @@ enum LocalDocumentParser {
             if firstRegex(trimmed, pattern: #"^\d"#) != nil { continue }   // skip numeric / address
             if firstRegex(trimmed, pattern: #"\d{1,2}:\d{2}"#) != nil { continue } // skip times
             if firstDate(in: trimmed) != nil { continue }                  // skip dates
+            if isInvalidStopCompanyLine(trimmed) { continue }
             // Strip leading "Name:" / "Company:" labels.
             let cleaned = trimmed.replacingOccurrences(
                 of: #"(?i)^(name|company|consignee|shipper|receiver)\s*[:\-]\s*"#,
                 with: "",
                 options: .regularExpression
-            )
+            ).trimmingCharacters(in: .whitespacesAndNewlines)
+            if isInvalidStopCompanyLine(cleaned) { continue }
             if cleaned.count >= 3 && cleaned.count <= 80 {
-                companyName = cleaned.trimmedCompanySuffix
-                break
+                companyCandidates.append((
+                    cleaned.trimmedCompanySuffix,
+                    stopCompanyScore(cleaned),
+                    order
+                ))
             }
         }
+
+        let companyName = companyCandidates
+            .sorted {
+                if $0.score != $1.score { return $0.score > $1.score }
+                return $0.order < $1.order
+            }
+            .first?
+            .name
 
         return AddrBlock(
             address: address,

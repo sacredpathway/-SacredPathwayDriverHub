@@ -49,6 +49,8 @@ enum ScreenshotMode {
         mcNumber: "1647441",
         dotNumber: "4250348",
         phone: "(555) 414-0001",
+        truckNumber: nil,
+        trailerNumber: nil,
         subscriptionTier: nil,
         subscriptionStatus: nil,
         driverPayPercentage: 70,

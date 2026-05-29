@@ -40,6 +40,11 @@ struct LoadDetailView: View {
                                 .font(.caption)
                                 .foregroundStyle(Color.spTextSecondary)
                         }
+                        if let dispatchDisplay {
+                            Text("Dispatch: \(dispatchDisplay)")
+                                .font(.caption)
+                                .foregroundStyle(Color.spTextSecondary)
+                        }
                     }
 
                     // Route
@@ -299,6 +304,9 @@ struct LoadDetailView: View {
         if let broker = load.brokerName, !broker.isEmpty {
             lines.append("Broker: \(broker)")
         }
+        if let dispatchDisplay {
+            lines.append("Dispatch: \(dispatchDisplay)")
+        }
         if let mc = load.brokerMcNumber, !mc.isEmpty {
             lines.append("Broker MC#: \(mc)")
         }
@@ -366,6 +374,15 @@ struct LoadDetailView: View {
         df.dateStyle = .medium
         df.timeStyle = .none
         return df.string(from: date)
+    }
+
+    private var dispatchDisplay: String? {
+        let parts = [load.dispatcherName, load.dispatcherCompany]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !parts.isEmpty else { return nil }
+        var seen = Set<String>()
+        return parts.filter { seen.insert($0).inserted }.joined(separator: " / ")
     }
 
     private func performDelete() {

@@ -6,6 +6,8 @@ struct Profile: Codable, Identifiable {
     var mcNumber: String?
     var dotNumber: String?
     var phone: String?
+    var truckNumber: String?
+    var trailerNumber: String?
     var subscriptionTier: String?
     var subscriptionStatus: String?
     var driverPayPercentage: Double?
@@ -23,6 +25,8 @@ struct Profile: Codable, Identifiable {
         case mcNumber = "mc_number"
         case dotNumber = "dot_number"
         case phone
+        case truckNumber = "truck_number"
+        case trailerNumber = "trailer_number"
         case subscriptionTier = "subscription_tier"
         case subscriptionStatus = "subscription_status"
         case driverPayPercentage = "driver_pay_percentage"
@@ -33,5 +37,42 @@ struct Profile: Codable, Identifiable {
         case payBasis = "pay_basis"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+}
+
+@MainActor
+enum DriverEquipmentProfileStore {
+    private static let truckKey = "sph.driverEquipment.truckNumber"
+    private static let trailerKey = "sph.driverEquipment.trailerNumber"
+
+    static func defaultTruckNumber(profile: Profile?) -> String {
+        if AppMode.shared.isLocal {
+            return localTruckNumber
+        }
+        return clean(profile?.truckNumber)
+    }
+
+    static func defaultTrailerNumber(profile: Profile?) -> String {
+        if AppMode.shared.isLocal {
+            return localTrailerNumber
+        }
+        return clean(profile?.trailerNumber)
+    }
+
+    static func saveLocal(truckNumber: String, trailerNumber: String) {
+        UserDefaults.standard.set(clean(truckNumber), forKey: truckKey)
+        UserDefaults.standard.set(clean(trailerNumber), forKey: trailerKey)
+    }
+
+    private static var localTruckNumber: String {
+        clean(UserDefaults.standard.string(forKey: truckKey))
+    }
+
+    private static var localTrailerNumber: String {
+        clean(UserDefaults.standard.string(forKey: trailerKey))
+    }
+
+    private static func clean(_ value: String?) -> String {
+        value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 }

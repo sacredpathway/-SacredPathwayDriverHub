@@ -65,6 +65,7 @@ struct SmartScanReviewView: View {
     @State private var stopOffPay: String = ""
 
     // Equipment / shipment metadata (Part 2).
+    @State private var truckNumber: String = ""
     @State private var trailerNumber: String = ""
     @State private var bolNumber: String = ""
     @State private var driverNotes: String = ""
@@ -182,7 +183,9 @@ struct SmartScanReviewView: View {
                                   placeholder: "e.g. REF-7821")
                         }
 
-                        sectionCard("Trailer & BOL") {
+                        sectionCard("Equipment & BOL") {
+                            field("Truck #", text: $truckNumber, key: "truckNumber",
+                                  placeholder: "e.g. 101")
                             field("Trailer #", text: $trailerNumber, key: "trailerNumber",
                                   placeholder: "e.g. T-2418")
                             field("BOL #", text: $bolNumber, key: "bolNumber",
@@ -337,7 +340,9 @@ struct SmartScanReviewView: View {
 
                         // Equipment + BOL metadata. Always shown so users can
                         // type even when nothing was auto-detected.
-                        sectionCard("Trailer & BOL") {
+                        sectionCard("Equipment & BOL") {
+                            field("Truck #", text: $truckNumber, key: "truckNumber",
+                                  placeholder: "e.g. 101")
                             field("Trailer #", text: $trailerNumber, key: "trailerNumber",
                                   placeholder: "e.g. T-2418")
                             field("BOL #", text: $bolNumber, key: "bolNumber",
@@ -912,8 +917,16 @@ struct SmartScanReviewView: View {
         detentionRate  = parsed.detentionRate.map  { String(format: "%.2f", $0) } ?? ""
         stopOffPay     = parsed.stopOffPay.map     { String(format: "%.2f", $0) } ?? ""
 
-        // Equipment + BOL
-        trailerNumber  = parsed.trailerNumber ?? ""
+        // Equipment + BOL. OCR trailer values win because they are
+        // document-specific; otherwise use the driver's saved equipment.
+        truckNumber    = DriverEquipmentProfileStore.defaultTruckNumber(profile: supabase.currentProfile)
+        let profileTrailer = DriverEquipmentProfileStore.defaultTrailerNumber(profile: supabase.currentProfile)
+        if let parsedTrailer = parsed.trailerNumber?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !parsedTrailer.isEmpty {
+            trailerNumber = parsedTrailer
+        } else {
+            trailerNumber = profileTrailer
+        }
         bolNumber      = parsed.bolNumber     ?? ""
         driverNotes    = parsed.driverNotes   ?? ""
 
@@ -1034,6 +1047,8 @@ struct SmartScanReviewView: View {
                 loadNumber: loadNumber.emptyToNil,
                 brokerName: brokerName.emptyToNil,
                 brokerMcNumber: brokerMcNumber.emptyToNil,
+                truckNumber: truckNumber.emptyToNil,
+                trailerNumber: trailerNumber.emptyToNil,
                 pickupDate: pickupDateSet ? pickupDate : nil,
                 deliveryDate: deliveryDateSet ? deliveryDate : nil,
                 origin: origin.emptyToNil,

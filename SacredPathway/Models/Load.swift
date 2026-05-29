@@ -32,6 +32,8 @@ struct Load: Codable, Identifiable {
     var loadNumber: String?
     var brokerName: String?
     var brokerMcNumber: String?
+    var truckNumber: String?
+    var trailerNumber: String?
     var pickupDate: Date?         // Postgres DATE
     var deliveryDate: Date?       // Postgres DATE
     var origin: String?
@@ -43,6 +45,10 @@ struct Load: Codable, Identifiable {
     var totalRevenue: Double?
     var weightValue: Double?
     var weightUnit: String?
+    var dispatchThreadId: UUID?
+    var dispatchLoadOfferId: UUID?
+    var dispatcherName: String?
+    var dispatcherCompany: String?
     var status: String?
     var createdAt: Date?          // Postgres TIMESTAMPTZ
     var updatedAt: Date?          // Postgres TIMESTAMPTZ
@@ -65,6 +71,8 @@ struct Load: Codable, Identifiable {
         case loadNumber = "load_number"
         case brokerName = "broker_name"
         case brokerMcNumber = "broker_mc_number"
+        case truckNumber = "truck_number"
+        case trailerNumber = "trailer_number"
         case pickupDate = "pickup_date"
         case deliveryDate = "delivery_date"
         case origin, destination
@@ -75,6 +83,10 @@ struct Load: Codable, Identifiable {
         case totalRevenue = "total_revenue"
         case weightValue = "weight_value"
         case weightUnit = "weight_unit"
+        case dispatchThreadId = "dispatch_thread_id"
+        case dispatchLoadOfferId = "dispatch_load_offer_id"
+        case dispatcherName = "dispatcher_name"
+        case dispatcherCompany = "dispatcher_company"
         case status
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -126,6 +138,8 @@ struct Load: Codable, Identifiable {
         loadNumber: String? = nil,
         brokerName: String? = nil,
         brokerMcNumber: String? = nil,
+        truckNumber: String? = nil,
+        trailerNumber: String? = nil,
         pickupDate: Date? = nil,
         deliveryDate: Date? = nil,
         origin: String? = nil,
@@ -137,6 +151,10 @@ struct Load: Codable, Identifiable {
         totalRevenue: Double? = nil,
         weightValue: Double? = nil,
         weightUnit: String? = nil,
+        dispatchThreadId: UUID? = nil,
+        dispatchLoadOfferId: UUID? = nil,
+        dispatcherName: String? = nil,
+        dispatcherCompany: String? = nil,
         status: String? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
@@ -153,6 +171,8 @@ struct Load: Codable, Identifiable {
         self.loadNumber = loadNumber
         self.brokerName = brokerName
         self.brokerMcNumber = brokerMcNumber
+        self.truckNumber = truckNumber
+        self.trailerNumber = trailerNumber
         self.pickupDate = pickupDate
         self.deliveryDate = deliveryDate
         self.origin = origin
@@ -164,6 +184,10 @@ struct Load: Codable, Identifiable {
         self.totalRevenue = totalRevenue
         self.weightValue = weightValue
         self.weightUnit = weightUnit
+        self.dispatchThreadId = dispatchThreadId
+        self.dispatchLoadOfferId = dispatchLoadOfferId
+        self.dispatcherName = dispatcherName
+        self.dispatcherCompany = dispatcherCompany
         self.status = status
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -185,6 +209,8 @@ struct Load: Codable, Identifiable {
         loadNumber            = try c.decodeIfPresent(String.self, forKey: .loadNumber)
         brokerName            = try c.decodeIfPresent(String.self, forKey: .brokerName)
         brokerMcNumber        = try c.decodeIfPresent(String.self, forKey: .brokerMcNumber)
+        truckNumber           = try c.decodeIfPresent(String.self, forKey: .truckNumber)
+        trailerNumber         = try c.decodeIfPresent(String.self, forKey: .trailerNumber)
         origin                = try c.decodeIfPresent(String.self, forKey: .origin)
         destination           = try c.decodeIfPresent(String.self, forKey: .destination)
         totalMiles            = try c.decodeIfPresent(Double.self, forKey: .totalMiles)
@@ -194,6 +220,10 @@ struct Load: Codable, Identifiable {
         totalRevenue          = try c.decodeIfPresent(Double.self, forKey: .totalRevenue)
         weightValue           = try c.decodeIfPresent(Double.self, forKey: .weightValue)
         weightUnit            = try c.decodeIfPresent(String.self, forKey: .weightUnit)
+        dispatchThreadId      = try c.decodeIfPresent(UUID.self,   forKey: .dispatchThreadId)
+        dispatchLoadOfferId   = try c.decodeIfPresent(UUID.self,   forKey: .dispatchLoadOfferId)
+        dispatcherName        = try c.decodeIfPresent(String.self, forKey: .dispatcherName)
+        dispatcherCompany     = try c.decodeIfPresent(String.self, forKey: .dispatcherCompany)
         status                = try c.decodeIfPresent(String.self, forKey: .status)
         brokerId              = try c.decodeIfPresent(UUID.self,   forKey: .brokerId)
         brokerContactId       = try c.decodeIfPresent(UUID.self,   forKey: .brokerContactId)
@@ -215,6 +245,8 @@ struct Load: Codable, Identifiable {
         try c.encodeIfPresent(loadNumber,           forKey: .loadNumber)
         try c.encodeIfPresent(brokerName,           forKey: .brokerName)
         try c.encodeIfPresent(brokerMcNumber,       forKey: .brokerMcNumber)
+        try c.encodeIfPresent(truckNumber,          forKey: .truckNumber)
+        try c.encodeIfPresent(trailerNumber,        forKey: .trailerNumber)
         try c.encodeIfPresent(origin,               forKey: .origin)
         try c.encodeIfPresent(destination,          forKey: .destination)
         try c.encodeIfPresent(totalMiles,           forKey: .totalMiles)
@@ -224,6 +256,10 @@ struct Load: Codable, Identifiable {
         try c.encodeIfPresent(totalRevenue,         forKey: .totalRevenue)
         try c.encodeIfPresent(weightValue,          forKey: .weightValue)
         try c.encodeIfPresent(weightUnit,           forKey: .weightUnit)
+        try c.encodeIfPresent(dispatchThreadId,     forKey: .dispatchThreadId)
+        try c.encodeIfPresent(dispatchLoadOfferId,  forKey: .dispatchLoadOfferId)
+        try c.encodeIfPresent(dispatcherName,       forKey: .dispatcherName)
+        try c.encodeIfPresent(dispatcherCompany,    forKey: .dispatcherCompany)
         try c.encodeIfPresent(status,               forKey: .status)
         try c.encodeIfPresent(brokerId,             forKey: .brokerId)
         try c.encodeIfPresent(brokerContactId,      forKey: .brokerContactId)
