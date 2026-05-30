@@ -86,6 +86,18 @@ enum SPDate {
 
 // MARK: - Expense
 
+struct ExpenseFormPrefill {
+    var category: String = "fuel"
+    var amount: String = ""
+    var vendorName: String = ""
+    var description: String = ""
+    var receiptDate: Date = Date()
+    var gallons: String = ""
+    var pricePerGallon: String = ""
+    var defGallons: String = ""
+    var defPricePerGallon: String = ""
+}
+
 struct Expense: Codable, Identifiable {
     var id: UUID?
     var loadId: UUID?

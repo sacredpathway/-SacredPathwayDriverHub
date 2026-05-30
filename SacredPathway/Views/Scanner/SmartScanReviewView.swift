@@ -234,6 +234,9 @@ struct SmartScanReviewView: View {
                     }
                 }
                 .onAppear(perform: prefillFromParsed)
+                .onReceive(supabase.$currentProfile) { _ in
+                    applyEquipmentDefaultsIfNeeded()
+                }
                 .task { await loadBrokers() }
                 .alert("Load Saved", isPresented: $showSavedAlert) {
                     Button("OK") { dismiss() }
@@ -401,6 +404,9 @@ struct SmartScanReviewView: View {
                 }
             }
             .onAppear(perform: prefillFromParsed)
+            .onReceive(supabase.$currentProfile) { _ in
+                applyEquipmentDefaultsIfNeeded()
+            }
             .task { await loadBrokers() }
             .alert("Add this broker to contacts?",
                    isPresented: $showAddBrokerPrompt) {
@@ -919,14 +925,7 @@ struct SmartScanReviewView: View {
 
         // Equipment + BOL. OCR trailer values win because they are
         // document-specific; otherwise use the driver's saved equipment.
-        truckNumber    = DriverEquipmentProfileStore.defaultTruckNumber(profile: supabase.currentProfile)
-        let profileTrailer = DriverEquipmentProfileStore.defaultTrailerNumber(profile: supabase.currentProfile)
-        if let parsedTrailer = parsed.trailerNumber?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !parsedTrailer.isEmpty {
-            trailerNumber = parsedTrailer
-        } else {
-            trailerNumber = profileTrailer
-        }
+        applyEquipmentDefaultsIfNeeded(allowParsedTrailer: true)
         bolNumber      = parsed.bolNumber     ?? ""
         driverNotes    = parsed.driverNotes   ?? ""
 
@@ -946,6 +945,27 @@ struct SmartScanReviewView: View {
            !pickupCityState.trimmingCharacters(in: .whitespaces).isEmpty,
            !deliveryCityState.trimmingCharacters(in: .whitespaces).isEmpty {
             Task { await runDistanceCalc(force: false) }
+        }
+    }
+
+    private func applyEquipmentDefaultsIfNeeded(allowParsedTrailer: Bool = false) {
+        let defaultTruck = DriverEquipmentProfileStore.defaultTruckNumber(profile: supabase.currentProfile)
+        if truckNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !defaultTruck.isEmpty {
+            truckNumber = defaultTruck
+        }
+
+        if allowParsedTrailer,
+           let parsedTrailer = parsed.trailerNumber?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !parsedTrailer.isEmpty {
+            trailerNumber = parsedTrailer
+            return
+        }
+
+        let defaultTrailer = DriverEquipmentProfileStore.defaultTrailerNumber(profile: supabase.currentProfile)
+        if trailerNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !defaultTrailer.isEmpty {
+            trailerNumber = defaultTrailer
         }
     }
 

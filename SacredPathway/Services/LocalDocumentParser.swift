@@ -92,6 +92,40 @@ struct ParsedLoadFields {
     var rawText: String = ""
 }
 
+struct ParsedFuelReceiptFields {
+    var vendorName: String?
+    var totalAmount: Double?
+    var gallons: Double?
+    var pricePerGallon: Double?
+    var defGallons: Double?
+    var defPricePerGallon: Double?
+    var receiptDate: Date?
+    var confidence: [String: Double] = [:]
+    var rawText: String = ""
+
+    var expensePrefill: ExpenseFormPrefill {
+        ExpenseFormPrefill(
+            category: "fuel",
+            amount: totalAmount.map(Self.money) ?? "",
+            vendorName: vendorName ?? "",
+            description: "Scanned fuel receipt",
+            receiptDate: receiptDate ?? Date(),
+            gallons: gallons.map { Self.decimal($0, places: 3) } ?? "",
+            pricePerGallon: pricePerGallon.map { Self.decimal($0, places: 3) } ?? "",
+            defGallons: defGallons.map { Self.decimal($0, places: 3) } ?? "",
+            defPricePerGallon: defPricePerGallon.map { Self.decimal($0, places: 3) } ?? ""
+        )
+    }
+
+    private static func money(_ value: Double) -> String {
+        String(format: "%.2f", value)
+    }
+
+    private static func decimal(_ value: Double, places: Int) -> String {
+        String(format: "%.\(places)f", value)
+    }
+}
+
 /// Coarse document-type classification used to route to a strategy.
 enum DocumentType: String {
     case rateCon   // rate confirmation
@@ -152,6 +186,21 @@ enum LocalDocumentParser {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         return extractFields(fromLines: lines)
+    }
+
+    /// Run OCR on a fuel receipt and return an expense-ready draft. This
+    /// stays on-device and intentionally only fills high-signal receipt
+    /// fields; anything uncertain remains editable on the expense screen.
+    static func parseFuelReceipt(image: UIImage) async -> ParsedFuelReceiptFields {
+        let lines = await recognizeText(in: image)
+        return extractFuelReceipt(fromLines: lines)
+    }
+
+    static func parseFuelReceiptText(_ text: String) -> ParsedFuelReceiptFields {
+        let lines = text.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        return extractFuelReceipt(fromLines: lines)
     }
 
     // MARK: - OCR
@@ -253,6 +302,209 @@ enum LocalDocumentParser {
 
             return total
         }
+    }
+
+    // MARK: - Fuel receipt extraction
+
+    static func extractFuelReceipt(fromLines lines: [String]) -> ParsedFuelReceiptFields {
+        var out = ParsedFuelReceiptFields()
+        out.rawText = lines.joined(separator: "\n")
+
+        if let vendor = pickFuelReceiptVendor(lines: lines) {
+            out.vendorName = vendor
+            out.confidence["vendorName"] = 0.85
+        }
+
+        if let date = firstDate(in: out.rawText) {
+            out.receiptDate = date
+            out.confidence["receiptDate"] = 0.75
+        }
+
+        let nonDefText = lines
+            .filter { !$0.localizedCaseInsensitiveContains("def") }
+            .joined(separator: "\n")
+        let defText = lines
+            .filter { $0.localizedCaseInsensitiveContains("def") }
+            .joined(separator: "\n")
+
+        if let gallons = pickFuelGallons(in: nonDefText.isEmpty ? out.rawText : nonDefText) {
+            out.gallons = gallons
+            out.confidence["gallons"] = 0.82
+        }
+        if let ppg = pickFuelPricePerGallon(in: nonDefText.isEmpty ? out.rawText : nonDefText) {
+            out.pricePerGallon = ppg
+            out.confidence["pricePerGallon"] = 0.82
+        }
+
+        if !defText.isEmpty {
+            if let gallons = pickFuelGallons(in: defText) {
+                out.defGallons = gallons
+                out.confidence["defGallons"] = 0.75
+            }
+            if let ppg = pickFuelPricePerGallon(in: defText) {
+                out.defPricePerGallon = ppg
+                out.confidence["defPricePerGallon"] = 0.75
+            }
+        }
+
+        if let total = pickFuelReceiptTotal(lines: lines) {
+            out.totalAmount = total
+            out.confidence["totalAmount"] = 0.86
+        } else if let gallons = out.gallons, let ppg = out.pricePerGallon {
+            let dieselTotal = gallons * ppg
+            let defTotal = (out.defGallons ?? 0) * (out.defPricePerGallon ?? 0)
+            out.totalAmount = ((dieselTotal + defTotal) * 100).rounded() / 100
+            out.confidence["totalAmount"] = 0.7
+        }
+
+        if out.pricePerGallon == nil,
+           let total = out.totalAmount,
+           let gallons = out.gallons,
+           gallons > 0 {
+            let computed = total / gallons
+            if (1.0...15.0).contains(computed) {
+                out.pricePerGallon = computed
+                out.confidence["pricePerGallon"] = 0.55
+            }
+        }
+
+        #if DEBUG
+        print("""
+        [FuelReceiptScan] vendor=\(out.vendorName ?? "<nil>")
+        [FuelReceiptScan] total=\(out.totalAmount.map { String(format: "%.2f", $0) } ?? "<nil>")
+        [FuelReceiptScan] gallons=\(out.gallons.map { String(format: "%.3f", $0) } ?? "<nil>")
+        [FuelReceiptScan] ppg=\(out.pricePerGallon.map { String(format: "%.3f", $0) } ?? "<nil>")
+        [FuelReceiptScan] confidence=\(out.confidence)
+        """)
+        #endif
+
+        return out
+    }
+
+    private static func pickFuelReceiptVendor(lines: [String]) -> String? {
+        let knownBrands: [(needle: String, name: String)] = [
+            ("love's", "Love's"),
+            ("loves", "Love's"),
+            ("pilot", "Pilot"),
+            ("flying j", "Flying J"),
+            ("ta travel", "TA Travel Center"),
+            ("travelcenters", "TA Travel Center"),
+            ("petro", "Petro"),
+            ("speedway", "Speedway"),
+            ("shell", "Shell"),
+            ("bp", "BP"),
+            ("exxon", "Exxon"),
+            ("mobil", "Mobil"),
+            ("chevron", "Chevron"),
+            ("marathon", "Marathon"),
+            ("circle k", "Circle K"),
+            ("quiktrip", "QuikTrip"),
+            ("quicktrip", "QuikTrip"),
+            ("casey's", "Casey's"),
+            ("road ranger", "Road Ranger"),
+            ("sapp bros", "Sapp Bros"),
+            ("kum & go", "Kum & Go")
+        ]
+
+        for line in lines.prefix(14) {
+            let lower = line.lowercased()
+            if let hit = knownBrands.first(where: { lower.contains($0.needle) }) {
+                return hit.name
+            }
+        }
+
+        for line in lines.prefix(10) {
+            let candidate = line
+                .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let lower = candidate.lowercased()
+            guard candidate.count >= 3,
+                  candidate.count <= 50,
+                  candidate.contains(where: { $0.isLetter }),
+                  !matchesRegex(lower, pattern: #"(receipt|invoice|transaction|auth|approval|card|visa|mastercard|diesel|unleaded|gallons?|price|total|subtotal|tax|change|store\s*#|\d{3}[-.\s]\d{3})"#)
+            else { continue }
+            return candidate
+        }
+
+        return nil
+    }
+
+    private static func pickFuelReceiptTotal(lines: [String]) -> Double? {
+        let goodLabels = [
+            "grand total", "total sale", "total due", "amount due",
+            "balance due", "total paid", "sale amount", "invoice total",
+            "fuel total", "diesel total", "purchase", "total"
+        ]
+        let badLabels = [
+            "subtotal", "tax", "change", "cash back", "discount", "savings",
+            "auth", "approval", "balance forward", "price", "ppg", "per gal"
+        ]
+
+        for line in lines.reversed() {
+            let lower = line.lowercased()
+            guard goodLabels.contains(where: { lower.contains($0) }),
+                  !badLabels.contains(where: { lower.contains($0) }) else { continue }
+            if let raw = firstRegex(line, pattern: #"\$?\s*([0-9]{1,4}(?:,[0-9]{3})*(?:\.[0-9]{2}))\b"#),
+               let value = parseReceiptNumber(raw),
+               (0.01...10000).contains(value) {
+                return value
+            }
+        }
+
+        var candidates: [Double] = []
+        for line in lines {
+            let lower = line.lowercased()
+            if matchesRegex(lower, pattern: #"(price|ppg|per\s*gal|gallons?|qty|quantity|subtotal|tax|discount|savings|auth|approval|change|cash\s*back)"#) {
+                continue
+            }
+            candidates += allMatches(line, pattern: #"\$\s*([0-9]{1,4}(?:,[0-9]{3})*(?:\.[0-9]{2}))\b"#)
+                .compactMap(parseReceiptNumber)
+                .filter { (0.01...10000).contains($0) }
+        }
+        return candidates.max()
+    }
+
+    private static func pickFuelGallons(in text: String) -> Double? {
+        let patterns = [
+            #"(?i)\b([0-9]{1,4}(?:\.[0-9]{1,3})?)\s*(?:gal|gals|gallon|gallons)\b"#,
+            #"(?i)\b(?:gallons?|gals?|qty|quantity)\s*[:#]?\s*([0-9]{1,4}(?:\.[0-9]{1,3})?)\b"#,
+            #"(?i)\b(?:diesel|dsl|ulsd|fuel).{0,36}?\b([0-9]{1,4}\.[0-9]{1,3})\b.{0,12}(?:gal|gals|gallon|gallons)?"#
+        ]
+
+        for pattern in patterns {
+            for raw in allMatches(text, pattern: pattern) {
+                if let value = parseReceiptNumber(raw),
+                   (1.0...500.0).contains(value) {
+                    return value
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func pickFuelPricePerGallon(in text: String) -> Double? {
+        let patterns = [
+            #"(?i)\$?\s*([1-9][0-9]?\.[0-9]{2,3})\s*/\s*(?:gal|gallon)"#,
+            #"(?i)\b(?:price\s*/?\s*gal|price\s*per\s*gal|ppg|unit\s*price|fuel\s*price|rate)\s*[:$ ]*\$?\s*([1-9][0-9]?\.[0-9]{2,3})\b"#,
+            #"(?i)@\s*\$?\s*([1-9][0-9]?\.[0-9]{2,3})\b"#
+        ]
+
+        for pattern in patterns {
+            for raw in allMatches(text, pattern: pattern) {
+                if let value = parseReceiptNumber(raw),
+                   (1.0...15.0).contains(value) {
+                    return value
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func parseReceiptNumber(_ raw: String) -> Double? {
+        let cleaned = raw
+            .replacingOccurrences(of: #"[^0-9\.,]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: ",", with: "")
+        return Double(cleaned)
     }
 
     // MARK: - Field extraction

@@ -55,9 +55,33 @@ struct ScanUploadView: View {
     @State private var originalFileData: Data? = nil
     @State private var originalFileMime: String? = nil
     @State private var smartScanParsed: ParsedLoadFields?
+    @State private var fuelReceiptPrefill: ExpenseFormPrefill?
+    @State private var showFuelReceiptReview = false
+    @State private var activeSmartScanKind: SmartScanDocumentKind = .rateCon
     @State private var isParsing = false
 
     private var canScan: Bool { subscriptions.isEntitled(.aiScan) }
+
+    private enum SmartScanDocumentKind {
+        case rateCon
+        case fuelReceipt
+
+        var parsingTitle: String {
+            switch self {
+            case .rateCon: return "Reading document..."
+            case .fuelReceipt: return "Reading receipt..."
+            }
+        }
+
+        var sourceMessage: String {
+            switch self {
+            case .rateCon:
+                return "Smart Scan reads the rate confirmation on your device — nothing is uploaded."
+            case .fuelReceipt:
+                return "Smart Scan reads the fuel receipt on your device — nothing is uploaded."
+            }
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -94,13 +118,13 @@ struct ScanUploadView: View {
                     // for parsing. The user always lands on a review
                     // screen and confirms before any save.
                     if FeatureFlags.smartScanEnabled {
-                        Button(action: { showSmartScanSourceSheet = true }) {
+                        Button(action: { startSmartScan(.rateCon) }) {
                             HStack(spacing: 14) {
                                 ZStack {
                                     Circle()
                                         .fill(Color.spCardBgLight)
                                         .frame(width: 48, height: 48)
-                                    if isParsing {
+                                    if isParsing && activeSmartScanKind == .rateCon {
                                         ProgressView().tint(Color.spGoldLight)
                                     } else {
                                         Image(systemName: "doc.text.viewfinder")
@@ -109,10 +133,43 @@ struct ScanUploadView: View {
                                     }
                                 }
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(isParsing ? "Reading document…" : "Smart Scan a Rate Con")
+                                    Text(isParsing && activeSmartScanKind == .rateCon ? activeSmartScanKind.parsingTitle : "Smart Scan a Rate Con")
                                         .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(Color.spTextPrimary)
                                     Text("Camera, Photos, or Files. On-device OCR fills the form for you.")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.spTextSecondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundStyle(Color.spTextSecondary)
+                            }
+                            .padding(16)
+                            .background(Color.spCardBg)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isParsing)
+
+                        Button(action: { startSmartScan(.fuelReceipt) }) {
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.spCardBgLight)
+                                        .frame(width: 48, height: 48)
+                                    if isParsing && activeSmartScanKind == .fuelReceipt {
+                                        ProgressView().tint(Color.spGoldLight)
+                                    } else {
+                                        Image(systemName: "fuelpump.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundStyle(Color.spGoldLight)
+                                    }
+                                }
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(isParsing && activeSmartScanKind == .fuelReceipt ? activeSmartScanKind.parsingTitle : "Scan Fuel Receipt")
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(Color.spTextPrimary)
+                                    Text("Fills fuel amount, gallons, price, vendor, and date.")
                                         .font(.caption)
                                         .foregroundStyle(Color.spTextSecondary)
                                 }
@@ -195,7 +252,7 @@ struct ScanUploadView: View {
             Button("Files (PDF / image)") { showFilePicker = true }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Smart Scan reads the document on your device — nothing is uploaded.")
+            Text(activeSmartScanKind.sourceMessage)
         }
 
         // ---- Pickers — always route through Smart Scan parser ----
@@ -264,6 +321,12 @@ struct ScanUploadView: View {
                     .environmentObject(supabase)
             }
         }
+        .sheet(isPresented: $showFuelReceiptReview) {
+            if let prefill = fuelReceiptPrefill {
+                AddEditExpenseView(mode: .add, prefill: prefill) { _ in }
+                .environmentObject(supabase)
+            }
+        }
     }
 
     // MARK: - Smart Scan handler
@@ -271,6 +334,11 @@ struct ScanUploadView: View {
     // BISECT C 2026-05-17 — parser is confirmed clean. Now turn the review
     // sheet back on, but SmartScanReviewView's body has been swapped with a
     // minimal stub to find which part of the body crashes.
+    private func startSmartScan(_ kind: SmartScanDocumentKind) {
+        activeSmartScanKind = kind
+        showSmartScanSourceSheet = true
+    }
+
     private func handleSmartScanImage(_ image: UIImage,
                                       originalData: Data?,
                                       mime: String?) {
@@ -278,12 +346,23 @@ struct ScanUploadView: View {
         originalFileData = originalData
         originalFileMime = mime
         isParsing = true
+        let kind = activeSmartScanKind
         Task {
-            let parsed = await LocalDocumentParser.parse(image: image)
-            await MainActor.run {
-                smartScanParsed = parsed
-                isParsing = false
-                showSmartScanReview = true
+            switch kind {
+            case .rateCon:
+                let parsed = await LocalDocumentParser.parse(image: image)
+                await MainActor.run {
+                    smartScanParsed = parsed
+                    isParsing = false
+                    showSmartScanReview = true
+                }
+            case .fuelReceipt:
+                let parsed = await LocalDocumentParser.parseFuelReceipt(image: image)
+                await MainActor.run {
+                    fuelReceiptPrefill = parsed.expensePrefill
+                    isParsing = false
+                    showFuelReceiptReview = true
+                }
             }
         }
     }

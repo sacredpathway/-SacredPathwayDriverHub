@@ -89,7 +89,14 @@ struct AddEditExpenseView: View {
     @Environment(\.dismiss) private var dismiss
 
     let mode: Mode
+    let prefill: ExpenseFormPrefill?
     let onSave: (Expense) -> Void
+
+    init(mode: Mode, prefill: ExpenseFormPrefill? = nil, onSave: @escaping (Expense) -> Void) {
+        self.mode = mode
+        self.prefill = prefill
+        self.onSave = onSave
+    }
 
     // Form state
     @State private var category: String = "fuel"
@@ -483,6 +490,12 @@ struct AddEditExpenseView: View {
         case .edit(let e):
             loadFromExpense(e)
         case .add:
+            if let prefill {
+                ExpenseDraftStore.clear()
+                applyPrefill(prefill)
+                return
+            }
+
             // Restore unsaved draft from prior open, if any.
             if let draft = ExpenseDraftStore.load(), draft.hasContent {
                 applyDraft(draft)
@@ -496,6 +509,19 @@ struct AddEditExpenseView: View {
                 }
             }
         }
+    }
+
+    private func applyPrefill(_ p: ExpenseFormPrefill) {
+        category = p.category
+        categoryWasAutoSet = true
+        vendorName = p.vendorName
+        description = p.description
+        receiptDate = p.receiptDate
+        gallons = p.gallons
+        pricePerGallon = p.pricePerGallon
+        defGallons = p.defGallons
+        defPricePerGallon = p.defPricePerGallon
+        amount = p.amount
     }
 
     private func loadFromExpense(_ e: Expense) {
@@ -648,6 +674,7 @@ struct AddEditExpenseView: View {
                 saved = LocalExpensesRepository.shared.create(expense)
             }
             ExpenseDraftStore.clear()
+            NotificationCenter.default.post(name: .expensesDidChange, object: nil)
             onSave(saved)
             isSaving = false
             dismiss()
