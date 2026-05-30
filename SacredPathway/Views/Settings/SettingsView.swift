@@ -692,9 +692,9 @@ struct SettingsView: View {
                                     Image(systemName: "lock.open.fill")
                                         .foregroundStyle(Color.spGold)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Demo Mode (Unlock All)")
+                                        Text("QA Entitlement Override")
                                             .foregroundStyle(Color.spTextPrimary)
-                                        Text("DEBUG only — bypass paywall for screenshots")
+                                        Text("DEBUG only — bypass paywall for role-routing QA")
                                             .font(.caption)
                                             .foregroundStyle(Color.spTextSecondary)
                                     }
