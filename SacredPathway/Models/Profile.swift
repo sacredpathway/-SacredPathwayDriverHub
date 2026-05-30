@@ -20,11 +20,11 @@ enum AccountRole: String, Codable, CaseIterable, Identifiable {
     var onboardingDescription: String {
         switch self {
         case .dispatcher:
-            return "Manage dispatcher profiles, service requests, agreements, offers, invoices, and payment tracking."
+            return "Manage assigned drivers, dispatch communication, load offers, revenue tracking, and dispatcher expenses."
         case .carrier:
             return "Manage company loads, dispatch relationships, settlements, expenses, and reports."
         case .driver:
-            return "Manage assigned loads, expenses, pay documents, and dispatch communication."
+            return "Track weekly paycheck estimates, simple loads, mileage pay, expenses, and dispatcher messages."
         case .ownerOperator:
             return "Manage your own trucking operation, loads, expenses, paystubs, and dispatch relationships."
         }

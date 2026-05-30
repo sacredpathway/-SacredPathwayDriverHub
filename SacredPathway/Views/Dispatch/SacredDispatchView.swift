@@ -25,42 +25,95 @@ struct SacredDispatchDashboardView: View {
                             Text("Dispatcher Mode")
                                 .font(.headline)
                                 .foregroundStyle(Color.spTextPrimary)
-                            Text("Dispatcher tools are separate from Driver Hub.")
+                            Text("Manage drivers, communication, loads, and dispatcher expenses.")
                                 .font(.caption)
                                 .foregroundStyle(Color.spTextSecondary)
                         }
                     }
 
                     HStack(spacing: 10) {
-                        DispatchSummaryTile(title: "Carriers", value: "\(network.activeCarriers)", systemImage: "building.2.fill")
-                        DispatchSummaryTile(title: "Fees Owed", value: network.feesOwed.asCurrency, systemImage: "dollarsign.circle.fill")
+                        DispatchSummaryTile(title: "Active Drivers", value: "\(activeDriverCount)", systemImage: "person.3.fill")
+                        DispatchSummaryTile(title: "Loads", value: "\(loadsBeingHandled)", systemImage: "shippingbox.fill")
                     }
                     HStack(spacing: 10) {
-                        DispatchSummaryTile(title: "Overdue", value: network.overduePayments.asCurrency, systemImage: "exclamationmark.triangle.fill")
-                        DispatchSummaryTile(title: "Monthly", value: network.monthlyEarnings.asCurrency, systemImage: "chart.line.uptrend.xyaxis")
+                        DispatchSummaryTile(title: "Unread", value: "\(dispatch.unreadCount())", systemImage: "message.badge.fill")
+                        DispatchSummaryTile(title: "Monthly Revenue", value: network.monthlyEarnings.asCurrency, systemImage: "chart.line.uptrend.xyaxis")
                     }
                 }
                 .listRowBackground(Color.spCardBg)
 
-                Section("Sacred DISPATCH Network") {
+                Section("Drivers") {
                     NavigationLink {
-                        DispatcherDirectoryView()
+                        DispatcherDriverContactsView()
                             .environmentObject(supabase)
                     } label: {
                         DispatchMenuRow(
-                            title: "Dispatcher Directory",
-                            subtitle: "Search, filter, view profiles, and request service",
+                            title: "Driver Contact Book",
+                            subtitle: "Assigned and connected drivers",
                             systemImage: "person.3.fill",
-                            badge: dispatch.dispatcherProfiles.isEmpty ? nil : "\(dispatch.dispatcherProfiles.count)"
+                            badge: activeDriverCount == 0 ? nil : "\(activeDriverCount)"
                         )
                     }
 
+                    NavigationLink {
+                        DispatchChatThreadsView()
+                            .environmentObject(supabase)
+                    } label: {
+                        DispatchMenuRow(
+                            title: "Driver Communication",
+                            subtitle: "Role-scoped dispatch messages",
+                            systemImage: "message.fill",
+                            badge: dispatch.unreadCount() == 0 ? nil : "\(dispatch.unreadCount())"
+                        )
+                    }
+
+                    NavigationLink {
+                        DispatchLoadOffersView()
+                            .environmentObject(supabase)
+                    } label: {
+                        DispatchMenuRow(
+                            title: "Load Offers",
+                            subtitle: "Send offers to connected drivers/carriers",
+                            systemImage: "doc.text.magnifyingglass",
+                            badge: pendingOffers.isEmpty ? nil : "\(pendingOffers.count)"
+                        )
+                    }
+
+                    NavigationLink {
+                        AcceptedDispatchLoadsView()
+                            .environmentObject(supabase)
+                    } label: {
+                        DispatchMenuRow(
+                            title: "Status Board",
+                            subtitle: "Accepted dispatch loads being handled",
+                            systemImage: "list.bullet.clipboard.fill",
+                            badge: acceptedOffers.isEmpty ? nil : "\(acceptedOffers.count)"
+                        )
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Dispatcher Expenses") {
+                    NavigationLink {
+                        DispatcherExpensesView()
+                            .environmentObject(supabase)
+                    } label: {
+                        DispatchMenuRow(
+                            title: "Expense Board",
+                            subtitle: "Software, phone, office, marketing, driver support",
+                            systemImage: "receipt.fill"
+                        )
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Carrier Agreements & Revenue Tracking") {
                     NavigationLink {
                         DispatchServiceRequestsView()
                             .environmentObject(supabase)
                     } label: {
                         DispatchMenuRow(
-                            title: "Dispatch Service Requests",
+                            title: "Service Requests",
                             subtitle: "Carrier requests that can become agreements",
                             systemImage: "envelope.badge.fill",
                             badge: dispatch.serviceRequests.isEmpty ? nil : "\(dispatch.serviceRequests.count)"
@@ -97,48 +150,9 @@ struct SacredDispatchDashboardView: View {
                     } label: {
                         DispatchMenuRow(
                             title: "Invoice History",
-                            subtitle: "Generated invoices and payment status",
+                            subtitle: "Payment tracking only, no in-app payment collection",
                             systemImage: "doc.richtext.fill",
                             badge: dispatch.invoices.isEmpty ? nil : "\(dispatch.invoices.count)"
-                        )
-                    }
-                }
-                .listRowBackground(Color.spCardBg)
-
-                Section("Load Coordination") {
-                    NavigationLink {
-                        DispatchLoadOffersView()
-                            .environmentObject(supabase)
-                    } label: {
-                        DispatchMenuRow(
-                            title: "Dispatcher Load Offers",
-                            subtitle: "Review, accept, or decline offers",
-                            systemImage: "doc.text.magnifyingglass",
-                            badge: pendingOffers.isEmpty ? nil : "\(pendingOffers.count)"
-                        )
-                    }
-
-                    NavigationLink {
-                        DispatchChatThreadsView()
-                            .environmentObject(supabase)
-                    } label: {
-                        DispatchMenuRow(
-                            title: "Dispatch Chat Threads",
-                            subtitle: "Load-specific messages",
-                            systemImage: "message.fill",
-                            badge: dispatch.unreadCount() == 0 ? nil : "\(dispatch.unreadCount())"
-                        )
-                    }
-
-                    NavigationLink {
-                        AcceptedDispatchLoadsView()
-                            .environmentObject(supabase)
-                    } label: {
-                        DispatchMenuRow(
-                            title: "Accepted Dispatch Loads",
-                            subtitle: "Loads added from accepted offers",
-                            systemImage: "shippingbox.fill",
-                            badge: acceptedOffers.isEmpty ? nil : "\(acceptedOffers.count)"
                         )
                     }
 
@@ -147,21 +161,10 @@ struct SacredDispatchDashboardView: View {
                             .environmentObject(supabase)
                     } label: {
                         DispatchMenuRow(
-                            title: "Dispatcher Payment Tracking",
+                            title: "Payment Tracking",
                             subtitle: "Track owed, pending, and paid status only",
                             systemImage: "creditcard.fill",
                             badge: legacyUnpaidPaymentCount == 0 ? nil : "\(legacyUnpaidPaymentCount)"
-                        )
-                    }
-
-                    NavigationLink {
-                        DispatcherInvoiceSummaryView()
-                            .environmentObject(supabase)
-                    } label: {
-                        DispatchMenuRow(
-                            title: "Dispatcher Invoice Summary",
-                            subtitle: "Weekly and monthly totals",
-                            systemImage: "calendar.badge.clock"
                         )
                     }
                 }
@@ -195,10 +198,480 @@ struct SacredDispatchDashboardView: View {
         dispatch.payments.filter { $0.paymentStatus != .paid }.count
     }
 
-    private var unpaidTotal: Double {
-        dispatch.payments
-            .filter { $0.paymentStatus != .paid }
-            .reduce(0) { $0 + $1.calculatedDispatchFee }
+    private var activeDriverCount: Int {
+        Set(dispatch.participants.filter { $0.role == .driver && $0.isActive }.map(\.profileId)).count
+    }
+
+    private var loadsBeingHandled: Int {
+        dispatch.offers.filter { $0.status == .accepted || $0.status == .pending }.count
+    }
+}
+
+struct DispatcherDriverContactsView: View {
+    @EnvironmentObject var supabase: SupabaseService
+    @ObservedObject private var dispatch = DispatchService.shared
+
+    private var contacts: [DriverContact] {
+        var byProfileId: [UUID: DriverContact] = [:]
+
+        for participant in dispatch.participants where participant.role == .driver && participant.isActive {
+            byProfileId[participant.profileId] = makeContact(
+                profileId: participant.profileId,
+                displayName: participant.displayName ?? "Driver",
+                participant: participant
+            )
+        }
+
+        for offer in dispatch.offers {
+            guard let profileId = offer.driverProfileId else { continue }
+            if byProfileId[profileId] == nil {
+                byProfileId[profileId] = makeContact(
+                    profileId: profileId,
+                    displayName: offer.driverProfileId == supabase.currentProfile?.id ? "You" : "Driver"
+                )
+            }
+        }
+
+        for thread in dispatch.threads {
+            guard let profileId = thread.driverProfileId else { continue }
+            if byProfileId[profileId] == nil {
+                byProfileId[profileId] = makeContact(
+                    profileId: profileId,
+                    displayName: "Driver"
+                )
+            }
+        }
+
+        return byProfileId.values.sorted {
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.spBackground.ignoresSafeArea()
+            List {
+                DispatchErrorBanner(message: dispatch.lastErrorMessage)
+
+                if contacts.isEmpty {
+                    Text("No connected drivers yet. Drivers appear here after a dispatch thread, participant record, or load offer connects them to this dispatcher account.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.spTextSecondary)
+                        .listRowBackground(Color.spCardBg)
+                } else {
+                    ForEach(contacts) { contact in
+                        NavigationLink {
+                            DispatcherDriverDetailView(contact: contact)
+                                .environmentObject(supabase)
+                        } label: {
+                            DriverContactRow(contact: contact)
+                        }
+                        .listRowBackground(Color.spCardBg)
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+        }
+        .navigationTitle("Driver Contacts")
+        .onAppear { dispatch.activeRole = .dispatcher }
+        .task { await dispatch.reload(supabase: supabase) }
+        .refreshable { await dispatch.reload(supabase: supabase) }
+    }
+
+    private func makeContact(profileId: UUID, displayName: String, participant: DispatchParticipant? = nil) -> DriverContact {
+        let currentLoads = dispatch.offers.filter { offer in
+            offer.driverProfileId == profileId &&
+            (offer.status == .accepted || offer.status == .pending)
+        }
+        let thread = dispatch.threads.first { thread in
+            thread.driverProfileId == profileId ||
+            dispatch.participants.contains {
+                $0.threadId == thread.id &&
+                $0.profileId == profileId &&
+                $0.role == .driver
+            }
+        }
+        let status: String = {
+            if let currentStatus = participant?.currentStatus, !currentStatus.isEmpty { return currentStatus }
+            if currentLoads.contains(where: { $0.status == .accepted }) { return "Handling Load" }
+            if currentLoads.contains(where: { $0.status == .pending }) { return "Offer Pending" }
+            return "Available"
+        }()
+        return DriverContact(
+            id: profileId,
+            profileId: profileId,
+            displayName: displayName,
+            phone: participant?.phone,
+            email: participant?.email,
+            truckNumber: participant?.truckNumber,
+            trailerNumber: participant?.trailerNumber,
+            currentStatus: status,
+            notes: participant?.notes,
+            thread: thread,
+            currentLoads: currentLoads
+        )
+    }
+}
+
+struct DispatcherDriverDetailView: View {
+    @EnvironmentObject var supabase: SupabaseService
+    let contact: DriverContact
+
+    var body: some View {
+        ZStack {
+            Color.spBackground.ignoresSafeArea()
+            List {
+                Section("Contact Info") {
+                    DispatchInfoRow("Driver", value: contact.displayName)
+                    DispatchInfoRow("Phone", value: contact.phone ?? "Not on file")
+                    DispatchInfoRow("Email", value: contact.email ?? "Not on file")
+                    DispatchInfoRow("Truck #", value: contact.truckNumber ?? "Not on file")
+                    DispatchInfoRow("Trailer #", value: contact.trailerNumber ?? "Not on file")
+                    DispatchInfoRow("Status", value: contact.currentStatus)
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Communication") {
+                    if let thread = contact.thread {
+                        NavigationLink {
+                            DispatchChatThreadView(thread: thread)
+                                .environmentObject(supabase)
+                        } label: {
+                            DispatchMenuRow(
+                                title: "Message Driver",
+                                subtitle: thread.lastMessagePreview ?? "Open dispatch thread",
+                                systemImage: "message.fill",
+                                badge: thread.unreadCount(for: .dispatcher) == 0 ? nil : "\(thread.unreadCount(for: .dispatcher))"
+                            )
+                        }
+                    } else {
+                        Text("No active message thread for this driver yet.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.spTextSecondary)
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Current Loads") {
+                    if contact.currentLoads.isEmpty {
+                        Text("No current dispatch loads for this driver.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.spTextSecondary)
+                    } else {
+                        ForEach(contact.currentLoads) { offer in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(offer.loadNumber.map { "Load #\($0)" } ?? offer.brokerName ?? "Dispatch Load")
+                                    .font(.headline)
+                                    .foregroundStyle(Color.spTextPrimary)
+                                Text("\(offer.origin ?? "Pickup") → \(offer.destination ?? "Delivery")")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.spTextSecondary)
+                                DispatchInfoRow("Status", value: offer.status.displayName)
+                                DispatchInfoRow("Gross", value: offer.grossAmountForCalculations.asCurrency)
+                            }
+                        }
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Notes") {
+                    Text(contact.notes ?? "No dispatcher notes saved for this driver.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.spTextSecondary)
+                }
+                .listRowBackground(Color.spCardBg)
+            }
+            .scrollContentBackground(.hidden)
+        }
+        .navigationTitle(contact.displayName)
+    }
+}
+
+struct DispatcherExpensesView: View {
+    @EnvironmentObject var supabase: SupabaseService
+    @ObservedObject private var appMode = AppMode.shared
+    @ObservedObject private var localExpenses = LocalExpensesRepository.shared
+    @State private var expenses: [Expense] = []
+    @State private var isLoading = true
+    @State private var showingExpenseEntry = false
+
+    private var sourceExpenses: [Expense] {
+        appMode.isLocal ? localExpenses.expenses : expenses
+    }
+
+    private var dispatcherExpenses: [Expense] {
+        sourceExpenses.filter { expense in
+            DispatcherExpenseCategory(rawValue: expense.category) != nil
+        }
+    }
+
+    private var weekTotal: Double {
+        DriverModeMath.weeklyExpenses(dispatcherExpenses).reduce(0) { $0 + $1.amount }
+    }
+
+    private var monthTotal: Double {
+        let interval = Calendar.current.dateInterval(of: .month, for: Date())
+        return dispatcherExpenses.filter { expense in
+            guard let interval, let date = expense.receiptDate ?? expense.createdAt else { return false }
+            return interval.contains(date)
+        }
+        .reduce(0) { $0 + $1.amount }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.spBackground.ignoresSafeArea()
+            List {
+                if appMode.isLocal {
+                    LocalModeBanner()
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
+
+                Section("Summary") {
+                    HStack(spacing: 10) {
+                        DispatchSummaryTile(title: "This Week", value: weekTotal.asCurrency, systemImage: "calendar")
+                        DispatchSummaryTile(title: "This Month", value: monthTotal.asCurrency, systemImage: "calendar.badge.clock")
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Expenses") {
+                    if isLoading {
+                        ProgressView().tint(Color.spGold)
+                    } else if dispatcherExpenses.isEmpty {
+                        Text("No dispatcher expenses yet.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.spTextSecondary)
+                    } else {
+                        ForEach(dispatcherExpenses.sorted { ($0.receiptDate ?? .distantPast) > ($1.receiptDate ?? .distantPast) }) { expense in
+                            DispatcherExpenseRow(expense: expense)
+                        }
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+            }
+            .scrollContentBackground(.hidden)
+        }
+        .navigationTitle("Dispatcher Expenses")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingExpenseEntry = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(Color.spGold)
+                }
+                .accessibilityLabel("Add Dispatcher Expense")
+            }
+        }
+        .task { await loadData() }
+        .refreshable { await loadData() }
+        .sheet(isPresented: $showingExpenseEntry, onDismiss: reload) {
+            DispatcherExpenseEntryView()
+                .environmentObject(supabase)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .expensesDidChange)) { _ in reload() }
+    }
+
+    private func loadData() async {
+        if appMode.isLocal {
+            localExpenses.reload()
+            isLoading = false
+            return
+        }
+        do {
+            expenses = try await supabase.fetchAllExpenses()
+        } catch {
+            #if DEBUG
+            print("[SacredDispatch] dispatcher expenses load failed: \(error)")
+            #endif
+        }
+        isLoading = false
+    }
+
+    private func reload() {
+        Task { await loadData() }
+    }
+}
+
+struct DispatcherExpenseEntryView: View {
+    @EnvironmentObject var supabase: SupabaseService
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var appMode = AppMode.shared
+    @State private var category: DispatcherExpenseCategory = .software
+    @State private var amount = ""
+    @State private var date = Date()
+    @State private var note = ""
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.spBackground.ignoresSafeArea()
+                ScrollView {
+                    VStack(spacing: 16) {
+                        DriverEntryCard("Dispatcher Expense") {
+                            Picker("Category", selection: $category) {
+                                ForEach(DispatcherExpenseCategory.allCases) { category in
+                                    Label(category.displayName, systemImage: category.systemImage).tag(category)
+                                }
+                            }
+                            DriverTextField("Amount", text: $amount, placeholder: "0.00", keyboard: .decimalPad, prefix: "$")
+                            DatePicker("Date", selection: $date, displayedComponents: .date)
+                                .foregroundStyle(Color.spTextPrimary)
+                            TextField("Note", text: $note, axis: .vertical)
+                                .lineLimit(2...4)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.spTextPrimary)
+                                .padding(12)
+                                .background(Color.spCardBgLight)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+
+                        if let errorMessage {
+                            Text(errorMessage)
+                                .font(.footnote)
+                                .foregroundStyle(Color.spDanger)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal)
+                        }
+
+                        Button {
+                            Task { await saveExpense() }
+                        } label: {
+                            if isSaving {
+                                ProgressView().tint(Color.spBlack)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                            } else {
+                                Label("Save Expense", systemImage: "checkmark.circle.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                            }
+                        }
+                        .background(Color.spGold)
+                        .foregroundStyle(Color.spBlack)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .disabled(isSaving)
+                        .padding(.horizontal)
+                    }
+                    .padding(.vertical, 14)
+                }
+            }
+            .navigationTitle("Add Expense")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.spGold)
+                }
+            }
+        }
+    }
+
+    private func saveExpense() async {
+        errorMessage = nil
+        guard let amountValue = Double(amount), amountValue > 0 else {
+            errorMessage = "Enter a valid expense amount."
+            return
+        }
+
+        let profileId: UUID
+        if appMode.isLocal {
+            profileId = appMode.localInstallId
+        } else if let id = supabase.currentProfile?.id ?? supabase.client.auth.currentUser?.id {
+            profileId = id
+        } else {
+            errorMessage = "Sign in before saving this expense."
+            return
+        }
+
+        isSaving = true
+        defer { isSaving = false }
+
+        let expense = Expense(
+            profileId: profileId,
+            category: category.rawValue,
+            amount: amountValue,
+            description: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note,
+            receiptDate: date
+        )
+
+        if appMode.isLocal {
+            _ = LocalExpensesRepository.shared.create(expense)
+            NotificationCenter.default.post(name: .expensesDidChange, object: nil)
+            dismiss()
+            return
+        }
+
+        do {
+            _ = try await supabase.createExpense(expense)
+            dismiss()
+        } catch {
+            errorMessage = "Couldn't save this dispatcher expense: \(error.localizedDescription)"
+        }
+    }
+}
+
+struct DriverContactRow: View {
+    let contact: DriverContact
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.spGold)
+                .frame(width: 30)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(contact.displayName)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.spTextPrimary)
+                Text(contact.currentStatus)
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+            }
+            Spacer()
+            if !contact.currentLoads.isEmpty {
+                Text("\(contact.currentLoads.count)")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.spBlack)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.spGold)
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct DispatcherExpenseRow: View {
+    let expense: Expense
+
+    var body: some View {
+        HStack(spacing: 12) {
+            let category = DispatcherExpenseCategory(rawValue: expense.category)
+            Image(systemName: category?.systemImage ?? "receipt.fill")
+                .foregroundStyle(Color.spGold)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(category?.displayName ?? expense.category.capitalized)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.spTextPrimary)
+                Text(expense.description ?? expense.receiptDate?.formatted(date: .abbreviated, time: .omitted) ?? "Dispatcher expense")
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+                    .lineLimit(2)
+            }
+            Spacer()
+            Text(expense.amount.asCurrency)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Color.spDanger)
+        }
+        .padding(.vertical, 4)
     }
 }
 

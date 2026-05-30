@@ -39,10 +39,15 @@ struct Load: Codable, Identifiable {
     var origin: String?
     var destination: String?
     var totalMiles: Double?
+    var emptyMiles: Double?
     var lineHaulRate: Double?
     var fuelSurcharge: Double?
     var accessorialCharges: Double?
     var totalRevenue: Double?
+    var driverPayType: String?
+    var driverPercentage: Double?
+    var driverRatePerMile: Double?
+    var driverGrossPay: Double?
     var weightValue: Double?
     var weightUnit: String?
     var dispatchThreadId: UUID?
@@ -77,10 +82,18 @@ struct Load: Codable, Identifiable {
         case deliveryDate = "delivery_date"
         case origin, destination
         case totalMiles = "total_miles"
+        case loadedMiles = "loaded_miles"
+        case emptyMiles = "empty_miles"
         case lineHaulRate = "line_haul_rate"
+        case grossLoadPay = "gross_load_pay"
         case fuelSurcharge = "fuel_surcharge"
         case accessorialCharges = "accessorial_charges"
         case totalRevenue = "total_revenue"
+        case driverPayType = "driver_pay_type"
+        case payType = "pay_type"
+        case driverPercentage = "driver_percentage"
+        case driverRatePerMile = "driver_rate_per_mile"
+        case driverGrossPay = "driver_gross_pay"
         case weightValue = "weight_value"
         case weightUnit = "weight_unit"
         case dispatchThreadId = "dispatch_thread_id"
@@ -145,10 +158,15 @@ struct Load: Codable, Identifiable {
         origin: String? = nil,
         destination: String? = nil,
         totalMiles: Double? = nil,
+        emptyMiles: Double? = nil,
         lineHaulRate: Double? = nil,
         fuelSurcharge: Double? = nil,
         accessorialCharges: Double? = nil,
         totalRevenue: Double? = nil,
+        driverPayType: String? = nil,
+        driverPercentage: Double? = nil,
+        driverRatePerMile: Double? = nil,
+        driverGrossPay: Double? = nil,
         weightValue: Double? = nil,
         weightUnit: String? = nil,
         dispatchThreadId: UUID? = nil,
@@ -178,10 +196,15 @@ struct Load: Codable, Identifiable {
         self.origin = origin
         self.destination = destination
         self.totalMiles = totalMiles
+        self.emptyMiles = emptyMiles
         self.lineHaulRate = lineHaulRate
         self.fuelSurcharge = fuelSurcharge
         self.accessorialCharges = accessorialCharges
         self.totalRevenue = totalRevenue
+        self.driverPayType = driverPayType
+        self.driverPercentage = driverPercentage
+        self.driverRatePerMile = driverRatePerMile
+        self.driverGrossPay = driverGrossPay
         self.weightValue = weightValue
         self.weightUnit = weightUnit
         self.dispatchThreadId = dispatchThreadId
@@ -213,11 +236,20 @@ struct Load: Codable, Identifiable {
         trailerNumber         = try c.decodeIfPresent(String.self, forKey: .trailerNumber)
         origin                = try c.decodeIfPresent(String.self, forKey: .origin)
         destination           = try c.decodeIfPresent(String.self, forKey: .destination)
-        totalMiles            = try c.decodeIfPresent(Double.self, forKey: .totalMiles)
+        totalMiles            = try c.decodeIfPresent(Double.self, forKey: .loadedMiles)
+                              ?? c.decodeIfPresent(Double.self, forKey: .totalMiles)
+        emptyMiles            = try c.decodeIfPresent(Double.self, forKey: .emptyMiles)
         lineHaulRate          = try c.decodeIfPresent(Double.self, forKey: .lineHaulRate)
+                              ?? c.decodeIfPresent(Double.self, forKey: .grossLoadPay)
         fuelSurcharge         = try c.decodeIfPresent(Double.self, forKey: .fuelSurcharge)
         accessorialCharges    = try c.decodeIfPresent(Double.self, forKey: .accessorialCharges)
         totalRevenue          = try c.decodeIfPresent(Double.self, forKey: .totalRevenue)
+                              ?? c.decodeIfPresent(Double.self, forKey: .grossLoadPay)
+        driverPayType         = try c.decodeIfPresent(String.self, forKey: .payType)
+                              ?? c.decodeIfPresent(String.self, forKey: .driverPayType)
+        driverPercentage      = try c.decodeIfPresent(Double.self, forKey: .driverPercentage)
+        driverRatePerMile     = try c.decodeIfPresent(Double.self, forKey: .driverRatePerMile)
+        driverGrossPay        = try c.decodeIfPresent(Double.self, forKey: .driverGrossPay)
         weightValue           = try c.decodeIfPresent(Double.self, forKey: .weightValue)
         weightUnit            = try c.decodeIfPresent(String.self, forKey: .weightUnit)
         dispatchThreadId      = try c.decodeIfPresent(UUID.self,   forKey: .dispatchThreadId)
@@ -250,10 +282,18 @@ struct Load: Codable, Identifiable {
         try c.encodeIfPresent(origin,               forKey: .origin)
         try c.encodeIfPresent(destination,          forKey: .destination)
         try c.encodeIfPresent(totalMiles,           forKey: .totalMiles)
+        try c.encodeIfPresent(totalMiles,           forKey: .loadedMiles)
+        try c.encodeIfPresent(emptyMiles,           forKey: .emptyMiles)
         try c.encodeIfPresent(lineHaulRate,         forKey: .lineHaulRate)
+        try c.encodeIfPresent(totalRevenue ?? lineHaulRate, forKey: .grossLoadPay)
         try c.encodeIfPresent(fuelSurcharge,        forKey: .fuelSurcharge)
         try c.encodeIfPresent(accessorialCharges,   forKey: .accessorialCharges)
         try c.encodeIfPresent(totalRevenue,         forKey: .totalRevenue)
+        try c.encodeIfPresent(driverPayType,        forKey: .driverPayType)
+        try c.encodeIfPresent(driverPayType,        forKey: .payType)
+        try c.encodeIfPresent(driverPercentage,     forKey: .driverPercentage)
+        try c.encodeIfPresent(driverRatePerMile,    forKey: .driverRatePerMile)
+        try c.encodeIfPresent(driverGrossPay,       forKey: .driverGrossPay)
         try c.encodeIfPresent(weightValue,          forKey: .weightValue)
         try c.encodeIfPresent(weightUnit,           forKey: .weightUnit)
         try c.encodeIfPresent(dispatchThreadId,     forKey: .dispatchThreadId)

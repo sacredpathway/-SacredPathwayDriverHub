@@ -228,6 +228,12 @@ struct DispatchParticipant: Codable, Identifiable {
     var profileId: UUID
     var role: DispatchParticipantRole
     var displayName: String?
+    var phone: String?
+    var email: String?
+    var truckNumber: String?
+    var trailerNumber: String?
+    var currentStatus: String?
+    var notes: String?
     var isActive: Bool = true
     var createdAt: Date?
     var updatedAt: Date?
@@ -239,6 +245,11 @@ struct DispatchParticipant: Codable, Identifiable {
         case profileId = "profile_id"
         case role
         case displayName = "display_name"
+        case phone, email
+        case truckNumber = "truck_number"
+        case trailerNumber = "trailer_number"
+        case currentStatus = "current_status"
+        case notes
         case isActive = "is_active"
         case createdAt = "created_at"
         case updatedAt = "updated_at"

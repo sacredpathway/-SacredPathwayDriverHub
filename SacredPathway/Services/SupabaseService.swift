@@ -436,6 +436,18 @@ class SupabaseService: ObservableObject {
             dropped.append("dispatch")
         }
 
+        if loadIncludesDriverPayFields(fallback), isMissingLoadDriverPayColumnError(error) {
+            fallback.totalMiles = nil
+            fallback.emptyMiles = nil
+            fallback.lineHaulRate = nil
+            fallback.totalRevenue = nil
+            fallback.driverPayType = nil
+            fallback.driverPercentage = nil
+            fallback.driverRatePerMile = nil
+            fallback.driverGrossPay = nil
+            dropped.append("driver_pay")
+        }
+
         guard !dropped.isEmpty else { return nil }
 
         #if DEBUG
@@ -470,6 +482,17 @@ class SupabaseService: ObservableObject {
         load.dispatcherCompany != nil
     }
 
+    private func loadIncludesDriverPayFields(_ load: Load) -> Bool {
+        load.totalMiles != nil ||
+        load.emptyMiles != nil ||
+        load.lineHaulRate != nil ||
+        load.totalRevenue != nil ||
+        load.driverPayType != nil ||
+        load.driverPercentage != nil ||
+        load.driverRatePerMile != nil ||
+        load.driverGrossPay != nil
+    }
+
     private func isMissingLoadWeightColumnError(_ error: Error) -> Bool {
         let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
         guard raw.contains("weight_value") || raw.contains("weight_unit") else { return false }
@@ -494,6 +517,22 @@ class SupabaseService: ObservableObject {
               raw.contains("dispatch_load_offer_id") ||
               raw.contains("dispatcher_name") ||
               raw.contains("dispatcher_company") else { return false }
+        return raw.contains("could not find") ||
+               raw.contains("schema cache") ||
+               raw.contains("column") ||
+               raw.contains("pgrst204")
+    }
+
+    private func isMissingLoadDriverPayColumnError(_ error: Error) -> Bool {
+        let raw = "\(String(describing: error)) \(String(reflecting: error))".lowercased()
+        guard raw.contains("loaded_miles") ||
+              raw.contains("empty_miles") ||
+              raw.contains("gross_load_pay") ||
+              raw.contains("pay_type") ||
+              raw.contains("driver_pay_type") ||
+              raw.contains("driver_percentage") ||
+              raw.contains("driver_rate_per_mile") ||
+              raw.contains("driver_gross_pay") else { return false }
         return raw.contains("could not find") ||
                raw.contains("schema cache") ||
                raw.contains("column") ||

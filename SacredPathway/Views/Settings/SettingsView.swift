@@ -123,6 +123,19 @@ struct SettingsView: View {
                             .headerProminence(.increased)
                         }
 
+                        if !appMode.isLocal && !ScreenshotMode.isActive {
+                            Section("Account Mode") {
+                                NavigationLink {
+                                    AccountRoleChangeView(initialRole: accountRole)
+                                        .environmentObject(supabase)
+                                } label: {
+                                    AccountModeSummaryRow(role: accountRole)
+                                }
+                            }
+                            .listRowBackground(Color.spCardBg)
+                            .headerProminence(.increased)
+                        }
+
                         if FeatureFlags.subscriptionsEnabled {
                             Section("Pro") {
                                 Button {
@@ -796,6 +809,188 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView().environmentObject(SupabaseService())
+}
+
+struct AccountRoleChangeView: View {
+    @EnvironmentObject var supabase: SupabaseService
+    @Environment(\.dismiss) private var dismiss
+
+    let initialRole: AccountRole
+
+    @State private var selectedRole: AccountRole
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    init(initialRole: AccountRole) {
+        self.initialRole = initialRole
+        _selectedRole = State(initialValue: initialRole)
+    }
+
+    private var currentRole: AccountRole {
+        supabase.currentProfile?.accountRole ?? initialRole
+    }
+
+    var body: some View {
+        ZStack {
+            Color.spBackground.ignoresSafeArea()
+
+            List {
+                Section("Current Mode") {
+                    AccountModeSummaryRow(role: currentRole)
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section("Switch To") {
+                    ForEach(AccountRole.allCases) { role in
+                        Button {
+                            selectedRole = role
+                        } label: {
+                            AccountRolePickerRow(
+                                role: role,
+                                isSelected: selectedRole == role
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .listRowBackground(Color.spCardBg)
+
+                Section {
+                    Text("Changing account mode updates your dashboard and available tools for future sessions. Existing loads, expenses, paystubs, dispatch records, and profile details stay unchanged.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.spTextSecondary)
+                }
+                .listRowBackground(Color.spCardBg)
+
+                if let errorMessage {
+                    Section {
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(Color.spDanger)
+                    }
+                    .listRowBackground(Color.spCardBg)
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+        }
+        .navigationTitle("Account Mode")
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                Task { await saveRole() }
+            } label: {
+                HStack {
+                    if isSaving {
+                        ProgressView()
+                            .tint(Color.spBlack)
+                    }
+                    Text(saveButtonTitle)
+                        .font(.headline)
+                }
+                .foregroundStyle(Color.spBlack)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(Color.spGold)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 12)
+                .background(Color.spBackground)
+            }
+            .disabled(isSaving || selectedRole == currentRole)
+            .opacity((isSaving || selectedRole == currentRole) ? 0.55 : 1)
+        }
+        .alert("Mode change failed",
+               isPresented: Binding(
+                   get: { errorMessage != nil },
+                   set: { if !$0 { errorMessage = nil } }
+               )) {
+            Button("OK") { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private var saveButtonTitle: String {
+        if isSaving { return "Saving..." }
+        if selectedRole == currentRole { return "Current Mode" }
+        return "Save Mode"
+    }
+
+    @MainActor
+    private func saveRole() async {
+        guard selectedRole != currentRole else { return }
+        isSaving = true
+        errorMessage = nil
+        defer { isSaving = false }
+
+        do {
+            try await supabase.setAccountRole(selectedRole)
+            DispatchService.shared.activeRole = selectedRole.dispatchParticipantRole
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+struct AccountModeSummaryRow: View {
+    let role: AccountRole
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: accountModeIcon(role))
+                .foregroundStyle(Color.spGold)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(role.displayName)
+                    .foregroundStyle(Color.spTextPrimary)
+                Text("Tap to change dashboard mode")
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+            }
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+private struct AccountRolePickerRow: View {
+    let role: AccountRole
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: accountModeIcon(role))
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(isSelected ? Color.spGold : Color.spTextSecondary)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(role.displayName)
+                    .foregroundStyle(Color.spTextPrimary)
+                Text(role.onboardingDescription)
+                    .font(.caption)
+                    .foregroundStyle(Color.spTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(isSelected ? Color.spGold : Color.spTextSecondary)
+                .font(.title3)
+        }
+        .padding(.vertical, 6)
+    }
+}
+
+private func accountModeIcon(_ role: AccountRole) -> String {
+    switch role {
+    case .dispatcher: return "point.3.connected.trianglepath.dotted"
+    case .carrier: return "building.2.fill"
+    case .driver: return "steeringwheel"
+    case .ownerOperator: return "truck.box.fill"
+    }
 }
 
 // =============================================================================
