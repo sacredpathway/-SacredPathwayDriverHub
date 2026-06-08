@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /config
+Disallow: /search
+
+Sitemap: https://sacredpathway.github.io/-SacredPathwayDriverHub/sitemap.xml
