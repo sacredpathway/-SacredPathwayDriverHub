@@ -14,7 +14,7 @@ struct ContentView: View {
             // ScreenshotMode takes a hard fast-path so App Store screenshots
             // stay deterministic and do not get blocked by PIN or account role
             // setup. Production runs unaffected.
-            if ScreenshotMode.isActive {
+            if ScreenshotMode.isActive || DriverHubUITestMode.isActive {
                 OwnerOperatorRootView()
             }
             // PIN lock takes priority over everything if enabled and not yet unlocked.
@@ -25,7 +25,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            if ScreenshotMode.isActive {
+            if ScreenshotMode.isActive || DriverHubUITestMode.isActive {
                 pinService.isUnlocked = true
                 return
             }
@@ -37,7 +37,7 @@ struct ContentView: View {
             didAttemptProfileRefresh = false
         }
         .onChange(of: scenePhase) { _, phase in
-            if ScreenshotMode.isActive { return }
+            if ScreenshotMode.isActive || DriverHubUITestMode.isActive { return }
             if phase == .background {
                 pinService.lock()
             }

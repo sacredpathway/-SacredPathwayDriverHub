@@ -64,10 +64,10 @@ struct ManualLoadEntryView: View {
                     VStack(spacing: 20) {
                         // Load Info
                         sectionCard("Load Info") {
-                            formField("Load #", text: $loadNumber, placeholder: "e.g. LD-2841")
-                            formField("Broker", text: $brokerName, placeholder: "e.g. CH Robinson")
+                            formField("Load #", text: $loadNumber, placeholder: "e.g. LD-2841", identifier: "load.form.loadNumber")
+                            formField("Broker", text: $brokerName, placeholder: "e.g. CH Robinson", identifier: "load.form.broker")
                             brokerSuggestionStrip
-                            formField("MC #", text: $brokerMcNumber, placeholder: "e.g. 128156", keyboard: .numberPad)
+                            formField("MC #", text: $brokerMcNumber, placeholder: "e.g. 128156", identifier: "load.form.brokerMC", keyboard: .numberPad)
                             if let m = matchedBroker {
                                 HStack(spacing: 6) {
                                     Image(systemName: "checkmark.seal.fill")
@@ -82,21 +82,21 @@ struct ManualLoadEntryView: View {
 
                         // Route
                         sectionCard("Route") {
-                            formField("Origin", text: $origin, placeholder: "e.g. Atlanta, GA")
-                            formField("Destination", text: $destination, placeholder: "e.g. Dallas, TX")
-                            formField("Miles", text: $totalMiles, placeholder: "e.g. 780", keyboard: .decimalPad)
+                            formField("Origin", text: $origin, placeholder: "e.g. Atlanta, GA", identifier: "load.form.origin")
+                            formField("Destination", text: $destination, placeholder: "e.g. Dallas, TX", identifier: "load.form.destination")
+                            formField("Miles", text: $totalMiles, placeholder: "e.g. 780", identifier: "load.form.miles", keyboard: .decimalPad)
                         }
 
                         sectionCard("Equipment") {
-                            formField("Truck #", text: $truckNumber, placeholder: "e.g. 101")
-                            formField("Trailer #", text: $trailerNumber, placeholder: "e.g. TRL55")
+                            formField("Truck #", text: $truckNumber, placeholder: "e.g. 101", identifier: "load.form.truckNumber")
+                            formField("Trailer #", text: $trailerNumber, placeholder: "e.g. TRL55", identifier: "load.form.trailerNumber")
                         }
 
                         // Revenue
                         sectionCard("Revenue") {
-                            formField("Line Haul", text: $lineHaulRate, placeholder: "0.00", keyboard: .decimalPad, prefix: "$")
-                            formField("Fuel Surcharge", text: $fuelSurcharge, placeholder: "0.00", keyboard: .decimalPad, prefix: "$")
-                            formField("Accessorials", text: $accessorialCharges, placeholder: "0.00", keyboard: .decimalPad, prefix: "$")
+                            formField("Line Haul", text: $lineHaulRate, placeholder: "0.00", identifier: "load.form.lineHaul", keyboard: .decimalPad, prefix: "$")
+                            formField("Fuel Surcharge", text: $fuelSurcharge, placeholder: "0.00", identifier: "load.form.fuelSurcharge", keyboard: .decimalPad, prefix: "$")
+                            formField("Accessorials", text: $accessorialCharges, placeholder: "0.00", identifier: "load.form.accessorials", keyboard: .decimalPad, prefix: "$")
 
                             Divider()
                                 .background(Color.spCardBgLight)
@@ -152,6 +152,7 @@ struct ManualLoadEntryView: View {
                         }
                         .background(Color.spGold)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .accessibilityIdentifier(isEditing ? "load.form.saveChanges" : "load.form.save")
                         .disabled(isSaving)
                         .padding(.horizontal)
                         .padding(.bottom, 32)
@@ -168,6 +169,7 @@ struct ManualLoadEntryView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(Color.spGoldLight)
+                        .accessibilityIdentifier("load.form.cancel")
                 }
             }
             .alert(isEditing ? "Changes Saved!" : "Load Saved!",
@@ -355,7 +357,14 @@ struct ManualLoadEntryView: View {
         .padding(.horizontal)
     }
 
-    private func formField(_ label: String, text: Binding<String>, placeholder: String, keyboard: UIKeyboardType = .default, prefix: String? = nil) -> some View {
+    private func formField(
+        _ label: String,
+        text: Binding<String>,
+        placeholder: String,
+        identifier: String,
+        keyboard: UIKeyboardType = .default,
+        prefix: String? = nil
+    ) -> some View {
         HStack {
             Text(label)
                 .font(.subheadline)
@@ -370,6 +379,7 @@ struct ManualLoadEntryView: View {
                 TextField(placeholder, text: text)
                     .foregroundStyle(Color.spTextPrimary)
                     .keyboardType(keyboard)
+                    .accessibilityIdentifier(identifier)
             }
             .padding(10)
             .background(Color.spCardBgLight)

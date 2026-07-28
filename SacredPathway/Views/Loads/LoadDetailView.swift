@@ -56,6 +56,8 @@ struct LoadDetailView: View {
                             Text("\(origin) → \(dest)")
                                 .font(.subheadline)
                                 .foregroundStyle(Color.spTextPrimary)
+                                .accessibilityIdentifier("load.detail.route")
+                                .accessibilityValue("\(origin) → \(dest)")
                             if let miles = load.totalMiles {
                                 Text("\(Int(miles)) miles")
                                     .font(.caption)
@@ -201,6 +203,7 @@ struct LoadDetailView: View {
                         Image(systemName: "ellipsis.circle")
                             .foregroundStyle(Color.spGold)
                     }
+                    .accessibilityIdentifier("load.detail.menu")
                     .disabled(isDeleting)
                 }
             }
@@ -388,6 +391,11 @@ struct LoadDetailView: View {
     private func performDelete() {
         guard let loadId = load.id else { return }
         isDeleting = true
+        if AppMode.shared.isLocal {
+            LocalLoadsRepository.shared.delete(id: loadId)
+            dismiss()
+            return
+        }
         Task {
             do {
                 try await supabase.deleteLoad(id: loadId)

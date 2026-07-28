@@ -31,6 +31,9 @@ struct SacredPathwayApp: App {
         )
         _supabase = StateObject(wrappedValue: supabaseInstance)
         _accessGate = StateObject(wrappedValue: gate)
+        #if DEBUG
+        DriverHubUITestMode.prepare(appMode: AppMode.shared)
+        #endif
     }
 
     var body: some Scene {
@@ -112,7 +115,7 @@ struct SacredPathwayApp: App {
         if forceUpdate.shouldForceUpdate && !ScreenshotMode.isActive {
             ForceUpdateView()
                 .transition(.opacity)
-        } else if ScreenshotMode.isActive {
+        } else if ScreenshotMode.isActive || DriverHubUITestMode.isActive {
             // Hard fast-path: skip splash + login + paywall entirely.
             ContentView()
                 .environmentObject(supabase)

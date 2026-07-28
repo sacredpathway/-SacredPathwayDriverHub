@@ -1,6 +1,29 @@
 import Foundation
 import Combine
 
+// DEBUG-only deterministic launch contract for XCUITest. Release builds do
+// not contain the destructive reset behavior.
+#if DEBUG
+enum DriverHubUITestMode {
+    static let isActive = ProcessInfo.processInfo.arguments.contains("-DriverHubUITest")
+    private static let shouldReset =
+        ProcessInfo.processInfo.environment["DRIVER_HUB_UI_TEST_RESET"] == "1"
+
+    @MainActor
+    static func prepare(appMode: AppMode) {
+        guard isActive else { return }
+        if shouldReset, let root = try? LocalStore.rootURL {
+            try? FileManager.default.removeItem(at: root)
+        }
+        appMode.setLocal()
+    }
+}
+#else
+enum DriverHubUITestMode {
+    static let isActive = false
+}
+#endif
+
 // =============================================================================
 //  AppMode — top-level free/cloud mode selector
 // -----------------------------------------------------------------------------

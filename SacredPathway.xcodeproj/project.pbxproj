@@ -40,10 +40,19 @@
 		1100000000000000000000F1 /* FeatureLockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100000000000000000000F2 /* FeatureLockedView.swift */; };
 		1FFAAE85CA6146A878290E96 /* SettlementHTMLPDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7741851B22320511EEE2D3 /* SettlementHTMLPDFService.swift */; };
 		2200000000000000000000F3 /* DeleteAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2200000000000000000000F4 /* DeleteAccountView.swift */; };
+		3745B5051D9F78884C5048B8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65476712D1AEDB7DF359D8C4 /* Foundation.framework */; };
 		3CA8FED9B2BCBEE24E2E6EF3 /* PDFPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1579F9D6DE2C6E92F2539D7C /* PDFPreviewView.swift */; };
 		5A0000000000000000000001 /* LocalDocumentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000002 /* LocalDocumentParser.swift */; };
 		5A0000000000000000000003 /* LocalBrokerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000004 /* LocalBrokerStore.swift */; };
 		5A0000000000000000000005 /* SmartScanReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000006 /* SmartScanReviewView.swift */; };
+		5B0000000000000000000001 /* PayWeekService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000002 /* PayWeekService.swift */; };
+		5B0000000000000000000003 /* PayWeekSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000004 /* PayWeekSettingsView.swift */; };
+		5B0000000000000000000005 /* BrokerContactsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000006 /* BrokerContactsListView.swift */; };
+		5B00000000000000000000C1 /* ContactsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C2 /* ContactsBridge.swift */; };
+		5B00000000000000000000C3 /* ShareSummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C4 /* ShareSummaryService.swift */; };
+		5B00000000000000000000C5 /* ShareSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C6 /* ShareSummaryView.swift */; };
+		5B0000000000000000000E01 /* WeeklyStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000E02 /* WeeklyStatsService.swift */; };
+		5B0000000000000000000F01 /* LoadsSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000F02 /* LoadsSyncService.swift */; };
 		7B0000000000000000000001 /* SettlementSheetPDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0000000000000000000002 /* SettlementSheetPDFService.swift */; };
 		7B0000000000000000000003 /* SettlementSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0000000000000000000004 /* SettlementSheetView.swift */; };
 		9900000000000000000000A1 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900000000000000000000A2 /* DemoMode.swift */; };
@@ -58,11 +67,20 @@
 		AB0000000000000000000001 /* DocumentExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000002 /* DocumentExtractionService.swift */; };
 		AB0000000000000000000003 /* InsightsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000004 /* InsightsService.swift */; };
 		AB0000000000000000000101 /* AccessGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* AccessGate.swift */; };
+		AB712B4B7F3D11BF569C9E5C /* ReleaseWorkflowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BED7F85962FFD2478C391EC /* ReleaseWorkflowUITests.swift */; };
 		BB0000000000000000000001 /* BrandingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000002 /* BrandingService.swift */; };
 		BB0000000000000000000003 /* BrandingSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* BrandingSettingsView.swift */; };
+		CA00000000000000000000A1 /* CPAExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A2 /* CPAExportModels.swift */; };
+		CA00000000000000000000A3 /* CPAExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A4 /* CPAExportService.swift */; };
+		CA00000000000000000000A5 /* CPAPDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A6 /* CPAPDFGenerator.swift */; };
+		CA00000000000000000000A7 /* CPAReadyExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A8 /* CPAReadyExportView.swift */; };
 		CC0000000000000000000001 /* ExpensesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000002 /* ExpensesListView.swift */; };
 		CC0000000000000000000003 /* AddEditExpenseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* AddEditExpenseView.swift */; };
 		CC0000000000000000000005 /* FeeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000006 /* FeeSettingsView.swift */; };
+		D10000000000000000000001 /* DispatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* DispatchModels.swift */; };
+		D10000000000000000000003 /* DispatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000004 /* DispatchService.swift */; };
+		D10000000000000000000005 /* LocalDispatchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000006 /* LocalDispatchRepository.swift */; };
+		D10000000000000000000007 /* SacredDispatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000008 /* SacredDispatchView.swift */; };
 		DA00000000000000000000A1 /* DailyInspection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000A2 /* DailyInspection.swift */; };
 		DA00000000000000000000B1 /* ComplianceDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000B2 /* ComplianceDocument.swift */; };
 		DA00000000000000000000C1 /* IFTAEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00000000000000000000C2 /* IFTAEntry.swift */; };
@@ -85,6 +103,17 @@
 		DD0000000000000000000005 /* DriversListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000006 /* DriversListView.swift */; };
 		DD0000000000000000000007 /* DocumentVaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000008 /* DocumentVaultView.swift */; };
 		DD0000000000000000000009 /* SmartInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000000A /* SmartInsightsView.swift */; };
+		EA0000000000000000000001 /* AppMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000002 /* AppMode.swift */; };
+		EA0000000000000000000003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000004 /* WelcomeView.swift */; };
+		EA0000000000000000000005 /* LocalModeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000006 /* LocalModeBanner.swift */; };
+		EA0000000000000000000041 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000042 /* LocalStore.swift */; };
+		EA0000000000000000000043 /* LocalLoadsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000044 /* LocalLoadsRepository.swift */; };
+		EA0000000000000000000045 /* LocalBrokersRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000046 /* LocalBrokersRepository.swift */; };
+		EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */; };
+		EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004A /* LocalSmokeTest.swift */; };
+		EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004C /* LocalExpensesRepository.swift */; };
+		EA000000000000000000004D /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004E /* BackupService.swift */; };
+		EA000000000000000000004F /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000050 /* BackupRestoreView.swift */; };
 		EE0000000000000000000001 /* Broker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* Broker.swift */; };
 		EE0000000000000000000003 /* BrokerContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000004 /* BrokerContact.swift */; };
 		EE0000000000000000000005 /* BrokerIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000006 /* BrokerIntelligenceService.swift */; };
@@ -102,34 +131,17 @@
 		FF0000000000000000000005 /* PaystubDraftsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000006 /* PaystubDraftsListView.swift */; };
 		FF0000000000000000000007 /* CustomFeeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000008 /* CustomFeeService.swift */; };
 		FF0000000000000000000009 /* EditCompanyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000000000000000000000A /* EditCompanyView.swift */; };
-		CA00000000000000000000A1 /* CPAExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A2 /* CPAExportModels.swift */; };
-		CA00000000000000000000A3 /* CPAExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A4 /* CPAExportService.swift */; };
-		CA00000000000000000000A5 /* CPAPDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A6 /* CPAPDFGenerator.swift */; };
-		CA00000000000000000000A7 /* CPAReadyExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000A8 /* CPAReadyExportView.swift */; };
-		5B0000000000000000000001 /* PayWeekService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000002 /* PayWeekService.swift */; };
-		5B0000000000000000000E01 /* WeeklyStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000E02 /* WeeklyStatsService.swift */; };
-		5B0000000000000000000F01 /* LoadsSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000F02 /* LoadsSyncService.swift */; };
-		5B0000000000000000000003 /* PayWeekSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000004 /* PayWeekSettingsView.swift */; };
-		5B0000000000000000000005 /* BrokerContactsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000000006 /* BrokerContactsListView.swift */; };
-		5B00000000000000000000C1 /* ContactsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C2 /* ContactsBridge.swift */; };
-		5B00000000000000000000C3 /* ShareSummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C4 /* ShareSummaryService.swift */; };
-		5B00000000000000000000C5 /* ShareSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B00000000000000000000C6 /* ShareSummaryView.swift */; };
-		EA0000000000000000000001 /* AppMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000002 /* AppMode.swift */; };
-		EA0000000000000000000003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000004 /* WelcomeView.swift */; };
-		EA0000000000000000000005 /* LocalModeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000006 /* LocalModeBanner.swift */; };
-		EA0000000000000000000041 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000042 /* LocalStore.swift */; };
-		EA0000000000000000000043 /* LocalLoadsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000044 /* LocalLoadsRepository.swift */; };
-		EA0000000000000000000045 /* LocalBrokersRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000046 /* LocalBrokersRepository.swift */; };
-		EA0000000000000000000047 /* LocalBrokerContactsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */; };
-		EA0000000000000000000049 /* LocalSmokeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004A /* LocalSmokeTest.swift */; };
-		EA000000000000000000004B /* LocalExpensesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004C /* LocalExpensesRepository.swift */; };
-		EA000000000000000000004D /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA000000000000000000004E /* BackupService.swift */; };
-		EA000000000000000000004F /* BackupRestoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0000000000000000000050 /* BackupRestoreView.swift */; };
-		D10000000000000000000001 /* DispatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* DispatchModels.swift */; };
-		D10000000000000000000003 /* DispatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000004 /* DispatchService.swift */; };
-		D10000000000000000000005 /* LocalDispatchRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000006 /* LocalDispatchRepository.swift */; };
-		D10000000000000000000007 /* SacredDispatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000008 /* SacredDispatchView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		497E52142BB0380C5B6DAE8A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 001A1A0E0E4A5B1C2D3E4F42 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 001A1A3C0E4A5B1C2D3E4F71;
+			remoteInfo = SacredPathway;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		001A1A0B0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredPathwayApp.swift; sourceTree = "<group>"; };
@@ -167,13 +179,24 @@
 		5A0000000000000000000002 /* LocalDocumentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDocumentParser.swift; sourceTree = "<group>"; };
 		5A0000000000000000000004 /* LocalBrokerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerStore.swift; sourceTree = "<group>"; };
 		5A0000000000000000000006 /* SmartScanReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartScanReviewView.swift; sourceTree = "<group>"; };
+		5B0000000000000000000002 /* PayWeekService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWeekService.swift; sourceTree = "<group>"; };
+		5B0000000000000000000004 /* PayWeekSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWeekSettingsView.swift; sourceTree = "<group>"; };
+		5B0000000000000000000006 /* BrokerContactsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerContactsListView.swift; sourceTree = "<group>"; };
+		5B00000000000000000000C2 /* ContactsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsBridge.swift; sourceTree = "<group>"; };
+		5B00000000000000000000C4 /* ShareSummaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummaryService.swift; sourceTree = "<group>"; };
+		5B00000000000000000000C6 /* ShareSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummaryView.swift; sourceTree = "<group>"; };
+		5B0000000000000000000E02 /* WeeklyStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyStatsService.swift; sourceTree = "<group>"; };
+		5B0000000000000000000F02 /* LoadsSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadsSyncService.swift; sourceTree = "<group>"; };
+		65476712D1AEDB7DF359D8C4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		7B0000000000000000000002 /* SettlementSheetPDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementSheetPDFService.swift; sourceTree = "<group>"; };
 		7B0000000000000000000004 /* SettlementSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementSheetView.swift; sourceTree = "<group>"; };
+		92FA17AB65EED7783EF7067F /* SacredPathwayUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SacredPathwayUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9900000000000000000000A2 /* DemoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMode.swift; sourceTree = "<group>"; };
 		9900000000000000000000B2 /* MoreTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTabView.swift; sourceTree = "<group>"; };
 		9900000000000000000000D2 /* IFTAPDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAPDFService.swift; sourceTree = "<group>"; };
 		9900000000000000000000E2 /* DemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDataSeeder.swift; sourceTree = "<group>"; };
 		9900000000000000000000F2 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
+		9BED7F85962FFD2478C391EC /* ReleaseWorkflowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReleaseWorkflowUITests.swift; sourceTree = "<group>"; };
 		A5C46EF1224FD9E29432AD8B /* sph_template.html */ = {isa = PBXFileReference; includeInIndex = 1; name = sph_template.html; path = "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Resources/sph_template.html"; sourceTree = "<absolute>"; };
 		AA0000000000000000000002 /* AppearanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000004 /* DocumentScannerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerCoordinator.swift; sourceTree = "<group>"; };
@@ -184,9 +207,17 @@
 		AB0000000000000000000102 /* AccessGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessGate.swift; sourceTree = "<group>"; };
 		BB0000000000000000000002 /* BrandingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandingService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000004 /* BrandingSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandingSettingsView.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A2 /* CPAExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAExportModels.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A4 /* CPAExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAExportService.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A6 /* CPAPDFGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAPDFGenerator.swift; sourceTree = "<group>"; };
+		CA00000000000000000000A8 /* CPAReadyExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAReadyExportView.swift; sourceTree = "<group>"; };
 		CC0000000000000000000002 /* ExpensesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpensesListView.swift; sourceTree = "<group>"; };
 		CC0000000000000000000004 /* AddEditExpenseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditExpenseView.swift; sourceTree = "<group>"; };
 		CC0000000000000000000006 /* FeeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeeSettingsView.swift; sourceTree = "<group>"; };
+		D10000000000000000000002 /* DispatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000004 /* DispatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchService.swift; sourceTree = "<group>"; };
+		D10000000000000000000006 /* LocalDispatchRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDispatchRepository.swift; sourceTree = "<group>"; };
+		D10000000000000000000008 /* SacredDispatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredDispatchView.swift; sourceTree = "<group>"; };
 		DA00000000000000000000A2 /* DailyInspection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyInspection.swift; sourceTree = "<group>"; };
 		DA00000000000000000000B2 /* ComplianceDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplianceDocument.swift; sourceTree = "<group>"; };
 		DA00000000000000000000C2 /* IFTAEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTAEntry.swift; sourceTree = "<group>"; };
@@ -209,6 +240,17 @@
 		DD0000000000000000000006 /* DriversListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriversListView.swift; sourceTree = "<group>"; };
 		DD0000000000000000000008 /* DocumentVaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentVaultView.swift; sourceTree = "<group>"; };
 		DD000000000000000000000A /* SmartInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartInsightsView.swift; sourceTree = "<group>"; };
+		EA0000000000000000000002 /* AppMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMode.swift; sourceTree = "<group>"; };
+		EA0000000000000000000004 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		EA0000000000000000000006 /* LocalModeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModeBanner.swift; sourceTree = "<group>"; };
+		EA0000000000000000000042 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
+		EA0000000000000000000044 /* LocalLoadsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLoadsRepository.swift; sourceTree = "<group>"; };
+		EA0000000000000000000046 /* LocalBrokersRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokersRepository.swift; sourceTree = "<group>"; };
+		EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerContactsRepository.swift; sourceTree = "<group>"; };
+		EA000000000000000000004A /* LocalSmokeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSmokeTest.swift; sourceTree = "<group>"; };
+		EA000000000000000000004C /* LocalExpensesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalExpensesRepository.swift; sourceTree = "<group>"; };
+		EA000000000000000000004E /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
+		EA0000000000000000000050 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
 		EE0000000000000000000002 /* Broker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Broker.swift; sourceTree = "<group>"; };
 		EE0000000000000000000004 /* BrokerContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerContact.swift; sourceTree = "<group>"; };
 		EE0000000000000000000006 /* BrokerIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerIntelligenceService.swift; sourceTree = "<group>"; };
@@ -229,33 +271,6 @@
 		FF0000000000000000000008 /* CustomFeeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFeeService.swift; sourceTree = "<group>"; };
 		FF000000000000000000000A /* EditCompanyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCompanyView.swift; sourceTree = "<group>"; };
 		FF7741851B22320511EEE2D3 /* SettlementHTMLPDFService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SettlementHTMLPDFService.swift; path = "/Users/demarquishinton/Documents/Claude/Projects/Sacred Pathway trucker tool/SacredPathway/SacredPathway/Services/SettlementHTMLPDFService.swift"; sourceTree = "<absolute>"; };
-		CA00000000000000000000A2 /* CPAExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAExportModels.swift; sourceTree = "<group>"; };
-		CA00000000000000000000A4 /* CPAExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAExportService.swift; sourceTree = "<group>"; };
-		CA00000000000000000000A6 /* CPAPDFGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAPDFGenerator.swift; sourceTree = "<group>"; };
-		CA00000000000000000000A8 /* CPAReadyExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPAReadyExportView.swift; sourceTree = "<group>"; };
-		5B0000000000000000000002 /* PayWeekService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWeekService.swift; sourceTree = "<group>"; };
-		5B0000000000000000000E02 /* WeeklyStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyStatsService.swift; sourceTree = "<group>"; };
-		5B0000000000000000000F02 /* LoadsSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadsSyncService.swift; sourceTree = "<group>"; };
-		5B0000000000000000000004 /* PayWeekSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayWeekSettingsView.swift; sourceTree = "<group>"; };
-		5B0000000000000000000006 /* BrokerContactsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokerContactsListView.swift; sourceTree = "<group>"; };
-		5B00000000000000000000C2 /* ContactsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsBridge.swift; sourceTree = "<group>"; };
-		5B00000000000000000000C4 /* ShareSummaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummaryService.swift; sourceTree = "<group>"; };
-		5B00000000000000000000C6 /* ShareSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummaryView.swift; sourceTree = "<group>"; };
-		EA0000000000000000000002 /* AppMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMode.swift; sourceTree = "<group>"; };
-		EA0000000000000000000004 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
-		EA0000000000000000000006 /* LocalModeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModeBanner.swift; sourceTree = "<group>"; };
-		EA0000000000000000000042 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
-		EA0000000000000000000044 /* LocalLoadsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLoadsRepository.swift; sourceTree = "<group>"; };
-		EA0000000000000000000046 /* LocalBrokersRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokersRepository.swift; sourceTree = "<group>"; };
-		EA0000000000000000000048 /* LocalBrokerContactsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBrokerContactsRepository.swift; sourceTree = "<group>"; };
-		EA000000000000000000004A /* LocalSmokeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSmokeTest.swift; sourceTree = "<group>"; };
-		EA000000000000000000004C /* LocalExpensesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalExpensesRepository.swift; sourceTree = "<group>"; };
-		EA000000000000000000004E /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
-		EA0000000000000000000050 /* BackupRestoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRestoreView.swift; sourceTree = "<group>"; };
-		D10000000000000000000002 /* DispatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchModels.swift; sourceTree = "<group>"; };
-		D10000000000000000000004 /* DispatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchService.swift; sourceTree = "<group>"; };
-		D10000000000000000000006 /* LocalDispatchRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDispatchRepository.swift; sourceTree = "<group>"; };
-		D10000000000000000000008 /* SacredDispatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredDispatchView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -265,6 +280,14 @@
 			files = (
 				00BB1A340E4A5B1C2D3E4F6F /* Supabase in Frameworks */,
 				00BB1A360E4A5B1C2D3E4F71 /* TPPDF in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F0D004C43D38A7304C3087B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3745B5051D9F78884C5048B8 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +320,8 @@
 				FF7741851B22320511EEE2D3 /* SettlementHTMLPDFService.swift */,
 				A5C46EF1224FD9E29432AD8B /* sph_template.html */,
 				1579F9D6DE2C6E92F2539D7C /* PDFPreviewView.swift */,
+				9FDC92AAD0687C4C044BF28B /* Frameworks */,
+				5960810D8F7B7B90DAAFB48E /* SacredPathwayUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -457,8 +482,17 @@
 			isa = PBXGroup;
 			children = (
 				001A1A350E4A5B1C2D3E4F6F /* SacredPathway.app */,
+				92FA17AB65EED7783EF7067F /* SacredPathwayUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		04912CAC849FA4017AAE9CE0 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				65476712D1AEDB7DF359D8C4 /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 		11000000000000000000000D /* Subscription */ = {
@@ -471,12 +505,37 @@
 			path = Subscription;
 			sourceTree = "<group>";
 		};
+		5960810D8F7B7B90DAAFB48E /* SacredPathwayUITests */ = {
+			isa = PBXGroup;
+			children = (
+				9BED7F85962FFD2478C391EC /* ReleaseWorkflowUITests.swift */,
+			);
+			name = SacredPathwayUITests;
+			path = SacredPathwayUITests;
+			sourceTree = "<group>";
+		};
+		5B00000000000000000000D0 /* ShareSummary */ = {
+			isa = PBXGroup;
+			children = (
+				5B00000000000000000000C6 /* ShareSummaryView.swift */,
+			);
+			path = ShareSummary;
+			sourceTree = "<group>";
+		};
 		9900000000000000000000C1 /* More */ = {
 			isa = PBXGroup;
 			children = (
 				9900000000000000000000B2 /* MoreTabView.swift */,
 			);
 			path = More;
+			sourceTree = "<group>";
+		};
+		9FDC92AAD0687C4C044BF28B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				04912CAC849FA4017AAE9CE0 /* iOS */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		CC0000000000000000000010 /* Expenses */ = {
@@ -558,25 +617,6 @@
 			path = Insights;
 			sourceTree = "<group>";
 		};
-		EE0000000000000000000020 /* Brokers */ = {
-			isa = PBXGroup;
-			children = (
-				EE0000000000000000000008 /* BrokersListView.swift */,
-				EE000000000000000000000A /* BrokerDetailView.swift */,
-				EE000000000000000000000C /* ContactDetailView.swift */,
-				5B0000000000000000000006 /* BrokerContactsListView.swift */,
-			);
-			path = Brokers;
-			sourceTree = "<group>";
-		};
-		5B00000000000000000000D0 /* ShareSummary */ = {
-			isa = PBXGroup;
-			children = (
-				5B00000000000000000000C6 /* ShareSummaryView.swift */,
-			);
-			path = ShareSummary;
-			sourceTree = "<group>";
-		};
 		EA0000000000000000000010 /* Local */ = {
 			isa = PBXGroup;
 			children = (
@@ -609,6 +649,17 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		EE0000000000000000000020 /* Brokers */ = {
+			isa = PBXGroup;
+			children = (
+				EE0000000000000000000008 /* BrokersListView.swift */,
+				EE000000000000000000000A /* BrokerDetailView.swift */,
+				EE000000000000000000000C /* ContactDetailView.swift */,
+				5B0000000000000000000006 /* BrokerContactsListView.swift */,
+			);
+			path = Brokers;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -632,6 +683,24 @@
 			productName = SacredPathway;
 			productReference = 001A1A350E4A5B1C2D3E4F6F /* SacredPathway.app */;
 			productType = "com.apple.product-type.application";
+		};
+		3D54390F790613F54F295649 /* SacredPathwayUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C2073BE020E250219A962CC8 /* Build configuration list for PBXNativeTarget "SacredPathwayUITests" */;
+			buildPhases = (
+				22E9453E2E0A68CE569DEC89 /* Sources */,
+				6F0D004C43D38A7304C3087B /* Frameworks */,
+				C9225B4D5CE5A375C7B86567 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				83C3D3A80430D6F7569D8C42 /* PBXTargetDependency */,
+			);
+			name = SacredPathwayUITests;
+			productName = SacredPathwayUITests;
+			productReference = 92FA17AB65EED7783EF7067F /* SacredPathwayUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -666,6 +735,7 @@
 			projectRoot = "";
 			targets = (
 				001A1A3C0E4A5B1C2D3E4F71 /* SacredPathway */,
+				3D54390F790613F54F295649 /* SacredPathwayUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -677,6 +747,13 @@
 			files = (
 				001A1A300E4A5B1C2D3E4F6D /* Assets.xcassets in Resources */,
 				0182C0A7BCD546033D5C9420 /* sph_template.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C9225B4D5CE5A375C7B86567 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -808,7 +885,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		22E9453E2E0A68CE569DEC89 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB712B4B7F3D11BF569C9E5C /* ReleaseWorkflowUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		83C3D3A80430D6F7569D8C42 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SacredPathway;
+			target = 001A1A3C0E4A5B1C2D3E4F71 /* SacredPathway */;
+			targetProxy = 497E52142BB0380C5B6DAE8A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		001A1A120E4A5B1C2D3E4F46 /* Debug */ = {
@@ -1001,6 +1095,41 @@
 			};
 			name = Release;
 		};
+		69818155C9711258AD65C61A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = DCCSGYD5A4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SacredPathway;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AD7F4FDC9A05C9EAFB35A59E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = DCCSGYD5A4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.demarquishinton.sacredpathway.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SacredPathway;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1018,6 +1147,15 @@
 			buildConfigurations = (
 				001A1A5C0E4A5B1C2D3E4F7C /* Debug */,
 				001A1A5D0E4A5B1C2D3E4F7D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C2073BE020E250219A962CC8 /* Build configuration list for PBXNativeTarget "SacredPathwayUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69818155C9711258AD65C61A /* Release */,
+				AD7F4FDC9A05C9EAFB35A59E /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
