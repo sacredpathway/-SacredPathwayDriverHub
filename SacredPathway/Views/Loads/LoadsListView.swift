@@ -82,12 +82,17 @@ struct LoadsListView: View {
                                     .background(Color.spGold).foregroundStyle(Color.spBlack)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
+                            .accessibilityIdentifier("loads.add.empty")
                         }
                     } else {
                         VStack(spacing: 0) {
                             Picker("", selection: $showAllLoads) {
-                                Text("This Week").tag(false)
-                                Text("All Loads").tag(true)
+                                Text("This Week")
+                                    .tag(false)
+                                    .accessibilityIdentifier("loads.filter.thisWeek")
+                                Text("All Loads")
+                                    .tag(true)
+                                    .accessibilityIdentifier("loads.filter.all")
                             }
                             .pickerStyle(.segmented)
                             .padding(.horizontal)
@@ -115,6 +120,8 @@ struct LoadsListView: View {
                                 NavigationLink(destination: LoadDetailView(load: load)) {
                                     LoadRowView(load: load)
                                 }
+                                .accessibilityIdentifier(rowIdentifier(for: load))
+                                .accessibilityValue(rowAccessibilityValue(for: load))
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
                                         loadToDelete = load
@@ -156,6 +163,7 @@ struct LoadsListView: View {
                         Button { showingManualEntry = true } label: {
                             Image(systemName: "plus.circle.fill").foregroundStyle(Color.spGold).font(.title3)
                         }
+                        .accessibilityIdentifier("loads.add.toolbar")
                     }
                 }
                 // The chooser: ScanUploadView shows both "Add a Load" (manual)
@@ -230,6 +238,23 @@ struct LoadsListView: View {
 
     private func reload() {
         Task { await loadAsync() }
+    }
+
+    private func rowIdentifier(for load: Load) -> String {
+        load.id.map { "load.row.\($0.uuidString.lowercased())" } ?? "load.row.unsaved"
+    }
+
+    private func rowAccessibilityValue(for load: Load) -> String {
+        let miles = load.totalMiles.map { String(format: "%.0f", locale: Locale(identifier: "en_US_POSIX"), $0) } ?? ""
+        let lineHaul = load.lineHaulRate.map { String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), $0) } ?? ""
+        return [
+            "number=\(load.loadNumber ?? "")",
+            "broker=\(load.brokerName ?? "")",
+            "origin=\(load.origin ?? "")",
+            "destination=\(load.destination ?? "")",
+            "miles=\(miles)",
+            "lineHaul=\(lineHaul)"
+        ].joined(separator: ";")
     }
 
     /// Copy a load's user-entered fields but strip identity + status so the

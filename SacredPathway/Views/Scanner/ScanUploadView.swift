@@ -112,6 +112,7 @@ struct ScanUploadView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("loads.add.manual")
 
                     // Smart Scan (on-device OCR + regex). 100% local —
                     // no API tokens, no Edge Functions, no Supabase calls
