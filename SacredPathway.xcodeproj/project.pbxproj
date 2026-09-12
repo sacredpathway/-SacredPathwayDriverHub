@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E77B0000000000000000010 /* Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000010 /* Money.swift */; };
+		5E77B0000000000000000020 /* SettlementModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000020 /* SettlementModels.swift */; };
+		5E77B0000000000000000030 /* SettlementCalculationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000030 /* SettlementCalculationEngine.swift */; };
+		5E77B0000000000000000040 /* SettlementValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000040 /* SettlementValidation.swift */; };
+		5E77B0000000000000000050 /* DriverAdvanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000050 /* DriverAdvanceService.swift */; };
+		5E77B0000000000000000060 /* RecurringDeductionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000060 /* RecurringDeductionService.swift */; };
+		5E77B0000000000000000070 /* SettlementAuditService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000070 /* SettlementAuditService.swift */; };
+		5E77B0000000000000000080 /* SettlementNumberService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E77F0000000000000000080 /* SettlementNumberService.swift */; };
 		001A1A0A0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A0B0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift */; };
 		001A1A0C0E4A5B1C2D3E4F5B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A0D0E4A5B1C2D3E4F5B /* ContentView.swift */; };
 		001A1A0E0E4A5B1C2D3E4F5C /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A1A0F0E4A5B1C2D3E4F5C /* Config.swift */; };
@@ -144,6 +152,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5E77F0000000000000000010 /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000020 /* SettlementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementModels.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000030 /* SettlementCalculationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementCalculationEngine.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000040 /* SettlementValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementValidation.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000050 /* DriverAdvanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverAdvanceService.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000060 /* RecurringDeductionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringDeductionService.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000070 /* SettlementAuditService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementAuditService.swift; sourceTree = "<group>"; };
+		5E77F0000000000000000080 /* SettlementNumberService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementNumberService.swift; sourceTree = "<group>"; };
 		001A1A0B0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredPathwayApp.swift; sourceTree = "<group>"; };
 		001A1A0D0E4A5B1C2D3E4F5B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		001A1A0F0E4A5B1C2D3E4F5C /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -343,6 +359,8 @@
 				DA00000000000000000000D2 /* IFTAJurisdiction.swift */,
 				FC0000000000000000000002 /* RemoteAppConfig.swift */,
 				CA00000000000000000000A2 /* CPAExportModels.swift */,
+				5E77F0000000000000000010 /* Money.swift */,
+				5E77F0000000000000000020 /* SettlementModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -384,6 +402,12 @@
 				5B00000000000000000000C2 /* ContactsBridge.swift */,
 				5B00000000000000000000C4 /* ShareSummaryService.swift */,
 				EA0000000000000000000010 /* Local */,
+				5E77F0000000000000000030 /* SettlementCalculationEngine.swift */,
+				5E77F0000000000000000040 /* SettlementValidation.swift */,
+				5E77F0000000000000000050 /* DriverAdvanceService.swift */,
+				5E77F0000000000000000060 /* RecurringDeductionService.swift */,
+				5E77F0000000000000000070 /* SettlementAuditService.swift */,
+				5E77F0000000000000000080 /* SettlementNumberService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -765,6 +789,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				001A1A0A0E4A5B1C2D3E4F5A /* SacredPathwayApp.swift in Sources */,
+				5E77B0000000000000000010 /* Money.swift in Sources */,
+				5E77B0000000000000000020 /* SettlementModels.swift in Sources */,
+				5E77B0000000000000000030 /* SettlementCalculationEngine.swift in Sources */,
+				5E77B0000000000000000040 /* SettlementValidation.swift in Sources */,
+				5E77B0000000000000000050 /* DriverAdvanceService.swift in Sources */,
+				5E77B0000000000000000060 /* RecurringDeductionService.swift in Sources */,
+				5E77B0000000000000000070 /* SettlementAuditService.swift in Sources */,
+				5E77B0000000000000000080 /* SettlementNumberService.swift in Sources */,
 				001A1A0C0E4A5B1C2D3E4F5B /* ContentView.swift in Sources */,
 				001A1A0E0E4A5B1C2D3E4F5C /* Config.swift in Sources */,
 				001A1A100E4A5B1C2D3E4F5D /* Driver.swift in Sources */,
