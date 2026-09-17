@@ -101,6 +101,9 @@ enum BackupService {
         var brokerContacts: [BrokerContact]
         var expenses: [Expense]
         var preferences: Preferences
+        /// Driver Pay & Settlements ledger (added 2026-09-16). Optional so
+        /// backups made before settlements existed still import.
+        var settlements: SettlementLedger? = nil
     }
 
     // MARK: - Export
@@ -141,7 +144,8 @@ enum BackupService {
             brokers: brokers,
             brokerContacts: contacts,
             expenses: expenses,
-            preferences: prefs
+            preferences: prefs,
+            settlements: SettlementRepository.shared.ledgerForBackup
         )
     }
 
@@ -272,6 +276,13 @@ enum BackupService {
         LocalBrokerContactsRepository.shared.replaceAll(with: bundle.brokerContacts)
         LocalLoadsRepository.shared.replaceAll(with: bundle.loads)
         LocalExpensesRepository.shared.replaceAll(with: bundle.expenses)
+
+        // Settlements: only replaced when the backup actually contains them.
+        // An older backup (no settlements key) leaves existing settlement
+        // history untouched rather than wiping financial records.
+        if let settlements = bundle.settlements {
+            try? SettlementRepository.shared.replaceLocalLedger(settlements)
+        }
 
         // ── Apply preferences. Each setter no-ops on nil so a partial
         //    preferences payload is safe. Both services persist on

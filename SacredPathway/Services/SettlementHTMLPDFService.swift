@@ -80,6 +80,14 @@ final class SettlementHTMLPDFService {
         return try await Renderer.render(html: html)
     }
 
+    /// Renders any self-contained HTML document with the same paginated
+    /// WKWebView pipeline the paystub uses. Added 2026-09-16 for the Driver Pay
+    /// & Settlements statement and reports (see SettlementStatementBuilder),
+    /// so the app keeps a single HTML→PDF engine.
+    static func renderHTML(_ html: String) async throws -> Data {
+        try await Renderer.render(html: html)
+    }
+
     // MARK: - HTML construction
 
     private static func buildHTML(

@@ -483,23 +483,71 @@ drop policy if exists "own advance repayments"      on public.driver_advance_rep
 drop policy if exists "read own audit events"       on public.settlement_audit_events;
 drop policy if exists "insert own audit events"     on public.settlement_audit_events;
 
+-- WITH CHECK also requires the PARENT row (settlement / driver / advance) to
+-- belong to the same account. profile_id = auth.uid() alone is not enough:
+-- every signed-in user (drivers included) has a profiles row, so without the
+-- parent check a driver could attach rows it owns to its carrier's
+-- settlement or driver record (forged lines in its own portal view, and
+-- unique-index collisions that block the carrier's saves).
 create policy "own settlement loads" on public.settlement_loads
-  for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  for all using (profile_id = auth.uid())
+  with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.settlements s
+                 where s.id = settlement_loads.settlement_id and s.profile_id = auth.uid())
+    and (settlement_loads.corrects_settlement_id is null
+         or exists (select 1 from public.settlements c
+                     where c.id = settlement_loads.corrects_settlement_id and c.profile_id = auth.uid()))
+  );
 
 create policy "own settlement additions" on public.settlement_additions
-  for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  for all using (profile_id = auth.uid())
+  with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.settlements s
+                 where s.id = settlement_additions.settlement_id and s.profile_id = auth.uid())
+  );
 
 create policy "own settlement deductions" on public.settlement_deductions
-  for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  for all using (profile_id = auth.uid())
+  with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.settlements s
+                 where s.id = settlement_deductions.settlement_id and s.profile_id = auth.uid())
+    and (settlement_deductions.advance_id is null
+         or exists (select 1 from public.driver_advances a
+                     where a.id = settlement_deductions.advance_id and a.profile_id = auth.uid()))
+    and (settlement_deductions.recurring_deduction_id is null
+         or exists (select 1 from public.recurring_deductions r
+                     where r.id = settlement_deductions.recurring_deduction_id and r.profile_id = auth.uid()))
+  );
 
 create policy "own recurring deductions" on public.recurring_deductions
-  for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  for all using (profile_id = auth.uid())
+  with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.drivers d
+                 where d.id = recurring_deductions.driver_id and d.profile_id = auth.uid())
+  );
 
 create policy "own driver advances" on public.driver_advances
-  for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  for all using (profile_id = auth.uid())
+  with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.drivers d
+                 where d.id = driver_advances.driver_id and d.profile_id = auth.uid())
+  );
 
 create policy "own advance repayments" on public.driver_advance_repayments
-  for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+  for all using (profile_id = auth.uid())
+  with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.driver_advances a
+                 where a.id = driver_advance_repayments.advance_id and a.profile_id = auth.uid())
+    and (driver_advance_repayments.settlement_id is null
+         or exists (select 1 from public.settlements s
+                     where s.id = driver_advance_repayments.settlement_id and s.profile_id = auth.uid()))
+  );
 
 -- Audit events are insert + select only. There is deliberately no UPDATE or
 -- DELETE policy, so the trail cannot be rewritten from a client.
@@ -507,7 +555,11 @@ create policy "read own audit events" on public.settlement_audit_events
   for select using (profile_id = auth.uid());
 
 create policy "insert own audit events" on public.settlement_audit_events
-  for insert with check (profile_id = auth.uid());
+  for insert with check (
+    profile_id = auth.uid()
+    and exists (select 1 from public.settlements s
+                 where s.id = settlement_audit_events.settlement_id and s.profile_id = auth.uid())
+  );
 
 
 -- =============================================================================
@@ -525,6 +577,9 @@ begin
   return new;
 end;
 $$;
+
+-- Trigger-only function: no API caller needs it (same rule as 20260611192931).
+revoke execute on function public.sph_touch_updated_at() from public, anon, authenticated;
 
 drop trigger if exists settlements_touch_updated_at on public.settlements;
 create trigger settlements_touch_updated_at

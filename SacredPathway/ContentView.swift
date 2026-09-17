@@ -143,6 +143,14 @@ struct CarrierRootView: View {
                 }
                 .tag("loads")
 
+            // Driver Pay & Settlements (added 2026-09-16).
+            SettlementsHomeView()
+                .environmentObject(supabase)
+                .tabItem {
+                    Label("Settlements", systemImage: "doc.text.fill")
+                }
+                .tag("settlements")
+
             ExpensesListView()
                 .tabItem {
                     Label("Expenses", systemImage: "creditcard.fill")
@@ -234,6 +242,14 @@ struct OwnerOperatorRootView: View {
                     Label("Loads", systemImage: "shippingbox.fill")
                 }
                 .tag("loads")
+
+            // Driver Pay & Settlements (added 2026-09-16).
+            SettlementsHomeView()
+                .environmentObject(supabase)
+                .tabItem {
+                    Label("Settlements", systemImage: "doc.text.fill")
+                }
+                .tag("settlements")
 
             ExpensesListView()
                 .tabItem {
@@ -835,6 +851,17 @@ struct DriverPaycheckView: View {
                         DriverPayTypeCard(supabase: supabase)
                     }
                     .listRowBackground(Color.spCardBg)
+
+                    // Approved / paid settlements from the carrier
+                    // (Driver Pay & Settlements, added 2026-09-16).
+                    if !appMode.isLocal {
+                        Section {
+                            DriverSettlementsLinkRow()
+                        } footer: {
+                            Text("Settlements your carrier has approved or paid.")
+                        }
+                        .listRowBackground(Color.spCardBg)
+                    }
 
                     Section("This Week") {
                         DriverInfoRow("Driver Gross", value: gross.asCurrency, systemImage: "dollarsign.circle.fill")

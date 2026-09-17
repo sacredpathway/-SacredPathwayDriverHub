@@ -101,6 +101,8 @@ struct DashboardView: View {
                             loadErrorBanner(message: loadError)
                         }
                         financialCards
+                        // Driver Pay & Settlements summary (added 2026-09-16).
+                        SettlementDashboardSummaryCard()
                         metricsRow
                         expenseBreakdown
                         recentLoadsSection

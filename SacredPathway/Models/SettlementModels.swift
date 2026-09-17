@@ -199,6 +199,33 @@ struct PayComponent: Codable, Hashable, Identifiable {
         case fixedAmount = "fixed_amount"
     }
 
+    // Explicit coding (2026-09-16): `Money` encodes rounded to cents, which
+    // would silently turn a $0.585/mi rate into $0.59/mi on save. A RATE is
+    // not a printed dollar total, so it is stored at full precision.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id          = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        kind        = try c.decode(PayMethodKind.self, forKey: .kind)
+        label       = try c.decodeIfPresent(String.self, forKey: .label) ?? kind.displayName
+        percent     = try c.decodeIfPresent(Decimal.self, forKey: .percent)
+        rate        = try c.decodeIfPresent(Money.self, forKey: .rate)
+        mileBasis   = try c.decodeIfPresent(MileBasis.self, forKey: .mileBasis) ?? .loaded
+        fixedAmount = try c.decodeIfPresent(Money.self, forKey: .fixedAmount)
+        hours       = try c.decodeIfPresent(Decimal.self, forKey: .hours)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(kind, forKey: .kind)
+        try c.encode(label, forKey: .label)
+        try c.encodeIfPresent(percent, forKey: .percent)
+        try c.encodeIfPresent(rate.map { Money.round($0.amount, scale: 6) }, forKey: .rate)
+        try c.encode(mileBasis, forKey: .mileBasis)
+        try c.encodeIfPresent(fixedAmount, forKey: .fixedAmount)
+        try c.encodeIfPresent(hours, forKey: .hours)
+    }
+
     /// Human-readable basis that prints on the statement next to the amount.
     var basisDescription: String {
         switch kind {
@@ -222,9 +249,20 @@ struct PayComponent: Codable, Hashable, Identifiable {
 /// user must enter a manual amount, and validation will say so.
 struct PayRule: Codable, Hashable {
     var components: [PayComponent]
+    /// Company fee terms (dispatcher %, factoring %, authority, maintenance
+    /// reserve and who pays each) frozen with the settlement so a later change
+    /// to the company defaults can never re-price a settled week. Nil on rules
+    /// saved before 2026-09-16 and on per-load overrides.
+    var feeTerms: CompanyFeeSettings?
 
-    init(components: [PayComponent] = []) {
+    init(components: [PayComponent] = [], feeTerms: CompanyFeeSettings? = nil) {
         self.components = components
+        self.feeTerms = feeTerms
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case components
+        case feeTerms = "fee_terms"
     }
 
     var isEmpty: Bool { components.isEmpty }
@@ -264,6 +302,23 @@ struct PayRule: Codable, Hashable {
     }
 
     static let none = PayRule()
+
+    /// True when both rules pay the same way. Component ids and labels are
+    /// ignored — they are identity, not terms — so a rule rebuilt from the
+    /// same numbers is not reported as a pay change.
+    func hasSameTerms(as other: PayRule) -> Bool {
+        func terms(_ r: PayRule) -> [String] {
+            r.components.map { c in
+                [c.kind.rawValue,
+                 c.percent.map { "\($0)" } ?? "-",
+                 c.rate.map { "\($0.amount)" } ?? "-",
+                 c.mileBasis.rawValue,
+                 c.fixedAmount.map { "\($0.rounded.amount)" } ?? "-",
+                 c.hours.map { "\($0)" } ?? "-"].joined(separator: "|")
+            }
+        }
+        return terms(self) == terms(other) && feeTerms == other.feeTerms
+    }
 }
 
 // MARK: - Additions

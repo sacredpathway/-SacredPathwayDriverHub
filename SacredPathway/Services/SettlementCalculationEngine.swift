@@ -134,6 +134,11 @@ struct SettlementCalculationInput {
     /// Estimates may include booked / in-progress loads and are never a
     /// financial record. Carried through to the result so the UI can label it.
     var isEstimate: Bool
+    /// true = use each load line's stored `driverEarnings` / basis instead of
+    /// re-pricing it. For displaying approved/paid history, and for driver
+    /// views, whose copy omits company-paid lines (a percent-of-NET rule
+    /// would otherwise re-price on the wrong base). Drafts never set this.
+    var frozenLoadEarnings: Bool = false
 
     init(
         settlementType: SettlementType = .companyDriver,
@@ -275,7 +280,7 @@ enum SettlementCalculationEngine {
         let companyBorneForNetBasis = Money.sum(allDeductions.map(\.companyAmount))
         let netBasis = (grossLoadRevenue - companyBorneForNetBasis).clampedToZero
 
-        let earningsOutcome = calculateDriverEarnings(
+        var earningsOutcome = calculateDriverEarnings(
             lines: orderedLines,
             loadGrosses: loadGrosses,
             defaultRule: input.payRule,
@@ -285,6 +290,12 @@ enum SettlementCalculationEngine {
             settlementHours: input.hoursWorked,
             warnings: &warnings
         )
+        if input.frozenLoadEarnings {
+            for line in orderedLines {
+                earningsOutcome.perLoad[line.id] = line.driverEarnings.rounded
+                earningsOutcome.perLoadBasis[line.id] = line.payBasisDescription
+            }
+        }
 
         for line in orderedLines {
             let amount = earningsOutcome.perLoad[line.id] ?? .zero
@@ -366,7 +377,9 @@ enum SettlementCalculationEngine {
                 companyExpenses += companyPart
                 lineItems.append(
                     SettlementLineItem(
-                        id: UUID(uuidString: deduction.id.uuidString) ?? deduction.id,
+                        // Distinct id from the driver-side row of a split line, so
+                        // SwiftUI lists that show both never see a duplicate id.
+                        id: companySideId(for: deduction.id),
                         kind: .companyExpense,
                         label: deduction.descriptionText.isEmpty
                             ? deduction.category.displayName
@@ -684,6 +697,14 @@ enum SettlementCalculationEngine {
                            bytes[4], bytes[5], bytes[6], bytes[7],
                            bytes[8], bytes[9], bytes[10], bytes[11],
                            bytes[12], bytes[13], bytes[14], bytes[15]))
+    }
+
+    /// Deterministic sibling id for the company-borne half of a deduction.
+    static func companySideId(for id: UUID) -> UUID {
+        var u = id.uuid
+        u.15 ^= 0xC0
+        u.14 ^= 0x01
+        return UUID(uuid: u)
     }
 
     // MARK: - Allocation
