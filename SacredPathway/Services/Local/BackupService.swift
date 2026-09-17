@@ -130,6 +130,9 @@ enum BackupService {
         var preferences: Preferences
         /// v2: embedded receipt photos. Optional so v1 backups decode.
         var receiptImages: [ReceiptImagePayload]?
+        /// Driver Pay & Settlements ledger (added 2026-09-16). Optional so
+        /// backups made before settlements existed still import.
+        var settlements: SettlementLedger? = nil
     }
 
     // MARK: - Export
@@ -197,7 +200,8 @@ enum BackupService {
             brokerContacts: contacts,
             expenses: expenses,
             preferences: prefs,
-            receiptImages: receiptImages.isEmpty ? nil : receiptImages
+            receiptImages: receiptImages.isEmpty ? nil : receiptImages,
+            settlements: SettlementRepository.shared.ledgerForBackup
         )
     }
 
@@ -355,6 +359,12 @@ enum BackupService {
         #if DEBUG
         print("[SP_DEBUG_LOCAL] BackupService.import → restored \(restoredImages) receipt image(s), swept \(sweptOrphans) orphan(s)")
         #endif
+        // Settlements: only replaced when the backup actually contains them.
+        // An older backup (no settlements key) leaves existing settlement
+        // history untouched rather than wiping financial records.
+        if let settlements = bundle.settlements {
+            try? SettlementRepository.shared.replaceLocalLedger(settlements)
+        }
 
         // ── Apply preferences. Each setter no-ops on nil so a partial
         //    preferences payload is safe. Both services persist on
