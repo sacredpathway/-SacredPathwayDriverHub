@@ -1,0 +1,17 @@
+-- 20260616094021_seed_apple_review_demo_dispatcher — SOURCE-CONTROL PLACEHOLDER (intentional no-op)
+--
+-- Production history records a data-only DO block under this version. It
+-- created an App Review demo login (auth user + identity + profile role) and
+-- demo dispatch/connection rows. It contains credential material, so its SQL
+-- is deliberately NOT stored in source control.
+--
+-- Evidence (2026-09-16, read-only): no later migration, function, policy,
+-- view, default, check constraint or trigger references any of its fixed IDs
+-- or emails, and no file in this repository does either. No schema object
+-- depends on it. Production digest of the original: md5 8ee0ba51… (1 statement).
+--
+-- Demo/test accounts for preview branches are created by the test harness at
+-- test time with throw-away credentials (see
+-- Tools/migration-check/history-replay/MIGRATION_RECONCILIATION.md), never by
+-- a schema migration.
+select 1;
