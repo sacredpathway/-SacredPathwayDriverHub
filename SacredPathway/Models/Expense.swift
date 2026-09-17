@@ -102,6 +102,10 @@ struct ExpenseFormPrefill {
     /// AddEditExpenseView so saving the expense also persists the image
     /// (Phase 1 · Task 3).
     var receiptImage: UIImage? = nil
+    /// Smart document import (2026-09-17): the reading, extraction and the
+    /// values proposed for each field. Optional — manual entry is unaffected.
+    var smartImport: SmartImport? = nil
+    var smartSuggestions: [String: FormSuggestion] = [:]
 }
 
 struct Expense: Codable, Identifiable {

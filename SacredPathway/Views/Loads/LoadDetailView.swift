@@ -215,6 +215,9 @@ struct LoadDetailView: View {
                         }
                         .buttonStyle(.plain)
                     }
+
+                    // The rate con this load was imported from (on this device), if any.
+                    SmartImportedDocumentSection(recordType: .load, recordID: load.id)
                 }
                 .padding()
             }

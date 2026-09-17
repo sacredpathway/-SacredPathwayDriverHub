@@ -23,6 +23,12 @@ struct SmartScanReviewView: View {
     /// alongside `parsed` so we have the exact bytes the user reviewed.
     var sourceImage: UIImage? = nil
 
+    /// Smart document import (2026-09-17): classification, per-field
+    /// confidence, stops, charges and duplicate checks for the review card.
+    var smartImport: SmartImport? = nil
+    var smartNotes: [ExtractionIssue] = []
+    @State private var smartDuplicates: [DuplicateMatch]?
+
     // MARK: Editable load fields
     @State private var loadNumber: String = ""
     @State private var brokerName: String = ""
@@ -120,6 +126,18 @@ struct SmartScanReviewView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         confidenceBanner
+
+                        if let smartImport {
+                            SmartExtractionReviewCard(
+                                result: smartReviewResult(smartImport),
+                                familyMismatchMessage: smartImport.familyMismatchMessage,
+                                extraNotes: smartNotes,
+                                sourceData: smartImport.source.originalData,
+                                sourceMimeType: smartImport.source.mimeType,
+                                sourceImages: smartImport.source.images
+                            )
+                            .padding(.horizontal)
+                        }
 
                         sectionCard("Load Info") {
                             // Field-order swap 2026-05-18: PO # now sits in the
@@ -239,6 +257,7 @@ struct SmartScanReviewView: View {
                     applyEquipmentDefaultsIfNeeded()
                 }
                 .task { await loadBrokers() }
+                .task { await refreshSmartDuplicates() }
                 .alert("Load Saved", isPresented: $showSavedAlert) {
                     Button("OK") { dismiss() }
                 } message: {
@@ -950,6 +969,10 @@ struct SmartScanReviewView: View {
 
         // Equipment + BOL. OCR trailer values win because they are
         // document-specific; otherwise use the driver's saved equipment.
+        if let docTruck = parsed.truckNumber?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !docTruck.isEmpty, docTruck.count <= 14 {
+            truckNumber = docTruck
+        }
         applyEquipmentDefaultsIfNeeded(allowParsedTrailer: true)
         bolNumber      = parsed.bolNumber     ?? ""
         driverNotes    = parsed.driverNotes   ?? ""
@@ -1089,6 +1112,74 @@ struct SmartScanReviewView: View {
         matchedBroker = b
     }
 
+    // MARK: - Smart import
+
+    private func smartReviewResult(_ imp: SmartImport) -> SmartExtractionResult {
+        var result = imp.result
+        if let smartDuplicates { result.duplicates = smartDuplicates }
+        return result
+    }
+
+    /// Cloud mode: compare with saved loads after the screen is up.
+    private func refreshSmartDuplicates() async {
+        guard let imp = smartImport, imp.result.kind == .rateConfirmation, !AppMode.shared.isLocal else { return }
+        guard let loads = try? await supabase.fetchLoads() else { return }
+        let probes = SmartImportCoordinator.loadProbes(loads)
+        smartDuplicates = DuplicateDetector.findMatches(for: imp.result.duplicateProbe(), in: probes)
+    }
+
+    /// Form values in the same shape the importer uses (for edit tracking).
+    private func smartFormValues() -> [String: String] {
+        [
+            "loadNumber": loadNumber, "brokerName": brokerName, "brokerContactName": brokerContactName,
+            "brokerPhone": brokerPhone, "brokerEmail": brokerEmail, "brokerMcNumber": brokerMcNumber,
+            "pickupCityState": pickupCityState, "pickupAddress": pickupAddress,
+            "pickupDate": pickupDateSet ? SimpleDate(date: pickupDate).iso : "", "pickupTime": pickupTime,
+            "deliveryCityState": deliveryCityState, "deliveryAddress": deliveryAddress,
+            "deliveryDate": deliveryDateSet ? SimpleDate(date: deliveryDate).iso : "", "deliveryTime": deliveryTime,
+            "rate": rate, "weight": weight, "commodity": commodity, "poNumber": poNumber,
+            "pickupNumber": pickupNumber, "referenceNumber": referenceNumber, "shipperName": shipperName,
+            "receiverName": receiverName, "truckNumber": truckNumber, "trailerNumber": trailerNumber,
+            "bolNumber": bolNumber, "loadedMiles": loadedMiles
+        ]
+    }
+
+    /// Values as they were prefilled from the document (before any typing).
+    private func smartPrefilledValues() -> [String: String] {
+        func money(_ v: Double?) -> String { v.map { String(format: "%.2f", $0) } ?? "" }
+        return [
+            "loadNumber": parsed.loadNumber ?? "", "brokerName": parsed.brokerName ?? "",
+            "brokerContactName": parsed.brokerContactName ?? "", "brokerPhone": parsed.brokerPhone ?? "",
+            "brokerEmail": sanitizedBrokerEmail(parsed.brokerEmail ?? ""), "brokerMcNumber": parsed.brokerMcNumber ?? "",
+            "pickupCityState": parsed.pickupCityState ?? "", "pickupAddress": parsed.pickupAddress ?? "",
+            "pickupDate": parsed.pickupDate.map { SimpleDate(date: $0).iso } ?? "", "pickupTime": parsed.pickupTime ?? "",
+            "deliveryCityState": parsed.deliveryCityState ?? "", "deliveryAddress": parsed.deliveryAddress ?? "",
+            "deliveryDate": parsed.deliveryDate.map { SimpleDate(date: $0).iso } ?? "", "deliveryTime": parsed.deliveryTime ?? "",
+            "rate": money(parsed.rate), "weight": parsed.weight ?? "", "commodity": parsed.commodity ?? "",
+            "poNumber": parsed.poNumber ?? "", "pickupNumber": parsed.pickupNumber ?? "",
+            "referenceNumber": parsed.referenceNumber ?? "", "shipperName": parsed.shipperName ?? "",
+            "receiverName": parsed.receiverName ?? "", "truckNumber": parsed.truckNumber ?? "",
+            "trailerNumber": parsed.trailerNumber ?? "", "bolNumber": parsed.bolNumber ?? "",
+            "loadedMiles": parsed.loadedMiles.map { String(Int($0.rounded())) } ?? ""
+        ]
+    }
+
+    private func persistSmartImport(_ saved: Load) {
+        guard let imp = smartImport else { return }
+        let prefilled = smartPrefilledValues()
+        let current = smartFormValues()
+        let applied = prefilled.filter { !$0.value.isEmpty }
+        // Equipment defaults come from the driver profile, not typing.
+        let edited = current.keys.filter { key in
+            guard key != "truckNumber" || !(prefilled[key] ?? "").isEmpty else { return false }
+            guard key != "trailerNumber" || !(prefilled[key] ?? "").isEmpty else { return false }
+            return (prefilled[key] ?? "") != (current[key] ?? "")
+        }
+        let title = ["Load " + (saved.loadNumber ?? "—"), saved.brokerName].compactMap { $0 }.joined(separator: " · ")
+        SmartImportCoordinator.persist(recordType: .load, recordID: saved.id, imp: imp,
+                                       appliedValues: applied, userEditedKeys: edited, title: title)
+    }
+
     // MARK: - Save
 
     private func save() async {
@@ -1176,6 +1267,7 @@ struct SmartScanReviewView: View {
                 // stays cloud-only (handled by persistScannedDocument's
                 // own guard below).
                 savedLoad = LocalLoadsRepository.shared.create(load)
+                persistSmartImport(savedLoad)
                 let (resolvedBrokerId, resolvedContactId) =
                     await autoAddBrokerContactLocal(profileId: profileId)
                 await patchLoadWithBrokerAttributionLocal(
@@ -1194,6 +1286,7 @@ struct SmartScanReviewView: View {
                 return
             }
             debugLogSaveSuccess(savedLoad, tableName: "loads", attemptID: attemptID)
+            persistSmartImport(savedLoad)
 
             // The row is saved once createLoad returns. Keep non-critical
             // broker/contact/document work off the spinner path so a slow

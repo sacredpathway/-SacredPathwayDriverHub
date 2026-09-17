@@ -577,6 +577,8 @@ class SupabaseService: ObservableObject {
             .delete()
             .eq("id", value: loadId)
             .execute()
+        // On-device import snapshot + original rate con for this load.
+        SmartDocumentStore.shared.delete(type: .load, id: loadId.uuidString)
     }
 
     // MARK: - Expenses
@@ -669,6 +671,8 @@ class SupabaseService: ObservableObject {
             .delete()
             .eq("id", value: expenseId)
             .execute()
+        // On-device import snapshot + original document for this expense.
+        SmartDocumentStore.shared.delete(type: .expense, id: expenseId.uuidString)
         NotificationCenter.default.post(name: .expensesDidChange, object: nil)
     }
 

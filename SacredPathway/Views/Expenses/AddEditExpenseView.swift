@@ -140,6 +140,18 @@ struct AddEditExpenseView: View {
     @State private var showReceiptPhotoPicker = false
     @State private var showReceiptCameraDenied = false
 
+    // Smart document import (2026-09-17). `smartAutoValues` remembers what the
+    // importer put in each field so a later read never overwrites a value the
+    // user typed; `smartConflicts` lists document values that differ.
+    @State private var smartImport: SmartImport?
+    @State private var smartAutoValues: [String: String] = [:]
+    @State private var smartAutoConfidence: [String: ExtractionConfidence] = [:]
+    @State private var smartConflicts: [MergeConflict] = []
+    @State private var isReadingReceipt = false
+    /// Fuel values exactly as the importer set them; the total is not
+    /// recalculated from them unless the user changes one.
+    @State private var smartFuelSnapshot: [String]?
+
     /// Increments on every save failure to drive the error-banner shake
     /// (Phase 2 · S6 micro-interaction; no-op under Reduce Motion).
     @State private var errorShakeTrigger = 0
@@ -168,6 +180,24 @@ struct AddEditExpenseView: View {
                     VStack(spacing: 20) {
                         if showDraftRestoredToast {
                             draftRestoredBanner
+                        }
+
+                        if let smartImport {
+                            SmartExtractionReviewCard(
+                                result: smartImport.result,
+                                selectableKinds: smartImport.selectableKinds,
+                                familyMismatchMessage: smartImport.familyMismatchMessage,
+                                conflicts: smartConflicts,
+                                sourceData: smartImport.source.originalData,
+                                sourceMimeType: smartImport.source.mimeType,
+                                sourceImages: smartImport.source.images,
+                                onChooseKind: { chooseSmartKind($0) },
+                                onUseDocumentValue: { useDocumentValue($0) }
+                            )
+                            .padding(.horizontal)
+                        } else if let expenseID = mode.expense?.id {
+                            SmartImportedDocumentSection(recordType: .expense, recordID: expenseID)
+                                .padding(.horizontal)
                         }
 
                         categorySection
@@ -353,12 +383,16 @@ struct AddEditExpenseView: View {
             .background(Color.spCardBg)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal)
+            SmartFieldHint(confidence: smartHint("amount", amount))
+                .padding(.horizontal)
         }
     }
 
     private var fuelSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("Fuel Details", icon: "fuelpump.fill")
+            SmartFieldHint(confidence: [smartHint("gallons", gallons), smartHint("pricePerGallon", pricePerGallon)].compactMap { $0 }.min())
+                .padding(.horizontal)
 
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -466,6 +500,8 @@ struct AddEditExpenseView: View {
                         }
                     }
 
+                SmartFieldHint(confidence: smartHint("vendorName", vendorName))
+
                 TextField("Description (optional)", text: $description)
                     .font(.subheadline)
                     .foregroundStyle(Color.spTextPrimary)
@@ -479,6 +515,7 @@ struct AddEditExpenseView: View {
                     .padding(12)
                     .background(Color.spCardBg)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                SmartFieldHint(confidence: smartHint("receiptDate", SimpleDate(date: receiptDate).iso))
             }
             .padding(.horizontal)
         }
@@ -546,6 +583,30 @@ struct AddEditExpenseView: View {
                     .padding(12)
                     .background(Color.spCardBg)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                    if let photo = pendingReceiptImage, smartImport == nil {
+                        Button {
+                            readAttachedReceipt(photo)
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isReadingReceipt {
+                                    ProgressView().tint(Color.spGold)
+                                } else {
+                                    Image(systemName: "doc.text.viewfinder")
+                                }
+                                Text(isReadingReceipt ? "Reading receipt…" : "Fill empty fields from this photo")
+                                    .font(.subheadline.weight(.semibold))
+                                Spacer()
+                            }
+                            .foregroundStyle(Color.spGold)
+                            .padding(12)
+                            .frame(minHeight: 44)
+                            .background(Color.spCardBg)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                        .disabled(isReadingReceipt)
+                        .accessibilityIdentifier("expense.readAttachedReceipt")
+                    }
                 } else {
                     if existingReceiptFileMissing {
                         HStack(spacing: 8) {
@@ -650,6 +711,12 @@ struct AddEditExpenseView: View {
     }
 
     private func autoCalcFuelTotal() {
+        // Values just filled from a document: keep the printed total (it may
+        // include tax or other items). Recalculate once the user edits a value.
+        if let snapshot = smartFuelSnapshot {
+            if snapshot == [gallons, pricePerGallon, defGallons, defPricePerGallon], !amount.isEmpty { return }
+            if snapshot != [gallons, pricePerGallon, defGallons, defPricePerGallon] { smartFuelSnapshot = nil }
+        }
         let dieselTotal: Double = {
             guard let gal = Double(gallons),
                   let ppg = Double(pricePerGallon),
@@ -710,6 +777,164 @@ struct AddEditExpenseView: View {
         // Smart Scan hands the captured photo through the prefill so the
         // OCR source image is persisted with the expense (Task 3).
         pendingReceiptImage = p.receiptImage
+        if let imp = p.smartImport {
+            smartImport = imp
+            // Values exactly as they were put into the form (read from the
+            // prefill, not from state that was just written).
+            let prefilled: [String: String] = [
+                "amount": p.amount, "vendorName": p.vendorName, "description": p.description,
+                "category": p.category, "receiptDate": SimpleDate(date: p.receiptDate).iso,
+                "gallons": p.gallons, "pricePerGallon": p.pricePerGallon,
+                "defGallons": p.defGallons, "defPricePerGallon": p.defPricePerGallon
+            ]
+            var autoValues: [String: String] = [:]
+            var autoConfidence: [String: ExtractionConfidence] = [:]
+            for (key, suggestion) in p.smartSuggestions {
+                guard let value = prefilled[key], !value.isEmpty else { continue }
+                autoValues[key] = value
+                autoConfidence[key] = suggestion.confidence
+            }
+            smartAutoValues = autoValues
+            smartAutoConfidence = autoConfidence
+            smartFuelSnapshot = [p.gallons, p.pricePerGallon, p.defGallons, p.defPricePerGallon]
+        }
+    }
+
+    // MARK: - Smart import helpers
+
+    private static let smartKeys = ["amount", "vendorName", "description", "category", "receiptDate",
+                                    "gallons", "pricePerGallon", "defGallons", "defPricePerGallon"]
+
+    private func formValue(_ key: String) -> String {
+        switch key {
+        case "amount": return amount
+        case "vendorName": return vendorName
+        case "description": return description
+        case "category": return category
+        case "receiptDate": return SimpleDate(date: receiptDate).iso
+        case "gallons": return gallons
+        case "pricePerGallon": return pricePerGallon
+        case "defGallons": return defGallons
+        case "defPricePerGallon": return defPricePerGallon
+        default: return ""
+        }
+    }
+
+    private func setFormValue(_ key: String, _ value: String) {
+        switch key {
+        case "amount": amount = value
+        case "vendorName": vendorName = value
+        case "description": description = value
+        case "category":
+            if SmartImportCoordinator.expenseCategories.contains(value) {
+                category = value
+                categoryWasAutoSet = true
+            }
+        case "receiptDate":
+            if let d = SmartImportCoordinator.date(fromISO: value) { receiptDate = d }
+        case "gallons": gallons = value
+        case "pricePerGallon": pricePerGallon = value
+        case "defGallons": defGallons = value
+        case "defPricePerGallon": defPricePerGallon = value
+        default: break
+        }
+    }
+
+    /// Confidence to show under a field, only while it still holds the imported value.
+    private func smartHint(_ key: String, _ current: String) -> ExtractionConfidence? {
+        guard let auto = smartAutoValues[key], auto == current else { return nil }
+        return smartAutoConfidence[key]
+    }
+
+    /// Current form state for the merge policy. A field counts as the user's
+    /// own when it differs from what the importer put there.
+    private func smartFormStates() -> [String: FormFieldState] {
+        let today = SimpleDate(date: Date()).iso
+        var states: [String: FormFieldState] = [:]
+        for key in Self.smartKeys {
+            var value = formValue(key)
+            let auto = smartAutoValues[key]
+            var edited = auto.map { $0 != value } ?? !value.isEmpty
+            if key == "category" {
+                edited = !categoryWasAutoSet
+                // An automatic default category is not a real value yet.
+                if !edited && auto == nil { value = "" }
+            }
+            if key == "receiptDate", auto == nil, value == today {
+                // Untouched default date.
+                value = ""
+                edited = false
+            }
+            states[key] = FormFieldState(value: value, userEdited: edited,
+                                         autoConfidence: (auto != nil && auto == value) ? smartAutoConfidence[key] : nil)
+        }
+        return states
+    }
+
+    private func applySmartSuggestions(_ suggestions: [String: FormSuggestion]) {
+        let outcome = ExtractionMergePolicy.merge(suggestions: suggestions, into: smartFormStates())
+        // Vendor before category so vendor-based auto-categorizing cannot undo the document's category.
+        var autoValues = smartAutoValues
+        var autoConfidence = smartAutoConfidence
+        for key in Self.smartKeys {
+            guard let s = outcome.applied[key] else { continue }
+            setFormValue(key, s.value)
+            autoValues[key] = s.value
+            autoConfidence[key] = s.confidence
+        }
+        smartAutoValues = autoValues
+        smartAutoConfidence = autoConfidence
+        smartConflicts = outcome.conflicts
+        smartFuelSnapshot = ["gallons", "pricePerGallon", "defGallons", "defPricePerGallon"].map {
+            outcome.applied[$0]?.value ?? formValue($0)
+        }
+    }
+
+    private func existingExpenseProbes() -> [DuplicateProbe] {
+        let expenses = AppMode.shared.isLocal ? LocalExpensesRepository.shared.expenses : []
+        return SmartImportCoordinator.expenseProbes(expenses).filter { $0.recordID != mode.expense?.id?.uuidString }
+    }
+
+    private func chooseSmartKind(_ kind: SmartDocumentKind) {
+        guard let current = smartImport else { return }
+        let updated = SmartImportCoordinator.choose(kind, for: current, existing: existingExpenseProbes())
+        smartImport = updated
+        applySmartSuggestions(SmartImportCoordinator.expenseSuggestions(updated))
+    }
+
+    private func useDocumentValue(_ conflict: MergeConflict) {
+        // Explicit user choice: replace their value with the document's.
+        setFormValue(conflict.key, conflict.suggestedValue)
+        smartAutoValues[conflict.key] = conflict.suggestedValue
+        smartAutoConfidence[conflict.key] = conflict.confidence
+        smartConflicts.removeAll { $0.key == conflict.key }
+    }
+
+    /// Reads an attached photo and fills only empty fields (typed values stay).
+    private func readAttachedReceipt(_ photo: UIImage) {
+        isReadingReceipt = true
+        let existing = existingExpenseProbes()
+        Task {
+            let imp = await SmartImportCoordinator.importDocument(
+                ImportedDocument(images: [photo], originalData: nil, mimeType: nil),
+                family: .expense, existing: existing)
+            smartImport = imp
+            applySmartSuggestions(SmartImportCoordinator.expenseSuggestions(imp))
+            isReadingReceipt = false
+        }
+    }
+
+    private func persistSmartImport(for saved: Expense) {
+        guard let imp = smartImport, mode.isEditing == false || saved.id != nil else { return }
+        let edited = Self.smartKeys.filter { key in
+            let value = formValue(key)
+            if let auto = smartAutoValues[key] { return auto != value }
+            return !value.isEmpty && key != "receiptDate" && key != "category"
+        }
+        let title = [saved.category.capitalized, saved.vendorName, SmartText.money(saved.amount)]
+            .compactMap { $0 }.joined(separator: " · ")
+        SmartImportCoordinator.persist(recordType: .expense, recordID: saved.id, imp: imp,
+                                       appliedValues: smartAutoValues, userEditedKeys: edited, title: title)
     }
 
     private func loadFromExpense(_ e: Expense) {
@@ -776,6 +1001,11 @@ struct AddEditExpenseView: View {
         pricePerGallon = ""
         defGallons = ""
         defPricePerGallon = ""
+        smartImport = nil
+        smartAutoValues = [:]
+        smartAutoConfidence = [:]
+        smartConflicts = []
+        smartFuelSnapshot = nil
         ExpenseDraftStore.clear()
         withAnimation { showDraftRestoredToast = false }
     }
@@ -906,6 +1136,7 @@ struct AddEditExpenseView: View {
                 saved = LocalExpensesRepository.shared.create(expense)
             }
             cleanUpReplacedReceiptFile()
+            persistSmartImport(for: saved)
             ExpenseDraftStore.clear()
             NotificationCenter.default.post(name: .expensesDidChange, object: nil)
             SPHaptics.success()
@@ -927,6 +1158,7 @@ struct AddEditExpenseView: View {
             // Row is confirmed in the cloud — now it's safe to drop a
             // replaced/removed old image file.
             cleanUpReplacedReceiptFile()
+            persistSmartImport(for: saved)
 
             // Best-effort cloud copy: push the receipt into the Document
             // Vault so cloud users can see it off-device. The AUTHORITATIVE

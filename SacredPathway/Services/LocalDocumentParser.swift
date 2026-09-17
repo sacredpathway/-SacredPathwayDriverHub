@@ -71,6 +71,8 @@ struct ParsedLoadFields {
     // ---- Equipment / shipment metadata ----
     /// Carrier trailer number printed on the doc (e.g. "TR#  T-2418" / "Trailer: 2580").
     var trailerNumber: String?
+    /// Truck / tractor number printed on the doc (filled by the smart extractor, 2026-09-17).
+    var truckNumber: String?
     /// Bill of Lading number — distinct from load # / PO # / ref #.
     var bolNumber: String?
     /// Driver-facing instructions or notes the broker stamped on the doc.

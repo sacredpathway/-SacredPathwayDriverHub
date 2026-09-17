@@ -61,6 +61,8 @@ struct ScanUploadView: View {
     @State private var originalFileData: Data? = nil
     @State private var originalFileMime: String? = nil
     @State private var smartScanParsed: ParsedLoadFields?
+    @State private var smartScanImport: SmartImport?
+    @State private var smartScanNotes: [ExtractionIssue] = []
     @State private var isParsing = false
 
     private var canScan: Bool { subscriptions.isEntitled(.aiScan) }
@@ -204,7 +206,7 @@ struct ScanUploadView: View {
             Button("Files (PDF / image)") { showFilePicker = true }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Smart Scan reads the rate confirmation on your device — nothing is uploaded.")
+            Text("Smart Scan reads the rate confirmation on your device — nothing is uploaded. Multi-page and multi-stop confirmations are supported; you review everything before saving.")
         }
 
         // ---- Pickers — always route through Smart Scan parser ----
@@ -271,7 +273,8 @@ struct ScanUploadView: View {
         // Smart Scan review — local OCR results, fully editable.
         .sheet(isPresented: $showSmartScanReview) {
             if let parsed = smartScanParsed {
-                SmartScanReviewView(parsed: parsed, sourceImage: scannedImage)
+                SmartScanReviewView(parsed: parsed, sourceImage: scannedImage,
+                                    smartImport: smartScanImport, smartNotes: smartScanNotes)
                     .environmentObject(supabase)
             }
         }
@@ -295,10 +298,23 @@ struct ScanUploadView: View {
         originalFileData = originalData
         originalFileMime = mime
         isParsing = true
+        let imported = ImportedDocument(images: images, originalData: originalData, mimeType: mime)
+        // Local records now; cloud loads are checked on the review screen so it opens without waiting.
+        let existing = SmartImportCoordinator.loadProbes(AppMode.shared.isLocal ? LocalLoadsRepository.shared.loads : [])
         Task {
-            let parsed = await LocalDocumentParser.parse(images: images)
+            // One read of every page: PDF text where reliable, Vision OCR otherwise.
+            let imp = await SmartImportCoordinator.importDocument(imported, family: .load, existing: existing)
+            // The legacy rate-con parser still reads the same OCR lines it always has…
+            var parsed = LocalDocumentParser.extractFields(fromLines: imp.legacyOCRLines)
+            #if DEBUG
+            LocalDocumentParser.SmartScanDebugStore.capture(lines: imp.legacyOCRLines, parsed: parsed)
+            #endif
+            // …and the shared extractor fills what it missed.
+            let notes = SmartImportCoordinator.enhance(&parsed, with: imp.result)
             await MainActor.run {
                 smartScanParsed = parsed
+                smartScanImport = imp
+                smartScanNotes = notes
                 isParsing = false
                 showSmartScanReview = true
             }

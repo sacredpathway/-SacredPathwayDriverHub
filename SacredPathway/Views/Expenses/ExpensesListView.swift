@@ -196,22 +196,31 @@ struct ExpensesListView: View {
                     Button("Files (PDF / image)") { showReceiptFilePicker = true }
                     Button("Cancel", role: .cancel) { }
                 } message: {
-                    Text("Smart Scan reads the receipt on your device — nothing is uploaded. It fills the amount, vendor, and date for you.")
+                    Text("Smart Scan reads fuel receipts, store receipts and repair or parts invoices on your device — nothing is uploaded. You review every value before saving.")
                 }
                 .fullScreenCover(isPresented: $showReceiptCamera) {
                     DocumentCameraView(
                         onScan: { images in
-                            if let first = images.first { handleReceiptImage(first) }
+                            // Every scanned page is read (multi-page invoices).
+                            if !images.isEmpty {
+                                handleReceiptDocument(ImportedDocument(images: images, originalData: nil, mimeType: nil))
+                            }
                         },
                         onCancel: { }
                     )
                     .ignoresSafeArea()
                 }
                 .sheet(isPresented: $showReceiptPhotoPicker) {
-                    PhotoPickerView(onPick: { image in handleReceiptImage(image) }, onCancel: { })
+                    PhotoPickerView(onPick: { image in
+                        handleReceiptDocument(ImportedDocument(images: [image], originalData: nil, mimeType: nil))
+                    }, onCancel: { })
                 }
                 .sheet(isPresented: $showReceiptFilePicker) {
-                    FilePickerView(onPick: { picked in handleReceiptImage(picked.image) }, onCancel: { })
+                    FilePickerView(onPick: { picked in
+                        // PDFs keep their embedded text and original bytes.
+                        handleReceiptDocument(ImportedDocument(images: picked.images, originalData: picked.originalData,
+                                                               mimeType: picked.mimeType))
+                    }, onCancel: { })
                 }
                 .sheet(isPresented: $showReceiptReview) {
                     if let prefill = receiptPrefill {
@@ -308,22 +317,20 @@ struct ExpensesListView: View {
 
     // MARK: - Receipt Smart Scan
 
-    /// OCR the receipt on-device, then open the expense form prefilled with the
-    /// parsed amount / vendor / date. Always lands on the editable review form
-    /// so the user confirms before saving.
-    private func handleReceiptImage(_ image: UIImage) {
+    /// Read the document on-device (PDF text or OCR), classify it, extract
+    /// fields, check for duplicates, then open the expense form prefilled for
+    /// review. Nothing is saved until the user taps Add Expense.
+    private func handleReceiptDocument(_ imported: ImportedDocument) {
         isParsingReceipt = true
+        let existing = SmartImportCoordinator.expenseProbes(sourceExpenses)
         Task {
-            let parsed = await LocalDocumentParser.parseFuelReceipt(image: image)
+            let imp = await SmartImportCoordinator.importDocument(imported, family: .expense, existing: existing)
             await MainActor.run {
-                var prefill = parsed.expensePrefill
-                // Carry the captured photo into the form so saving the
-                // expense persists the image too — previously the photo was
-                // OCR'd and then thrown away (Phase 1 · Task 3).
-                prefill.receiptImage = image
-                receiptPrefill = prefill
+                // The captured photo rides along so saving the expense also
+                // persists the receipt image (Phase 1 · Task 3).
+                receiptPrefill = SmartImportCoordinator.expensePrefill(imp)
                 isParsingReceipt = false
-                SPHaptics.success()   // scan parsed — fields are ready
+                SPHaptics.success()   // scan read — fields are ready for review
                 showReceiptReview = true
             }
         }

@@ -61,6 +61,20 @@
 		5B0000000000000000001A01 /* IFTARatesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000001A02 /* IFTARatesService.swift */; };
 		5B0000000000000000001A03 /* ReviewPromptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000001A04 /* ReviewPromptService.swift */; };
 		5B0000000000000000001A05 /* ReceiptImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000001A06 /* ReceiptImageStore.swift */; };
+		5E7D0000000000000000B000 /* DocumentFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F000 /* DocumentFingerprint.swift */; };
+		5E7D0000000000000000B001 /* DuplicateDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F001 /* DuplicateDetector.swift */; };
+		5E7D0000000000000000B002 /* LineItemParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F002 /* LineItemParser.swift */; };
+		5E7D0000000000000000B003 /* MaintenanceExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F003 /* MaintenanceExtractor.swift */; };
+		5E7D0000000000000000B004 /* RateConfirmationExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F004 /* RateConfirmationExtractor.swift */; };
+		5E7D0000000000000000B005 /* ReceiptExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F005 /* ReceiptExtractor.swift */; };
+		5E7D0000000000000000B006 /* SmartDocumentClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F006 /* SmartDocumentClassifier.swift */; };
+		5E7D0000000000000000B007 /* SmartDocumentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F007 /* SmartDocumentStore.swift */; };
+		5E7D0000000000000000B008 /* SmartExtractionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F008 /* SmartExtractionModels.swift */; };
+		5E7D0000000000000000B009 /* SmartExtractionPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F009 /* SmartExtractionPipeline.swift */; };
+		5E7D0000000000000000B00A /* SmartText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F00A /* SmartText.swift */; };
+		5E7D0000000000000000B00B /* DocumentTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F00B /* DocumentTextReader.swift */; };
+		5E7D0000000000000000B00C /* SmartImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F00C /* SmartImportCoordinator.swift */; };
+		5E7D0000000000000000B00D /* SmartExtractionReviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F00D /* SmartExtractionReviewCard.swift */; };
 		5B0000000000000000001A07 /* SPInteraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0000000000000000001A08 /* SPInteraction.swift */; };
 		62B2187604521095396A73A0 /* ReleaseWorkflowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4233447231E7C3762EDA2762 /* ReleaseWorkflowUITests.swift */; };
 		7B0000000000000000000001 /* SettlementSheetPDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0000000000000000000002 /* SettlementSheetPDFService.swift */; };
@@ -210,6 +224,11 @@
 		5E79B000000000000000001C /* DriverSettlementsPortalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001C /* DriverSettlementsPortalView.swift */; };
 		5E79B000000000000000001D /* SettlementTestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001D /* SettlementTestFixtures.swift */; };
 		5E79B000000000000000001E /* MoneyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001E /* MoneyTests.swift */; };
+		5E7D0000000000000000B100 /* SmartFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F100 /* SmartFixtures.swift */; };
+		5E7D0000000000000000B101 /* SmartExtractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F101 /* SmartExtractionTests.swift */; };
+		5E7D0000000000000000B102 /* SmartExtractionSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F102 /* SmartExtractionSupportTests.swift */; };
+		5E7D0000000000000000B103 /* SmartDocumentStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F103 /* SmartDocumentStoreTests.swift */; };
+		5E7D0000000000000000B104 /* SmartDocumentImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7D0000000000000000F104 /* SmartDocumentImportTests.swift */; };
 		5E79B000000000000000001F /* SettlementCalculationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */; };
 		5E79B0000000000000000020 /* DriverAdvanceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */; };
 		5E79B0000000000000000021 /* RecurringDeductionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */; };
@@ -296,6 +315,20 @@
 		5B0000000000000000001A02 /* IFTARatesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IFTARatesService.swift; sourceTree = "<group>"; };
 		5B0000000000000000001A04 /* ReviewPromptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptService.swift; sourceTree = "<group>"; };
 		5B0000000000000000001A06 /* ReceiptImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptImageStore.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F000 /* DocumentFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentFingerprint.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F001 /* DuplicateDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicateDetector.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F002 /* LineItemParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineItemParser.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F003 /* MaintenanceExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceExtractor.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F004 /* RateConfirmationExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateConfirmationExtractor.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F005 /* ReceiptExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptExtractor.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F006 /* SmartDocumentClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartDocumentClassifier.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F007 /* SmartDocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartDocumentStore.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F008 /* SmartExtractionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartExtractionModels.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F009 /* SmartExtractionPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartExtractionPipeline.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F00A /* SmartText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartText.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F00B /* DocumentTextReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTextReader.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F00C /* SmartImportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartImportCoordinator.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F00D /* SmartExtractionReviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartExtractionReviewCard.swift; sourceTree = "<group>"; };
 		5B0000000000000000001A08 /* SPInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SPInteraction.swift; sourceTree = "<group>"; };
 		7049B776F85DD81B59B6C2D3 /* CustomFeeAndMatcherTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CustomFeeAndMatcherTests.swift; sourceTree = "<group>"; };
 		78177406FF7F425A4B2C44AD /* ReceiptPersistenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptPersistenceTests.swift; sourceTree = "<group>"; };
@@ -451,6 +484,11 @@
 		5E79F000000000000000001C /* DriverSettlementsPortalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverSettlementsPortalView.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001D /* SettlementTestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementTestFixtures.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001E /* MoneyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyTests.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F100 /* SmartFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFixtures.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F101 /* SmartExtractionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartExtractionTests.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F102 /* SmartExtractionSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartExtractionSupportTests.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F103 /* SmartDocumentStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartDocumentStoreTests.swift; sourceTree = "<group>"; };
+		5E7D0000000000000000F104 /* SmartDocumentImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartDocumentImportTests.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementCalculationEngineTests.swift; sourceTree = "<group>"; };
 		5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverAdvanceServiceTests.swift; sourceTree = "<group>"; };
 		5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringDeductionServiceTests.swift; sourceTree = "<group>"; };
@@ -627,6 +665,7 @@
 				5B0000000000000000001A02 /* IFTARatesService.swift */,
 				5B0000000000000000001A04 /* ReviewPromptService.swift */,
 				5B0000000000000000001A06 /* ReceiptImageStore.swift */,
+				5E7D0000000000000000A0FF /* SmartExtraction */,
 				5B0000000000000000000F02 /* LoadsSyncService.swift */,
 				5B00000000000000000000C2 /* ContactsBridge.swift */,
 				5B00000000000000000000C4 /* ShareSummaryService.swift */,
@@ -715,6 +754,26 @@
 			path = Loads;
 			sourceTree = "<group>";
 		};
+		5E7D0000000000000000A0FF /* SmartExtraction */ = {
+			isa = PBXGroup;
+			children = (
+				5E7D0000000000000000F000 /* DocumentFingerprint.swift */,
+				5E7D0000000000000000F001 /* DuplicateDetector.swift */,
+				5E7D0000000000000000F002 /* LineItemParser.swift */,
+				5E7D0000000000000000F003 /* MaintenanceExtractor.swift */,
+				5E7D0000000000000000F004 /* RateConfirmationExtractor.swift */,
+				5E7D0000000000000000F005 /* ReceiptExtractor.swift */,
+				5E7D0000000000000000F006 /* SmartDocumentClassifier.swift */,
+				5E7D0000000000000000F007 /* SmartDocumentStore.swift */,
+				5E7D0000000000000000F008 /* SmartExtractionModels.swift */,
+				5E7D0000000000000000F009 /* SmartExtractionPipeline.swift */,
+				5E7D0000000000000000F00A /* SmartText.swift */,
+				5E7D0000000000000000F00B /* DocumentTextReader.swift */,
+				5E7D0000000000000000F00C /* SmartImportCoordinator.swift */,
+			);
+			path = SmartExtraction;
+			sourceTree = "<group>";
+		};
 		001A1A560E4A5B1C2D3E4F78 /* Scanner */ = {
 			isa = PBXGroup;
 			children = (
@@ -722,6 +781,7 @@
 				AA0000000000000000000006 /* DocumentReviewView.swift */,
 				AA0000000000000000000008 /* ManualLoadEntryView.swift */,
 				5A0000000000000000000006 /* SmartScanReviewView.swift */,
+				5E7D0000000000000000F00D /* SmartExtractionReviewCard.swift */,
 			);
 			path = Scanner;
 			sourceTree = "<group>";
@@ -947,6 +1007,11 @@
 				C5B4A39281706F5E4D3C2B1A /* OCRConcurrencyRegressionTests.swift */,
 				5E79F000000000000000001D /* SettlementTestFixtures.swift */,
 				5E79F000000000000000001E /* MoneyTests.swift */,
+				5E7D0000000000000000F100 /* SmartFixtures.swift */,
+				5E7D0000000000000000F101 /* SmartExtractionTests.swift */,
+				5E7D0000000000000000F102 /* SmartExtractionSupportTests.swift */,
+				5E7D0000000000000000F103 /* SmartDocumentStoreTests.swift */,
+				5E7D0000000000000000F104 /* SmartDocumentImportTests.swift */,
 				5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */,
 				5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */,
 				5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */,
@@ -1241,6 +1306,20 @@
 				5B0000000000000000001A01 /* IFTARatesService.swift in Sources */,
 				5B0000000000000000001A03 /* ReviewPromptService.swift in Sources */,
 				5B0000000000000000001A05 /* ReceiptImageStore.swift in Sources */,
+				5E7D0000000000000000B000 /* DocumentFingerprint.swift in Sources */,
+				5E7D0000000000000000B001 /* DuplicateDetector.swift in Sources */,
+				5E7D0000000000000000B002 /* LineItemParser.swift in Sources */,
+				5E7D0000000000000000B003 /* MaintenanceExtractor.swift in Sources */,
+				5E7D0000000000000000B004 /* RateConfirmationExtractor.swift in Sources */,
+				5E7D0000000000000000B005 /* ReceiptExtractor.swift in Sources */,
+				5E7D0000000000000000B006 /* SmartDocumentClassifier.swift in Sources */,
+				5E7D0000000000000000B007 /* SmartDocumentStore.swift in Sources */,
+				5E7D0000000000000000B008 /* SmartExtractionModels.swift in Sources */,
+				5E7D0000000000000000B009 /* SmartExtractionPipeline.swift in Sources */,
+				5E7D0000000000000000B00A /* SmartText.swift in Sources */,
+				5E7D0000000000000000B00B /* DocumentTextReader.swift in Sources */,
+				5E7D0000000000000000B00C /* SmartImportCoordinator.swift in Sources */,
+				5E7D0000000000000000B00D /* SmartExtractionReviewCard.swift in Sources */,
 				5B0000000000000000000F01 /* LoadsSyncService.swift in Sources */,
 				5B0000000000000000000003 /* PayWeekSettingsView.swift in Sources */,
 				5B0000000000000000000005 /* BrokerContactsListView.swift in Sources */,
@@ -1303,6 +1382,11 @@
 				A1B2C3D4E5F60718293A4B5C /* OCRConcurrencyRegressionTests.swift in Sources */,
 				5E79B000000000000000001D /* SettlementTestFixtures.swift in Sources */,
 				5E79B000000000000000001E /* MoneyTests.swift in Sources */,
+				5E7D0000000000000000B100 /* SmartFixtures.swift in Sources */,
+				5E7D0000000000000000B101 /* SmartExtractionTests.swift in Sources */,
+				5E7D0000000000000000B102 /* SmartExtractionSupportTests.swift in Sources */,
+				5E7D0000000000000000B103 /* SmartDocumentStoreTests.swift in Sources */,
+				5E7D0000000000000000B104 /* SmartDocumentImportTests.swift in Sources */,
 				5E79B000000000000000001F /* SettlementCalculationEngineTests.swift in Sources */,
 				5E79B0000000000000000020 /* DriverAdvanceServiceTests.swift in Sources */,
 				5E79B0000000000000000021 /* RecurringDeductionServiceTests.swift in Sources */,
