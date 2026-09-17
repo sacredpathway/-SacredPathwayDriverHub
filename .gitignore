@@ -1,0 +1,23 @@
+# Generated Xcode / Swift build artifacts — never commit these.
+build/
+_cleanbuild/
+_ship/
+DerivedData/
+Secrets.local.xcconfig
+.swiftpm/
+
+# Local build/audit byproducts.
+*.log
+*.bak
+*.bak.*
+*.dpifix.bak.*
+*.dup.bak
+*.dup2.bak
+*.helper.bak
+supabase/.temp/
+
+# Local-only files (added 2026-09-17 when preserving the 2.3.3 source).
+.DS_Store
+xcuserdata/
+*.xcuserstate
+*.v200bak
