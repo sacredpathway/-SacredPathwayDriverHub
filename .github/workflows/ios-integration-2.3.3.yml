@@ -5,7 +5,7 @@ name: Driver Hub 2.3.3 settlements integration (build + tests)
 # no repository secrets.
 on:
   push:
-    branches: [integration/settlements-2.3.3, feature/remove-gps]
+    branches: [integration/settlements-2.3.3, integration/settlements-2.3.3-smart-extraction, feature/remove-gps, feature/smart-document-extraction]
   workflow_dispatch:
 
 permissions:

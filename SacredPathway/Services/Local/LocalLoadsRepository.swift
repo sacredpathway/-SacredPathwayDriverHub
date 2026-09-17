@@ -191,6 +191,7 @@ final class LocalLoadsRepository: ObservableObject {
         deletedIDs = nextDeletedIDs
         loads = remaining
         LoadsSyncService.shared.tombstone(id)
+        SmartDocumentStore.shared.delete(type: .load, id: id.uuidString)
         return true
     }
 

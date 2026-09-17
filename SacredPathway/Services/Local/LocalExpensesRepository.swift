@@ -72,6 +72,7 @@ final class LocalExpensesRepository: ObservableObject {
         if expenses.count != before {
             flush()
             ReceiptImageStore.shared.delete(filename: receiptFilename)
+            SmartDocumentStore.shared.delete(type: .expense, id: id.uuidString)
         }
     }
 
