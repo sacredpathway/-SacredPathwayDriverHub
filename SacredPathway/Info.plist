@@ -12,35 +12,19 @@
 	<string>Sacred Pathway needs permission to save generated paystubs and processed documents to your photo library.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Sacred Pathway can import broker reps from your iPhone Contacts and save scanned rate-con contacts back to your address book.</string>
-	<!-- Location: powers the Live Rate Map, Live Weather Map, the dashboard
-	     "Near Me" cards, the Sacred Path truck-stop locator, and Sacred Path
-	     in-app turn-by-turn navigation. -->
+	<!-- Location (When In Use only): powers the Live Rate Map, Live Weather
+	     Map, the dashboard "Near Me" cards, the Sacred Path truck-stop locator,
+	     and trip planning. No Always / background location: in-app
+	     turn-by-turn navigation was removed 2026-09-17. -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Sacred Pathway uses your location to show freight rates, weather, and nearby truck stops and rest areas, and to keep your position centered on the live maps.</string>
-	<!-- Always is requested ONLY when the driver starts active Sacred Path
-	     turn-by-turn navigation, so guidance and voice keep working with the
-	     screen off or the app in the background. Background tracking runs only
-	     during an active trip and stops the moment navigation ends. -->
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>During active Sacred Path navigation, Sacred Pathway keeps tracking your truck's location in the background so turn-by-turn directions and voice guidance keep working when your screen is off or you switch apps. Background tracking runs only while navigation is active and stops as soon as you end it.</string>
 	<!-- OpenWeatherMap key, injected from the OPENWEATHERMAP_API_KEY build
 	     setting so the literal key is never committed to source. See
 	     Config.Weather for setup. -->
 	<key>OpenWeatherMapAPIKey</key>
 	<string>$(OPENWEATHERMAP_API_KEY)</string>
-	<!-- Mapbox Directions token for active in-app trucking navigation. Inject
-	     with MAPBOX_ACCESS_TOKEN; do not commit a literal token. -->
-	<key>MapboxAccessToken</key>
-	<string>$(MAPBOX_ACCESS_TOKEN)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Sacred Pathway uses the camera to scan receipts, rate confirmations, and compliance documents that you choose to add.</string>
-	<!-- Active MapLibre rendering tiles. MAPTILER_API_KEY is injected from an
-	     Xcode build setting / xcconfig. DEBUG builds may use public OSM tiles
-	     as a local fallback; Release/TestFlight builds never fall back to OSM. -->
-	<key>MapTilerAPIKey</key>
-	<string>$(MAPTILER_API_KEY)</string>
-	<key>MapLibreTileURLTemplate</key>
-	<string>https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=$(MAPTILER_API_KEY)</string>
 	<!-- Background refresh for the maps' freight + weather snapshots. `fetch`
 	     and `processing` here ARE the "Background Modes" capability; no extra
 	     entitlement is required. See BackgroundRefreshManager. -->
@@ -48,11 +32,6 @@
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
-		<!-- Active Sacred Path turn-by-turn navigation: continuous location for
-		     background guidance and audio for background voice prompts. Used
-		     only while a navigation trip is active. -->
-		<string>location</string>
-		<string>audio</string>
 		<string>remote-notification</string>
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>

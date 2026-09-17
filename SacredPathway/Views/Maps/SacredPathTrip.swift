@@ -139,12 +139,6 @@ final class SacredPathTripStore: ObservableObject {
         stops.removeAll()
     }
 
-    /// Ordered stops for in-app navigation (the driver's current location is the
-    /// origin, so a current-location entry is dropped from the sequence).
-    var navigationStops: [SacredPathDestination] {
-        stops.filter { $0.kind != .currentLocation }.map { $0.destination }
-    }
-
     func saveCurrent(name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trip = SacredPathTrip(name: trimmed.isEmpty ? "Trip \(savedTrips.count + 1)" : trimmed, stops: stops)
@@ -252,7 +246,7 @@ struct SacredPathTripPlannerView: View {
                     .disabled(store.stops.isEmpty)
             }
         }
-        .safeAreaInset(edge: .bottom) { startBar }
+        .safeAreaInset(edge: .bottom) { disclaimerBar }
         .onAppear { location.startUpdating() }
         .task(id: store.stops) { await recalcLegs() }
         .sheet(isPresented: $showAddStop) {
@@ -355,28 +349,10 @@ struct SacredPathTripPlannerView: View {
         }
     }
 
-    private var startBar: some View {
+    private var disclaimerBar: some View {
         Group {
-            if store.navigationStops.count >= 1 {
+            if !store.stops.isEmpty {
                 VStack(spacing: 8) {
-                    NavigationLink {
-                        SacredPathNavigationModeView(stops: store.navigationStops, route: nil,
-                                                     profile: TruckProfileStore.shared.profile)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "location.north.line.fill")
-                            Text(store.navigationStops.count == 1 ? "Start Navigation" : "Start Trip (\(store.navigationStops.count) stops)")
-                                .font(.subheadline.weight(.bold))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .foregroundStyle(.white)
-                        .background(Color.spDarkGreen, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.spGold.opacity(0.5), lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-
-                    OpenInMapsButtons(stops: store.navigationStops)
                     SacredPathDisclaimer(compact: true)
                 }
                 .padding(.horizontal, 16)
