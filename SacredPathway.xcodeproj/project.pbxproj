@@ -165,9 +165,9 @@
 		FEED00000000000000280000 /* RoadsideStopsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000290000 /* RoadsideStopsViewModel.swift */; };
 		FEED000000000000002A0000 /* RoadsideStopsMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE000000000000002B0000 /* RoadsideStopsMapView.swift */; };
 		FEED000000000000002C0000 /* SacredPathHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE000000000000002D0000 /* SacredPathHubView.swift */; };
-		FEED000000000000002E0000 /* SacredPathNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE000000000000002F0000 /* SacredPathNavigationView.swift */; };
+		FEED000000000000002E0000 /* SacredPathRoutePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE000000000000002F0000 /* SacredPathRoutePreview.swift */; };
 		FEED00000000000000300000 /* SacredPathTruckProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000310000 /* SacredPathTruckProfile.swift */; };
-		FEED00000000000000320000 /* SacredPathNavigationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000330000 /* SacredPathNavigationEngine.swift */; };
+		FEED00000000000000320000 /* SacredPathSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000330000 /* SacredPathSupport.swift */; };
 		FEED00000000000000340000 /* SacredPathTrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000350000 /* SacredPathTrip.swift */; };
 		FEED00000000000000A10000 /* TripPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000A10000 /* TripPlan.swift */; };
 		FEED00000000000000A20000 /* MotiveModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE00000000000000A20000 /* MotiveModels.swift */; };
@@ -210,6 +210,7 @@
 		5E79B000000000000000001C /* DriverSettlementsPortalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001C /* DriverSettlementsPortalView.swift */; };
 		5E79B000000000000000001D /* SettlementTestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001D /* SettlementTestFixtures.swift */; };
 		5E79B000000000000000001E /* MoneyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001E /* MoneyTests.swift */; };
+		5E7C00000000000000A00001 /* SacredPathNavigationRemovalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7C00000000000000A00002 /* SacredPathNavigationRemovalTests.swift */; };
 		5E79B000000000000000001F /* SettlementCalculationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */; };
 		5E79B0000000000000000020 /* DriverAdvanceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */; };
 		5E79B0000000000000000021 /* RecurringDeductionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */; };
@@ -224,6 +225,7 @@
 		5E79B000000000000000002A /* SettlementPDFRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000002A /* SettlementPDFRenderingTests.swift */; };
 		5E7AB0000000000000000001 /* SettlementBackupRoundTripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7AF0000000000000000001 /* SettlementBackupRoundTripTests.swift */; };
 		5E7AB0000000000000000002 /* SettlementsNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7AF0000000000000000002 /* SettlementsNavigationUITests.swift */; };
+		5E7C00000000000000A00003 /* MapsWithoutNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7C00000000000000A00004 /* MapsWithoutNavigationUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -396,9 +398,9 @@
 		FACE00000000000000290000 /* RoadsideStopsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RoadsideStopsViewModel.swift; path = Views/Maps/RoadsideStopsViewModel.swift; sourceTree = "<group>"; };
 		FACE000000000000002B0000 /* RoadsideStopsMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RoadsideStopsMapView.swift; path = Views/Maps/RoadsideStopsMapView.swift; sourceTree = "<group>"; };
 		FACE000000000000002D0000 /* SacredPathHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathHubView.swift; path = Views/Maps/SacredPathHubView.swift; sourceTree = "<group>"; };
-		FACE000000000000002F0000 /* SacredPathNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathNavigationView.swift; path = Views/Maps/SacredPathNavigationView.swift; sourceTree = "<group>"; };
+		FACE000000000000002F0000 /* SacredPathRoutePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathRoutePreview.swift; path = Views/Maps/SacredPathRoutePreview.swift; sourceTree = "<group>"; };
 		FACE00000000000000310000 /* SacredPathTruckProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathTruckProfile.swift; path = Views/Maps/SacredPathTruckProfile.swift; sourceTree = "<group>"; };
-		FACE00000000000000330000 /* SacredPathNavigationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathNavigationEngine.swift; path = Views/Maps/SacredPathNavigationEngine.swift; sourceTree = "<group>"; };
+		FACE00000000000000330000 /* SacredPathSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathSupport.swift; path = Views/Maps/SacredPathSupport.swift; sourceTree = "<group>"; };
 		FACE00000000000000350000 /* SacredPathTrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SacredPathTrip.swift; path = Views/Maps/SacredPathTrip.swift; sourceTree = "<group>"; };
 		FACE00000000000000A10000 /* TripPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TripPlan.swift; path = Models/Maps/TripPlan.swift; sourceTree = "<group>"; };
 		FACE00000000000000A20000 /* MotiveModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MotiveModels.swift; path = Models/Maps/MotiveModels.swift; sourceTree = "<group>"; };
@@ -451,6 +453,7 @@
 		5E79F000000000000000001C /* DriverSettlementsPortalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverSettlementsPortalView.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001D /* SettlementTestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementTestFixtures.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001E /* MoneyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyTests.swift; sourceTree = "<group>"; };
+		5E7C00000000000000A00002 /* SacredPathNavigationRemovalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredPathNavigationRemovalTests.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementCalculationEngineTests.swift; sourceTree = "<group>"; };
 		5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverAdvanceServiceTests.swift; sourceTree = "<group>"; };
 		5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringDeductionServiceTests.swift; sourceTree = "<group>"; };
@@ -465,6 +468,7 @@
 		5E79F000000000000000002A /* SettlementPDFRenderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementPDFRenderingTests.swift; sourceTree = "<group>"; };
 		5E7AF0000000000000000001 /* SettlementBackupRoundTripTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementBackupRoundTripTests.swift; sourceTree = "<group>"; };
 		5E7AF0000000000000000002 /* SettlementsNavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementsNavigationUITests.swift; sourceTree = "<group>"; };
+		5E7C00000000000000A00004 /* MapsWithoutNavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsWithoutNavigationUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -536,9 +540,9 @@
 				FACE00000000000000290000 /* RoadsideStopsViewModel.swift */,
 				FACE000000000000002B0000 /* RoadsideStopsMapView.swift */,
 				FACE000000000000002D0000 /* SacredPathHubView.swift */,
-				FACE000000000000002F0000 /* SacredPathNavigationView.swift */,
+				FACE000000000000002F0000 /* SacredPathRoutePreview.swift */,
 				FACE00000000000000310000 /* SacredPathTruckProfile.swift */,
-				FACE00000000000000330000 /* SacredPathNavigationEngine.swift */,
+				FACE00000000000000330000 /* SacredPathSupport.swift */,
 				FACE00000000000000A10000 /* TripPlan.swift */,
 				FACE00000000000000A20000 /* MotiveModels.swift */,
 				FACE00000000000000A30000 /* MotiveIntegration.swift */,
@@ -887,6 +891,7 @@
 			children = (
 				4233447231E7C3762EDA2762 /* ReleaseWorkflowUITests.swift */,
 				5E7AF0000000000000000002 /* SettlementsNavigationUITests.swift */,
+				5E7C00000000000000A00004 /* MapsWithoutNavigationUITests.swift */,
 			);
 			name = SacredPathwayUITests;
 			path = SacredPathwayUITests;
@@ -947,6 +952,7 @@
 				C5B4A39281706F5E4D3C2B1A /* OCRConcurrencyRegressionTests.swift */,
 				5E79F000000000000000001D /* SettlementTestFixtures.swift */,
 				5E79F000000000000000001E /* MoneyTests.swift */,
+				5E7C00000000000000A00002 /* SacredPathNavigationRemovalTests.swift */,
 				5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */,
 				5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */,
 				5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */,
@@ -1126,9 +1132,9 @@
 				FEED00000000000000280000 /* RoadsideStopsViewModel.swift in Sources */,
 				FEED000000000000002A0000 /* RoadsideStopsMapView.swift in Sources */,
 				FEED000000000000002C0000 /* SacredPathHubView.swift in Sources */,
-				FEED000000000000002E0000 /* SacredPathNavigationView.swift in Sources */,
+				FEED000000000000002E0000 /* SacredPathRoutePreview.swift in Sources */,
 				FEED00000000000000300000 /* SacredPathTruckProfile.swift in Sources */,
-				FEED00000000000000320000 /* SacredPathNavigationEngine.swift in Sources */,
+				FEED00000000000000320000 /* SacredPathSupport.swift in Sources */,
 				FEED00000000000000A10000 /* TripPlan.swift in Sources */,
 				FEED00000000000000A20000 /* MotiveModels.swift in Sources */,
 				FEED00000000000000A30000 /* MotiveIntegration.swift in Sources */,
@@ -1303,6 +1309,7 @@
 				A1B2C3D4E5F60718293A4B5C /* OCRConcurrencyRegressionTests.swift in Sources */,
 				5E79B000000000000000001D /* SettlementTestFixtures.swift in Sources */,
 				5E79B000000000000000001E /* MoneyTests.swift in Sources */,
+				5E7C00000000000000A00001 /* SacredPathNavigationRemovalTests.swift in Sources */,
 				5E79B000000000000000001F /* SettlementCalculationEngineTests.swift in Sources */,
 				5E79B0000000000000000020 /* DriverAdvanceServiceTests.swift in Sources */,
 				5E79B0000000000000000021 /* RecurringDeductionServiceTests.swift in Sources */,
@@ -1325,6 +1332,7 @@
 			files = (
 				62B2187604521095396A73A0 /* ReleaseWorkflowUITests.swift in Sources */,
 				5E7AB0000000000000000002 /* SettlementsNavigationUITests.swift in Sources */,
+				5E7C00000000000000A00003 /* MapsWithoutNavigationUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

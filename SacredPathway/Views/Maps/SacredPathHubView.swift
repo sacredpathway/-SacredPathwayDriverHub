@@ -220,7 +220,7 @@ struct SacredPathHubView: View {
                         .foregroundStyle(Color.spTextSecondary)
                 }
             }
-            Text("See truck stops, fuel, rest areas, and parking along your route, then start in-app Sacred Path navigation.")
+            Text("See truck stops, fuel, rest areas, and parking along your route.")
                 .font(.caption2)
                 .foregroundStyle(Color.spTextSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -233,7 +233,7 @@ struct SacredPathHubView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "map.fill")
-                    Text("Preview Trip & Get Directions")
+                    Text("Preview Trip")
                         .font(.subheadline.weight(.bold))
                     Spacer()
                     Image(systemName: "chevron.right")

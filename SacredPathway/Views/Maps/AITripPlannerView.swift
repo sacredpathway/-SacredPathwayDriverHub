@@ -11,8 +11,8 @@ import UIKit
 // planner returns a legal, on-time plan: fuel stops, the 30-minute break, and
 // 10/34-hour resets, plus warnings if the load can't be made legally.
 //
-// This is a PLANNING tool and NOT an ELD. Drivers can start the route in
-// Sacred Path's in-app navigation and keep their official HOS log in Motive.
+// This is a PLANNING tool and NOT an ELD. Drivers keep their official HOS log
+// in Motive.
 //
 // Gating: reachable only from the Owner-Operator / Carrier Maps tab. `advanced`
 // exposes cycle / 34-hour and Motive sync; a Driver-role simple planner can
@@ -67,7 +67,7 @@ struct AITripPlannerView: View {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "info.circle.fill")
                     .foregroundStyle(Color.spGold)
-                Text("Planning aid only. Sacred Path helps you plan fuel and rest, then starts in-app navigation. It is not an ELD — your official hours of service stay in Motive.")
+                Text("Planning aid only. Sacred Path helps you plan fuel and rest. It is not an ELD — your official hours of service stay in Motive.")
                     .font(.caption)
                     .foregroundStyle(Color.spTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -356,51 +356,30 @@ struct AITripPlannerView: View {
     /// Concrete route-aware stop suggestion for a fuel/break/rest event.
     @ViewBuilder
     private func recommendedStopRow(_ event: TripPlanEvent) -> some View {
-        if let name = event.recommendedStopName, let coord = event.recommendedCoordinate {
-            NavigationLink {
-                SacredPathNavigationModeView(
-                    destination: SacredPathDestination(name: name, latitude: coord.latitude, longitude: coord.longitude),
-                    route: nil,
-                    profile: TruckProfileStore.shared.profile
-                )
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "mappin.circle.fill")
-                        .foregroundStyle(Color.spGreenAccent)
-                    Text(event.recommendedStopBrand ?? name)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(Color.spTextPrimary)
-                        .lineLimit(1)
-                    if event.recommendedStopBrand != nil {
-                        Text(name)
-                            .font(.caption2)
-                            .foregroundStyle(Color.spTextSecondary)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 0)
-                    Image(systemName: "location.north.line.fill")
+        if let name = event.recommendedStopName, event.recommendedCoordinate != nil {
+            HStack(spacing: 6) {
+                Image(systemName: "mappin.circle.fill")
+                    .foregroundStyle(Color.spGreenAccent)
+                Text(event.recommendedStopBrand ?? name)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.spTextPrimary)
+                    .lineLimit(1)
+                if event.recommendedStopBrand != nil {
+                    Text(name)
                         .font(.caption2)
-                        .foregroundStyle(Color.spGold)
+                        .foregroundStyle(Color.spTextSecondary)
+                        .lineLimit(1)
                 }
-                .padding(.top, 3)
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
+            .padding(.top, 3)
         }
     }
 
-    // MARK: Navigation + save
+    // MARK: Copy + save
 
     private func handoffSection(_ plan: TripPlan) -> some View {
-        Section("Navigate / Save It") {
-            if let dest = vm.deliveryDestination {
-                OpenInMapsButtons(stops: [dest])
-                    .listRowBackground(Color.spCardBg)
-            } else {
-                handoffButton("Find route to enable directions", systemImage: "arrow.triangle.turn.up.right.circle.fill") {
-                    Task { await vm.resolveRoute() }
-                }
-            }
-
+        Section("Save It") {
             handoffButton(vm.didCopy ? "Copied!" : "Copy Route Plan", systemImage: vm.didCopy ? "checkmark" : "doc.on.doc.fill") {
                 vm.copyPlan(plan)
             }
@@ -573,16 +552,6 @@ final class TripPlannerViewModel: ObservableObject {
     @Published var didCopy = false
     @Published var didSave = false
 
-    /// Delivery destination, when its coordinate is resolved. Used to start
-    /// in-app Sacred Path navigation.
-    var deliveryDestination: SacredPathDestination? {
-        guard let c = deliveryCoordinate else { return nil }
-        return SacredPathDestination(
-            name: deliveryName.isEmpty ? "Delivery" : deliveryName,
-            latitude: c.latitude, longitude: c.longitude
-        )
-    }
-
     // MARK: Route resolution (MKLocalSearch + MKDirections)
 
     func resolveRoute() async {
@@ -699,9 +668,6 @@ final class TripPlannerViewModel: ObservableObject {
         deliveryDate = plan.deliveryDate
         distanceMiles = plan.distanceMiles
     }
-
-    // MARK: Navigation
-    // Driving directions stay inside Sacred Path via OpenInMapsButtons.
 
     func copyPlan(_ plan: TripPlan) {
         UIPasteboard.general.string = plan.summaryText()

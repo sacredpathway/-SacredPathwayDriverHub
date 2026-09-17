@@ -585,13 +585,6 @@ private struct SacredPathPlaceDetailSheet: View {
                 .listRowBackground(Color.spCardBg)
 
                 Section {
-                    // Start in-app Sacred Path navigation.
-                    OpenInMapsMenu(
-                        name: stop.name,
-                        latitude: stop.latitude,
-                        longitude: stop.longitude
-                    )
-
                     Button {
                         Task {
                             if store.isSaved(stop) {

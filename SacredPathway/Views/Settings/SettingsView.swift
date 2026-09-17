@@ -758,22 +758,6 @@ struct SettingsView: View {
                                 }
                             }
 
-                            NavigationLink {
-                                SacredPathMapDiagnosticsView()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "map.fill")
-                                        .foregroundStyle(Color.spGold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Map Diagnostics")
-                                            .foregroundStyle(Color.spTextPrimary)
-                                        Text("Renderer, tile provider, keys, GPS, route errors")
-                                            .font(.caption)
-                                            .foregroundStyle(Color.spTextSecondary)
-                                    }
-                                }
-                            }
-
                             Toggle(isOn: Binding(
                                 get: { DemoMode.unlockAllFeatures },
                                 set: { newValue in
