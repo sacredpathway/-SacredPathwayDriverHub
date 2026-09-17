@@ -31,7 +31,7 @@ struct SmartImport {
 
     /// A document of the wrong family for this screen (e.g. a receipt scanned from Add Load).
     var familyMismatchMessage: String? {
-        guard result.kind != .unknown else { return nil }
+        guard result.kind != .unknown || family == .expense else { return nil }
         switch family {
         case .load where result.kind != .rateConfirmation && result.classification.confidence >= .medium:
             return "This looks like a \(result.kind.displayName). Receipts and repair invoices are added from the Expenses tab."
