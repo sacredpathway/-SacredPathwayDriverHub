@@ -1,0 +1,172 @@
+name: Driver Hub 2.3.3 settlements integration (build + tests)
+
+# Integration/testing branch only. Unsigned simulator build and tests.
+# No archive, no TestFlight upload, no App Store Connect, no Supabase access,
+# no repository secrets.
+on:
+  push:
+    branches: [integration/settlements-2.3.3]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Static integration checks
+        run: |
+          set -euo pipefail
+          P=SacredPathway.xcodeproj/project.pbxproj
+          if grep -q 'SPDate.swift' "$P"; then echo "::error::standalone SPDate.swift is in the Xcode project"; exit 1; fi
+          test "$(grep -c 'enum SPDate' SacredPathway/Models/Expense.swift)" = 1
+          M=supabase/migrations
+          if ls "$M" | grep -E '20260529090000|20260614|REVIEW_BEFORE_APPLYING'; then echo "::error::retired or roadside migration in $M"; exit 1; fi
+          echo "3586c168e166d74ccd0ae733b5b872ef1f16d9469972d9719f3c47ea2db85041  $M/20260912120000_driver_pay_and_settlements.sql" | shasum -a 256 -c
+          echo "ad250b694d00294f7f02884b19b1c7f59bf8ab3f4bed5cd7695e853e6da1cf34  $M/20260916120000_settlement_driver_portal.sql" | shasum -a 256 -c
+          echo "::notice::static checks passed ($(ls $M | wc -l | tr -d ' ') migrations)"
+
+      - name: Select Xcode 26
+        run: |
+          set -euo pipefail
+          ls -d /Applications/Xcode*.app || true
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)
+          if [ -n "$XC" ]; then sudo xcode-select -s "$XC"; fi
+          xcodebuild -version
+          MAJOR=$(xcodebuild -version | awk 'NR==1{split($2,v,"."); print v[1]}')
+          if [ "$MAJOR" -lt 26 ]; then echo "::error::Xcode 26 is required (SWIFT_DEFAULT_ACTOR_ISOLATION); found $MAJOR"; exit 1; fi
+          echo "::notice::$(xcodebuild -version | tr '\n' ' ')"
+          # Build settings placeholders only (all values empty), as on a fresh clone.
+          cp Secrets.local.xcconfig.example Secrets.local.xcconfig
+
+      - name: Pick simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json,sys,re
+          d=json.load(sys.stdin)["devices"]
+          def ver(k):
+              m=re.search(r"iOS-(\d+)-(\d+)",k); return (int(m.group(1)),int(m.group(2))) if m else (0,0)
+          for rt in sorted([k for k in d if "iOS" in k], key=ver, reverse=True):
+              for dev in d[rt]:
+                  if dev["name"].startswith("iPhone 1") and "Pro" in dev["name"]:
+                      print(dev["udid"]); raise SystemExit
+              for dev in d[rt]:
+                  if dev["name"].startswith("iPhone"):
+                      print(dev["udid"]); raise SystemExit
+          ')
+          test -n "$UDID" || { echo "::error::no iPhone simulator available"; exit 1; }
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices | grep "$UDID" | sed 's/^/::notice::simulator /'
+
+      - name: Build app + test bundles (no signing)
+        run: |
+          set +e
+          xcodebuild -project SacredPathway.xcodeproj -scheme SacredPathway -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO build-for-testing > "$RUNNER_TEMP/build.log" 2>&1 || true
+          grep -E ": error:" "$RUNNER_TEMP/build.log" | sort -u | head -60 | sed -E 's/^/::error::/' || true
+          echo "errors: $(grep -cE ': error:' "$RUNNER_TEMP/build.log")  warnings: $(grep -cE ': warning:' "$RUNNER_TEMP/build.log")"
+          grep -E "invalid redeclaration|ambiguous use of" "$RUNNER_TEMP/build.log" | head -5 || true
+          if grep -q "TEST BUILD SUCCEEDED" "$RUNNER_TEMP/build.log"; then echo "::notice::TEST BUILD SUCCEEDED (app + unit tests + UI tests)"; else echo "::error::BUILD FAILED"; tail -30 "$RUNNER_TEMP/build.log"; exit 1; fi
+
+      - name: Unit tests (SacredPathwayDriverHubTests)
+        id: unit
+        run: |
+          set +e
+          xcodebuild -project SacredPathway.xcodeproj -scheme SacredPathway -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -only-testing:SacredPathwayDriverHubTests \
+            -resultBundlePath "$RUNNER_TEMP/unit.xcresult" \
+            CODE_SIGNING_ALLOWED=NO test-without-building > "$RUNNER_TEMP/unit.log" 2>&1
+          RC=$?
+          grep -E "Executed [0-9]+ tests?" "$RUNNER_TEMP/unit.log" | tail -1 | sed 's/^/::notice::unit /' || true
+          grep -E ": error:|' failed \(" "$RUNNER_TEMP/unit.log" | head -40 | sed -E 's/^/::error::/' || true
+          echo "rc=$RC" >> "$GITHUB_OUTPUT"
+          exit $RC
+
+      - name: UI tests (SacredPathwayUITests)
+        id: ui
+        if: always() && steps.unit.outcome != 'skipped'
+        run: |
+          set +e
+          xcodebuild -project SacredPathway.xcodeproj -scheme SacredPathway -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -only-testing:SacredPathwayUITests \
+            -resultBundlePath "$RUNNER_TEMP/ui.xcresult" \
+            CODE_SIGNING_ALLOWED=NO test-without-building > "$RUNNER_TEMP/ui.log" 2>&1
+          RC=$?
+          grep -E "Executed [0-9]+ tests?" "$RUNNER_TEMP/ui.log" | tail -1 | sed 's/^/::notice::ui /' || true
+          grep -h "NAV_REPORT" "$RUNNER_TEMP/ui.log" | sed -E 's/.*NAV_REPORT: /::notice::nav /' | sort -u || true
+          grep -E ": error:|' failed \(" "$RUNNER_TEMP/ui.log" | head -40 | sed -E 's/^/::error::/' || true
+          exit $RC
+
+      - name: Test report
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          out = []
+          def tree(path):
+              r = subprocess.run(["xcrun", "xcresulttool", "get", "test-results", "tests", "--path", path],
+                                 capture_output=True, text=True)
+              return json.loads(r.stdout) if r.returncode == 0 else None
+          def walk(node, suite, rows):
+              t = node.get("nodeType"); name = node.get("name", "")
+              if t == "Test Suite": suite = name
+              if t == "Test Case":
+                  rows.append((suite, node.get("result", "?")))
+              for c in node.get("children", []) or []:
+                  walk(c, suite, rows)
+          for label in ("unit", "ui"):
+              path = os.path.join(os.environ["RUNNER_TEMP"], f"{label}.xcresult")
+              if not os.path.exists(path):
+                  out.append(f"### {label}: no result bundle"); continue
+              data = tree(path)
+              if not data:
+                  out.append(f"### {label}: xcresulttool could not read the bundle"); continue
+              rows = []
+              for n in data.get("testNodes", []): walk(n, "", rows)
+              counts = {}
+              for s, r in rows:
+                  c = counts.setdefault(s, {}); c[r] = c.get(r, 0) + 1
+              tot = {}
+              for s, r in rows: tot[r] = tot.get(r, 0) + 1
+              out.append(f"### {label}: discovered {len(rows)} — " + ", ".join(f"{k} {v}" for k, v in sorted(tot.items())))
+              out.append("| suite | " + " | ".join(sorted(tot)) + " |")
+              out.append("|---|" + "---|" * len(tot))
+              for s in sorted(counts):
+                  out.append(f"| {s} | " + " | ".join(str(counts[s].get(k, 0)) for k in sorted(tot)) + " |")
+              print(f"::notice::{label} discovered={len(rows)} " + " ".join(f"{k}={v}" for k, v in sorted(tot.items())))
+          text = "\n".join(out)
+          print(text)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f: f.write(text + "\n")
+          PY
+          mkdir -p "$RUNNER_TEMP/attachments"
+          for b in unit ui; do
+            [ -d "$RUNNER_TEMP/$b.xcresult" ] && xcrun xcresulttool export attachments --path "$RUNNER_TEMP/$b.xcresult" --output-path "$RUNNER_TEMP/attachments/$b" >/dev/null 2>&1 || true
+          done
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-2.3.3-logs
+          path: |
+            ${{ runner.temp }}/build.log
+            ${{ runner.temp }}/unit.log
+            ${{ runner.temp }}/ui.log
+            ${{ runner.temp }}/attachments
+          if-no-files-found: ignore
