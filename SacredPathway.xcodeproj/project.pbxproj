@@ -211,6 +211,7 @@
 		5E79B000000000000000001D /* SettlementTestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001D /* SettlementTestFixtures.swift */; };
 		5E79B000000000000000001E /* MoneyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001E /* MoneyTests.swift */; };
 		5E7C00000000000000A00001 /* SacredPathNavigationRemovalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7C00000000000000A00002 /* SacredPathNavigationRemovalTests.swift */; };
+		5E7E0000000000000000B200 /* SettlementNullPayBasisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7E0000000000000000F200 /* SettlementNullPayBasisTests.swift */; };
 		5E79B000000000000000001F /* SettlementCalculationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */; };
 		5E79B0000000000000000020 /* DriverAdvanceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */; };
 		5E79B0000000000000000021 /* RecurringDeductionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */; };
@@ -454,6 +455,7 @@
 		5E79F000000000000000001D /* SettlementTestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementTestFixtures.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001E /* MoneyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyTests.swift; sourceTree = "<group>"; };
 		5E7C00000000000000A00002 /* SacredPathNavigationRemovalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SacredPathNavigationRemovalTests.swift; sourceTree = "<group>"; };
+		5E7E0000000000000000F200 /* SettlementNullPayBasisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementNullPayBasisTests.swift; sourceTree = "<group>"; };
 		5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlementCalculationEngineTests.swift; sourceTree = "<group>"; };
 		5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverAdvanceServiceTests.swift; sourceTree = "<group>"; };
 		5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringDeductionServiceTests.swift; sourceTree = "<group>"; };
@@ -953,6 +955,7 @@
 				5E79F000000000000000001D /* SettlementTestFixtures.swift */,
 				5E79F000000000000000001E /* MoneyTests.swift */,
 				5E7C00000000000000A00002 /* SacredPathNavigationRemovalTests.swift */,
+				5E7E0000000000000000F200 /* SettlementNullPayBasisTests.swift */,
 				5E79F000000000000000001F /* SettlementCalculationEngineTests.swift */,
 				5E79F0000000000000000020 /* DriverAdvanceServiceTests.swift */,
 				5E79F0000000000000000021 /* RecurringDeductionServiceTests.swift */,
@@ -1310,6 +1313,7 @@
 				5E79B000000000000000001D /* SettlementTestFixtures.swift in Sources */,
 				5E79B000000000000000001E /* MoneyTests.swift in Sources */,
 				5E7C00000000000000A00001 /* SacredPathNavigationRemovalTests.swift in Sources */,
+				5E7E0000000000000000B200 /* SettlementNullPayBasisTests.swift in Sources */,
 				5E79B000000000000000001F /* SettlementCalculationEngineTests.swift in Sources */,
 				5E79B0000000000000000020 /* DriverAdvanceServiceTests.swift in Sources */,
 				5E79B0000000000000000021 /* RecurringDeductionServiceTests.swift in Sources */,

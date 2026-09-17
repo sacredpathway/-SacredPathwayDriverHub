@@ -14,6 +14,43 @@ import Foundation
 //  `Decimal`. There is no `Double` in this file on purpose.
 // =============================================================================
 
+// MARK: - Defensive decoding
+
+/// A `String` field that tolerates NULL or a missing key and reads as "".
+/// Used where a Supabase column is nullable but the app only ever writes a
+/// string: without this, one NULL row makes the whole array decode throw and
+/// the settlement ledger fails to load (defect D1). Encoding is unchanged —
+/// the value is always written as a plain string, never null.
+@propertyWrapper
+struct DefaultEmptyString: Codable, Hashable {
+    var wrappedValue: String
+
+    init(wrappedValue: String) {
+        self.wrappedValue = wrappedValue
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        wrappedValue = (try? container.decode(String.self)) ?? ""
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(wrappedValue)
+    }
+}
+
+extension KeyedDecodingContainer {
+    /// Missing key or JSON null both decode to "" instead of throwing.
+    func decode(
+        _ type: DefaultEmptyString.Type,
+        forKey key: Key
+    ) throws -> DefaultEmptyString {
+        try decodeIfPresent(type, forKey: key)
+            ?? DefaultEmptyString(wrappedValue: "")
+    }
+}
+
 // MARK: - Status
 
 /// Lifecycle of a settlement. A settlement only ever moves forward except
@@ -892,7 +929,7 @@ struct SettlementLoadLine: Codable, Hashable, Identifiable {
     var hoursWorked: Decimal?
     /// Frozen result of the calculation engine for this line.
     var driverEarnings: Money
-    var payBasisDescription: String
+    @DefaultEmptyString var payBasisDescription: String
     var rateConfirmationDocumentId: UUID?
     var proofOfDeliveryDocumentId: UUID?
     var notes: String?
